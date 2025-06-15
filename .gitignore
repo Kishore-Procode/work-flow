@@ -3,6 +3,7 @@ bin/
 obj/
 out/
 Generated_Code/
+.vs/
 
 ## User-specific files
 *.user
