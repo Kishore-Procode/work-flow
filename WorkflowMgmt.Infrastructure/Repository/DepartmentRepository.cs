@@ -21,7 +21,7 @@ namespace WorkflowMgmt.Infrastructure.Repository
         public async Task<List<DepartmentDTO>> GetAllDepartments()
         {
             var departments = await Connection.QueryAsync<DepartmentDTO>(
-                "SELECT * FROM public.departments", Transaction);
+                "SELECT * FROM workflowmgmt.departments", Transaction);
 
             return departments.ToList();
         }

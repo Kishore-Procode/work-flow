@@ -21,21 +21,21 @@ namespace WorkflowMgmt.Infrastructure.Repository
         public async Task<List<User>> GetAllUsers()
         {
             var users = await Connection.QueryAsync<User>(
-                "SELECT * FROM public.users", Transaction);
+                "SELECT * FROM workflowmgmt.users", Transaction);
 
             return users.ToList();
         }
         public async Task<User?> GetUserByUserName(string userName)
         {
             return await Connection.QueryFirstOrDefaultAsync<User>(
-                "SELECT * FROM public.users where (username = @UserName or email = @UserName) AND is_active IS TRUE",
+                "SELECT * FROM workflowmgmt.users where (username = @UserName or email = @UserName) AND is_active IS TRUE",
                 new { UserName = userName }, 
                 Transaction);
         }
         public async Task UpdateLastLoginAsync(Guid userId)
         {
             await Connection.ExecuteAsync(
-                "UPDATE public.users SET last_login = @Now WHERE id = @UserId",
+                "UPDATE workflowmgmt.users SET last_login = @Now WHERE id = @UserId",
                 new { Now = DateTime.UtcNow, UserId = userId },
                 transaction: Transaction
             );
@@ -43,7 +43,7 @@ namespace WorkflowMgmt.Infrastructure.Repository
         public async Task<Role?> GetRoleByRoleId(int roleId)
         {
             return await Connection.QueryFirstOrDefaultAsync<Role>(
-                "SELECT * FROM public.roles WHERE id = @RoleId",
+                "SELECT * FROM workflowmgmt.roles WHERE id = @RoleId",
                 new { RoleId = roleId },
                 transaction: Transaction
                 );
@@ -51,7 +51,7 @@ namespace WorkflowMgmt.Infrastructure.Repository
         public async Task<DepartmentDTO?> GetDepartmentByDepartmentId(int? departmentId)
         {
             return await Connection.QueryFirstOrDefaultAsync<DepartmentDTO>(
-                "SELECT * FROM public.departments WHERE id = @DepartmentId",
+                "SELECT * FROM workflowmgmt.departments WHERE id = @DepartmentId",
                 new { DepartmentId = departmentId },
                 transaction: Transaction
                 );
