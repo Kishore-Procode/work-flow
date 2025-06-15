@@ -1,0 +1,75 @@
+## Build artifacts
+bin/
+obj/
+out/
+Generated_Code/
+
+## User-specific files
+*.user
+*.userosscache
+*.suo
+*.sln.docstates
+
+## Rider
+.idea/
+
+## VS Code
+.vscode/
+.history/
+
+## ASP.NET Core
+appsettings.Development.json
+appsettings.Local.json
+secrets.json
+
+## Logs
+*.log
+logs/
+
+## Coverage reports
+coverage/
+*.lcov
+TestResults/
+
+## NuGet
+*.nupkg
+*.snupkg
+.nuget/
+
+## DotCover
+.idea/.idea.DotSettings
+
+## Resharper
+_ReSharper*/
+*.[Rr]e[Ss]harper
+
+## TFS
+$tf/
+
+## Local db
+*.mdf
+*.ldf
+
+## Others
+.DS_Store
+Thumbs.db
+*.bak
+*.old
+*.tmp
+
+# Publish outputs
+publish/
+wwwroot/
+
+# Azure
+*.azure*
+
+# Entity Framework Core Migrations Snapshots
+*Migrations/*.Designer.cs
+*Migrations/*ModelSnapshot.cs
+
+# JetBrains Rider solution cache
+.idea/
+
+# Backup files
+*~ 
