@@ -22,6 +22,7 @@ namespace WorkflowMgmt.Infrastructure
 
         private IUserRepository? userRepository;
         private IDepartmentRepository? departmentRepository;
+        private ICourseRepository? courseRepository;
 
         public UnitOfWork(IDbConnectionFactory connectionFactory)
         {
@@ -36,6 +37,10 @@ namespace WorkflowMgmt.Infrastructure
         public IDepartmentRepository DepartmentRepository
         {
             get { return departmentRepository ?? (departmentRepository = new DepartmentRepository(_transaction)); }
+        }
+        public ICourseRepository CourseRepository
+        {
+            get { return courseRepository ?? (courseRepository = new CourseRepository(_transaction)); }
         }
 
 
