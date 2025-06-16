@@ -11,4 +11,8 @@ using WorkflowMgmt.Domain.Models;
 namespace WorkflowMgmt.Application.Features.Department
 {
     public record GetDepartmentCommand() : IRequest<ApiResponse<List<DepartmentDTO>>>;
+    public record GetDepartmentByIdCommand(int id) : IRequest<ApiResponse<DepartmentDTO>>;
+    public record CreateDepartmentCommand(DepartmentDTO Department) : IRequest<ApiResponse<int>>;
+    public record UpdateDepartmentCommand(DepartmentDTO Department) : IRequest<ApiResponse<bool>>;
+    public record DeleteOrRestoreDepartmentCommand(int id, string modifiedBy, bool isRestore) : IRequest<ApiResponse<bool>>;
 }
