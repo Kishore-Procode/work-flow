@@ -1,0 +1,127 @@
+﻿using Dapper;
+using System;
+using System.Collections.Generic;
+using System.Data;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+using System.Transactions;
+using WorkflowMgmt.Domain.Entities.Semesters;
+using WorkflowMgmt.Domain.Interface.IRepository;
+using WorkflowMgmt.Infrastructure.RepositoryBase;
+
+namespace WorkflowMgmt.Infrastructure.Repository
+{
+    public class SemesterRepository : RepositoryTranBase, ISemesterRepository
+    {
+        public SemesterRepository(IDbTransaction transaction) : base(transaction)
+        {
+        }
+
+        public async Task<List<SemesterDTO>> GetAllSemesters()
+        {
+            var sql = "SELECT * FROM workflowmgmt.semesters WHERE is_active = true";
+            var semesters = await Connection.QueryAsync<SemesterDTO>(sql, transaction: Transaction);
+            return semesters.ToList();
+        }
+
+        public async Task<SemesterDTO?> GetSemesterById(int id)
+        {
+            var sql = "SELECT * FROM workflowmgmt.semesters WHERE id = @Id AND is_active = true";
+            return await Connection.QueryFirstOrDefaultAsync<SemesterDTO>(sql, new { Id = id }, Transaction);
+        }
+
+        public async Task<int> InsertSemester(SemesterDTO semester)
+        {
+            var sql = @"
+                INSERT INTO workflowmgmt.semesters (
+                    name,
+                    code,
+                    academic_year,
+                    department_id,
+                    course_name,
+                    course_code,
+                    start_date,
+                    end_date,
+                    duration_weeks,
+                    level,
+                    total_students,
+                    status,
+                    description,
+                    exam_scheduled,
+                    created_date,
+                    created_by
+                ) VALUES (
+                    @Name,
+                    @Code,
+                    @AcademicYear,
+                    @DepartmentId,
+                    @CourseName,
+                    @CourseCode,
+                    @StartDate,
+                    @EndDate,
+                    @DurationWeeks,
+                    @Level,
+                    @TotalStudents,
+                    @Status,
+                    @Description,
+                    @ExamScheduled,
+                    NOW(),
+                    @CreatedBy
+                ) RETURNING id;
+            ";
+
+            return await Connection.ExecuteScalarAsync<int>(sql, semester, Transaction);
+        }
+
+        public async Task<bool> UpdateSemester(SemesterDTO semester)
+        {
+            var sql = @"
+                UPDATE workflowmgmt.semesters SET
+                    name = @Name,
+                    code = @Code,
+                    academic_year = @AcademicYear,
+                    department_id = @DepartmentId,
+                    course_name = @CourseName,
+                    course_code = @CourseCode,
+                    start_date = @StartDate,
+                    end_date = @EndDate,
+                    duration_weeks = @DurationWeeks,
+                    level = @Level,
+                    total_students = @TotalStudents,
+                    status = @Status,
+                    description = @Description,
+                    exam_scheduled = @ExamScheduled,
+                    modified_date = NOW(),
+                    modified_by = @ModifiedBy,
+                    is_active = @IsActive
+                WHERE id = @Id;
+            ";
+
+            var affectedRows = await Connection.ExecuteAsync(sql, semester, Transaction);
+            return affectedRows > 0;
+        }
+
+        public async Task<bool> DeleteOrRestoreSemester(int id, string modifiedBy, bool isRestore)
+        {
+            var sql = @"
+                UPDATE workflowmgmt.semesters
+                SET is_active = @IsActive,
+                    status = @Status,
+                    modified_by = @ModifiedBy,
+                    modified_date = NOW()
+                WHERE id = @Id AND is_active != @IsActive;
+            ";
+
+            var result = await Connection.ExecuteAsync(sql, new
+            {
+                Id = id,
+                ModifiedBy = modifiedBy,
+                IsActive = isRestore,
+                Status = isRestore ? "Upcoming" : "Inactive"
+            }, Transaction);
+
+            return result > 0;
+        }
+    }
+}
