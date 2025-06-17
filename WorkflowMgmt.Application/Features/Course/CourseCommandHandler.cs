@@ -30,9 +30,100 @@ namespace WorkflowMgmt.Application.Features.Course
             }
             catch (Exception ex)
             {
-                return ApiResponse<List<CourseDTO>>.ErrorResponse($"Error retrieving courses: {ex.Message}");
+                return ApiResponse<List<CourseDTO>>.ErrorResponse($"Error during fetching courses: {ex.Message}");
             }
         }
 
     }
+    public class GetCourseByIdCommandHandler : IRequestHandler<GetCourseByIdCommand, ApiResponse<CourseDTO>>
+    {         
+        private readonly IUnitOfWork _unitOfWork;
+        public GetCourseByIdCommandHandler(IUnitOfWork unitOfWork)
+        {
+            _unitOfWork = unitOfWork;
+        }
+        public async Task<ApiResponse<CourseDTO>> Handle(GetCourseByIdCommand request, CancellationToken cancellationToken)
+        {
+            try
+            {
+                var course = await _unitOfWork.CourseRepository.GetCourseById(request.id);
+                if (course == null)
+                    return ApiResponse<CourseDTO>.ErrorResponse($"Course with ID {request.id} not found");
+                return ApiResponse<CourseDTO>.SuccessResponse(course, "Course retrieved successfully");
+            }
+            catch (Exception ex)
+            {
+                return ApiResponse<CourseDTO>.ErrorResponse($"Error fetching course: {ex.Message}");
+            }
+        }
+    }
+    public class CreateCourseCommandHandler : IRequestHandler<CreateCourseCommand, ApiResponse<int>>
+    {
+        private readonly IUnitOfWork _unitOfWork;
+
+        public CreateCourseCommandHandler(IUnitOfWork unitOfWork)
+        {
+            _unitOfWork = unitOfWork;
+        }
+
+        public async Task<ApiResponse<int>> Handle(CreateCourseCommand request, CancellationToken cancellationToken)
+        {
+            try
+            {
+                var courseId = await _unitOfWork.CourseRepository.InsertCourse(request.Course);
+                if (courseId > 0)
+                    _unitOfWork.Commit();
+                return ApiResponse<int>.SuccessResponse(courseId, "Department created successfully");
+            }
+            catch (Exception ex)
+            {
+                return ApiResponse<int>.ErrorResponse($"Error creating department: {ex.Message}");
+            }
+        }
+    }
+    public class UpdateCourseCommandHandler : IRequestHandler<UpdateCourseCommand, ApiResponse<bool>>
+    {
+        private readonly IUnitOfWork _unitOfWork;
+        public UpdateCourseCommandHandler(IUnitOfWork unitOfWork)
+        {
+            _unitOfWork = unitOfWork;
+        }
+        public async Task<ApiResponse<bool>> Handle(UpdateCourseCommand request, CancellationToken cancellationToken)
+        {
+            try
+            {
+                var isUpdated = await _unitOfWork.CourseRepository.UpdateCourse(request.Course);
+                if (isUpdated)
+                    _unitOfWork.Commit();
+                return ApiResponse<bool>.SuccessResponse(isUpdated, "Course updated successfully");
+            }
+            catch (Exception ex)
+            {
+                return ApiResponse<bool>.ErrorResponse($"Error updating course: {ex.Message}");
+            }
+        }
+    }
+    public class DeleteOrRestoreCourseCommandHandler : IRequestHandler<DeleteOrRestoreCourseCommand, ApiResponse<bool>>
+    {
+        private readonly IUnitOfWork _unitOfWork;
+        public DeleteOrRestoreCourseCommandHandler(IUnitOfWork unitOfWork)
+        {
+            _unitOfWork = unitOfWork;
+        }
+        public async Task<ApiResponse<bool>> Handle(DeleteOrRestoreCourseCommand request, CancellationToken cancellationToken)
+        {
+            try
+            {
+                var isDeleted = await _unitOfWork.CourseRepository.DeleteOrRestoreCourse(request.id, request.modifiedBy, request.isRestore);
+                if (isDeleted)
+                    _unitOfWork.Commit();
+                return ApiResponse<bool>.SuccessResponse(isDeleted, request.isRestore ? "Course restored successfully" : "Course deleted successfully");
+            }
+            catch (Exception ex)
+            {
+                return ApiResponse<bool>.ErrorResponse($"Error deleting/restoring course: {ex.Message}");
+            }
+        }
+    }
+
 }

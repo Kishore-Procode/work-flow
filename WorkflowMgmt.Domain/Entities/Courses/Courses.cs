@@ -1,27 +1,37 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace WorkflowMgmt.Domain.Entities.Courses
 {
     public class CourseDTO : BaseEntity
     {
-        public string ?CourseName { get; set; }
-        public string ?CourseCode { get; set; }
-        public string ?Description { get; set; }
+        [Column("name")]
+        public string CourseName { get; set; }
+        [Column("code")]
+        public string? CourseCode { get; set; }
+        [Column("description")]
+        public string? Description { get; set; }
+        [Column("credits")]
         public int Credits { get; set; }
-        public string ?Course_Type { get; set; }
-        public string ?Level { get; set; }
-        public int Semester_Id { get; set; }
-        public string ?Duration_Work { get;set; }
-        public string ?Status { get; set; }
-        public string ?Prerequisites { get; set; }
-        public string ?Learning_Objectives { get; set; }
-        public string ?Learning_Outcomes { get; set; }
-        public DateTime Created_Date { get; set; }
-
-
+        [Column("department_id")]
+        public int DepartmentId { get; set; }
+        [Column("course_type")]
+        public string? CourseType { get; set; }
+        [Column("level")]
+        public string? Level { get; set; }
+        [Column("semester_id")]
+        public int SemesterId { get; set; }
+        [Column("duration_weeks")]
+        public int? DurationWeeks { get; set; }
+        [Column("max_capacity")]
+        public int MaxCapacity { get; set; }
+        [Column("status")]
+        public string? Status { get; set; }
+        [Column("prerequisites")]
+        public string? Prerequisites { get; set; }
+        [Column("learning_objectives")]
+        public string? LearningObjectives { get; set; }
+        [Column("learning_outcomes")]
+        public string? LearningOutcomes { get; set; }   
     }
 }
