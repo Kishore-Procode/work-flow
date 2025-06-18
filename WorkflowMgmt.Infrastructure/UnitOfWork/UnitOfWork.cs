@@ -51,8 +51,9 @@ namespace WorkflowMgmt.Infrastructure
         }
         public ISyllabusTemplateRepository SyllabusTemplateRepository
         {
-            get { return syllabusTemplateRepository ?? (syllabusTemplateRepository =new SyllabusTemplateRepository(_transaction));}
+            get { return syllabusTemplateRepository ?? (syllabusTemplateRepository = new SyllabusTemplateRepository(_transaction)); }
         }
+
         public void Begin()
         {
             if (_transaction == null)

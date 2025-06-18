@@ -42,7 +42,7 @@ namespace WorkflowMgmt.WebAPI.Controllers
         [HttpDelete("{id}")]
         public async Task<IActionResult> SoftDeleteSyllabusTemplate(Guid id)
         {
-            var modifiedBy = User?.Identity?.Name ?? "admin";
+            var modifiedBy = User?.Identity?.Name ?? "unknown";
             var result = await Mediator.Send(new DeleteOrRestoreSyllabusTemplateCommand(id, modifiedBy, isRestore: false));
             return Ok(result);
         }
@@ -50,7 +50,7 @@ namespace WorkflowMgmt.WebAPI.Controllers
         [HttpPut("restore/{id}")]
         public async Task<IActionResult> RestoreSyllabusTemplate(Guid id)
         {
-            var modifiedBy = User?.Identity?.Name ?? "admin";
+            var modifiedBy = User?.Identity?.Name ?? "unknown";
             var result = await Mediator.Send(new DeleteOrRestoreSyllabusTemplateCommand(id, modifiedBy, isRestore: true));
             return Ok(result);
         }
