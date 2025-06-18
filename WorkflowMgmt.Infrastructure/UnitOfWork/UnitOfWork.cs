@@ -24,6 +24,7 @@ namespace WorkflowMgmt.Infrastructure
         private IDepartmentRepository? departmentRepository;
         private ICourseRepository? courseRepository;
         private ISemesterRepository? semesterRepository;
+        private ISyllabusTemplateRepository syllabusTemplateRepository;
 
         public UnitOfWork(IDbConnectionFactory connectionFactory)
         {
@@ -47,6 +48,10 @@ namespace WorkflowMgmt.Infrastructure
         public ISemesterRepository SemesterRepository
         {
             get { return semesterRepository ?? (semesterRepository = new SemesterRepository(_transaction)); }
+        }
+        public ISyllabusTemplateRepository SyllabusTemplateRepository
+        {
+            get { return syllabusTemplateRepository ?? (syllabusTemplateRepository = new SyllabusTemplateRepository(_transaction)); }
         }
 
         public void Begin()

@@ -45,7 +45,7 @@ namespace WorkflowMgmt.WebAPI.Controllers
         public async Task<IActionResult> SoftDeleteSemester(int id)
         {
 
-            var modifiedBy = User?.Identity?.Name ?? "admin";
+            var modifiedBy = User?.Identity?.Name ?? "unknown";
             var result = await Mediator.Send(new DeleteOrRestoreSemesterCommand(id, modifiedBy, isRestore: false));
             return Ok(result);
         }
@@ -53,7 +53,7 @@ namespace WorkflowMgmt.WebAPI.Controllers
         [HttpPut("restore/{id}")]
         public async Task<IActionResult> RestoreSemester(int id)
         {
-            var modifiedBy = User?.Identity?.Name ?? "admin";
+            var modifiedBy = User?.Identity?.Name ?? "unknown";
             var result = await Mediator.Send(new DeleteOrRestoreSemesterCommand(id, modifiedBy, isRestore: true));
             return Ok(result);
         }
