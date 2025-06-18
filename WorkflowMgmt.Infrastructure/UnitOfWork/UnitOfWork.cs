@@ -25,6 +25,8 @@ namespace WorkflowMgmt.Infrastructure
         private ICourseRepository? courseRepository;
         private ISemesterRepository? semesterRepository;
 
+        private IUserManagementRepository? userManagementRepository;
+
         public UnitOfWork(IDbConnectionFactory connectionFactory)
         {
             _connection = connectionFactory.CreateConnection();
@@ -48,7 +50,10 @@ namespace WorkflowMgmt.Infrastructure
         {
             get { return semesterRepository ?? (semesterRepository = new SemesterRepository(_transaction)); }
         }
-
+        public IUserManagementRepository UserManagementRepository
+        {
+            get { return userManagementRepository ?? (userManagementRepository = new UserManagementRepository(_transaction)); }
+        }
         public void Begin()
         {
             if (_transaction == null)

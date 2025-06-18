@@ -27,7 +27,7 @@ namespace WorkflowMgmt.Application.Features.Department
             {
                 var departments = await _unitOfWork.DepartmentRepository.GetAllDepartments();
 
-                return ApiResponse<List<DepartmentDTO>>.SuccessResponse(departments, "Login successful");
+                return ApiResponse<List<DepartmentDTO>>.SuccessResponse(departments, "Departments retrieved successfully");
             }
             catch (Exception ex)
             {
