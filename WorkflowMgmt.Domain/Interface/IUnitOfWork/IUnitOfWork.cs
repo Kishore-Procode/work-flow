@@ -17,7 +17,13 @@ namespace WorkflowMgmt.Domain.Interface.IUnitOfWork
         ISemesterRepository SemesterRepository { get; }
         ISyllabusTemplateRepository SyllabusTemplateRepository { get; }
 
+
         IUserManagementRepository UserManagementRepository { get; }
+
+        ILessonPlanTemplateRepository LessonPlanTemplateRepository { get; }
+
+
+
         void Begin();
         void Commit();
         void Rollback();

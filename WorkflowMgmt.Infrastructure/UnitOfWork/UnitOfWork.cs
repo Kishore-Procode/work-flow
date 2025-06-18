@@ -25,6 +25,7 @@ namespace WorkflowMgmt.Infrastructure
         private ICourseRepository? courseRepository;
         private ISemesterRepository? semesterRepository;
         private ISyllabusTemplateRepository syllabusTemplateRepository;
+        private ILessonPlanTemplateRepository lessonPlanTemplateRepository;
 
         private IUserManagementRepository? userManagementRepository;
 
@@ -62,6 +63,15 @@ namespace WorkflowMgmt.Infrastructure
             get { return syllabusTemplateRepository ?? (syllabusTemplateRepository = new SyllabusTemplateRepository(_transaction)); }
         }
 
+
+        public ILessonPlanTemplateRepository LessonPlanTemplateRepository
+        {
+            get
+            {
+                return lessonPlanTemplateRepository ??
+                       (lessonPlanTemplateRepository = new LessonPlanTemplateRepository(_transaction));
+            }
+        }
 
         public void Begin()
         {
