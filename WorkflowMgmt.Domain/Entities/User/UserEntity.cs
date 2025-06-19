@@ -41,11 +41,18 @@ namespace WorkflowMgmt.Domain.Entities
         public DateTime? last_login { get; set; }
         public string full_name => $"{first_name} {last_name}".Trim();
         public string DisplayName => !string.IsNullOrEmpty(full_name) ? full_name : username;
-        public DateTime CreatedDate { get; set; } = DateTime.UtcNow;
-        public DateTime? ModifiedDate { get; set; }
-        public string? CreatedBy { get; set; }
-        public string? ModifiedBy { get; set; }
-        public bool IsActive { get; set; } = true;
+        public DateTime created_date { get; set; } = DateTime.UtcNow;
+        public DateTime? modified_date { get; set; }
+        public string? created_by { get; set; }
+        public string? modified_by { get; set; }
+        public bool is_active { get; set; } = true;
+    }
+
+    public class UpdatePasswordRequest
+    {
+        public Guid id { get; set; }
+        public string OldPassword { get; set; } = string.Empty;
+        public string NewPassword { get; set; } = string.Empty;
     }
 
 }
