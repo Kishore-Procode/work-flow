@@ -26,6 +26,7 @@ namespace WorkflowMgmt.Infrastructure
         private ISemesterRepository? semesterRepository;
         private ISyllabusTemplateRepository syllabusTemplateRepository;
         private ILessonPlanTemplateRepository lessonPlanTemplateRepository;
+        private IRefreshTokenRepository? refreshTokenRepository;
 
         public UnitOfWork(IDbConnectionFactory connectionFactory)
         {
@@ -62,6 +63,11 @@ namespace WorkflowMgmt.Infrastructure
                 return lessonPlanTemplateRepository ??
                        (lessonPlanTemplateRepository = new LessonPlanTemplateRepository(_transaction));
             }
+        }
+
+        public IRefreshTokenRepository RefreshTokenRepository
+        {
+            get { return refreshTokenRepository ?? (refreshTokenRepository = new RefreshTokenRepository(_transaction)); }
         }
         public void Begin()
         {
