@@ -14,6 +14,5 @@ namespace WorkflowMgmt.Domain.Interface.IRepository
         Task<int> InsertDepartment(DepartmentDTO department);
         Task<bool> UpdateDepartment(DepartmentDTO department);
         Task<bool> DeleteOrRestoreDepartment(int id, string modifiedBy, bool isRestore);
-        Task<DepartmentStatsDto> GetDepartmentStatsAsync();
     }
 }

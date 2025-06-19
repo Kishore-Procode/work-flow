@@ -29,6 +29,7 @@ namespace WorkflowMgmt.Infrastructure
         private IRefreshTokenRepository? refreshTokenRepository;
 
         private IUserManagementRepository? userManagementRepository;
+        private IStatsRepository statsRepository;
 
         public UnitOfWork(IDbConnectionFactory connectionFactory)
         {
@@ -77,6 +78,11 @@ namespace WorkflowMgmt.Infrastructure
         public IRefreshTokenRepository RefreshTokenRepository
         {
             get { return refreshTokenRepository ?? (refreshTokenRepository = new RefreshTokenRepository(_transaction)); }
+        }
+
+        public IStatsRepository StatsRepository
+        {
+            get { return statsRepository ?? (statsRepository = new StatsRepository(_transaction)); }
         }
 
         public void Begin()

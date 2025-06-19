@@ -17,20 +17,68 @@ namespace WorkflowMgmt.Infrastructure.Repository
 
         public async Task<List<CourseDTO>> GetAllCourses()
         {
-            var query = "SELECT * FROM workflowmgmt.courses";
-            var courses = await Connection.QueryAsync<CourseDTO>(query, Transaction);
+            var query = @"
+                SELECT
+                    id,
+                    name as CourseName,
+                    code as CourseCode,
+                    description,
+                    credits,
+                    department_id as DepartmentId,
+                    course_type as CourseType,
+                    level,
+                    semester_id as SemesterId,
+                    duration_weeks as DurationWeeks,
+                    max_capacity as MaxCapacity,
+                    status,
+                    prerequisites,
+                    learning_objectives as LearningObjectives,
+                    learning_outcomes as LearningOutcomes,
+                    created_date as CreatedDate,
+                    modified_date as ModifiedDate,
+                    created_by as CreatedBy,
+                    modified_by as ModifiedBy,
+                    is_active as IsActive
+                FROM workflowmgmt.courses
+                ORDER BY code";
+
+            var courses = await Connection.QueryAsync<CourseDTO>(query, transaction: Transaction);
             return courses.ToList();
         }
 
         public async Task<CourseDTO?> GetCourseById(int id)
         {
-            var query = "SELECT * FROM workflowmgmt.courses WHERE id = @Id";
+            var query = @"
+                SELECT
+                    id,
+                    name as CourseName,
+                    code as CourseCode,
+                    description,
+                    credits,
+                    department_id as DepartmentId,
+                    course_type as CourseType,
+                    level,
+                    semester_id as SemesterId,
+                    duration_weeks as DurationWeeks,
+                    max_capacity as MaxCapacity,
+                    status,
+                    prerequisites,
+                    learning_objectives as LearningObjectives,
+                    learning_outcomes as LearningOutcomes,
+                    created_date as CreatedDate,
+                    modified_date as ModifiedDate,
+                    created_by as CreatedBy,
+                    modified_by as ModifiedBy,
+                    is_active as IsActive
+                FROM workflowmgmt.courses
+                WHERE id = @Id AND is_active = true";
+
             return await Connection.QuerySingleOrDefaultAsync<CourseDTO>(query, new { Id = id }, Transaction);
         }
 
         public async Task<bool> IsCourseCodeExists(string code, int? excludeId = null)
         {
-            var query = "SELECT 1 FROM workflowmgmt.courses WHERE code = @Code" +
+            var query = "SELECT 1 FROM workflowmgmt.courses WHERE code = @Code AND is_active = true" +
                         (excludeId.HasValue ? " AND id != @Id" : "");
             var result = await Connection.ExecuteScalarAsync<int?>(query, new { Code = code, Id = excludeId }, Transaction);
             return result.HasValue;

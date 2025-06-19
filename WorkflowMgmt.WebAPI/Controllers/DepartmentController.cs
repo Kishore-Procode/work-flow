@@ -57,13 +57,5 @@ namespace WorkflowMgmt.WebAPI.Controllers
             var result = await Mediator.Send(new DeleteOrRestoreDepartmentCommand(id, modifiedBy, isRestore: true));
             return Ok(result);
         }
-
-        [HttpGet("stats")]
-        public async Task<IActionResult> GetDepartmentStats()
-        {
-            var result = await Mediator.Send(new GetDepartmentStatsQuery());
-            return Ok(result);
-        }
-
     }
 }

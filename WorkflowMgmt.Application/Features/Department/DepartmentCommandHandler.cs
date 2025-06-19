@@ -134,26 +134,4 @@ namespace WorkflowMgmt.Application.Features.Department
             }
         }
     }
-    public class GetDepartmentStatsQueryHandler : IRequestHandler<GetDepartmentStatsQuery, ApiResponse<DepartmentStatsDto>>
-    {
-        private readonly IUnitOfWork _unitOfWork;
-
-        public GetDepartmentStatsQueryHandler(IUnitOfWork unitOfWork)
-        {
-            _unitOfWork = unitOfWork;
-        }
-
-        public async Task<ApiResponse<DepartmentStatsDto>> Handle(GetDepartmentStatsQuery request, CancellationToken cancellationToken)
-        {
-            try
-            {
-                var stats = await _unitOfWork.DepartmentRepository.GetDepartmentStatsAsync();
-                return ApiResponse<DepartmentStatsDto>.SuccessResponse(stats, "Department statistics retrieved successfully");
-            }
-            catch (Exception ex)
-            {
-                return ApiResponse<DepartmentStatsDto>.ErrorResponse($"Error retrieving department statistics: {ex.Message}");
-            }
-        }
-    }
 }
