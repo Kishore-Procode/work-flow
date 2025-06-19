@@ -21,7 +21,7 @@ namespace WorkflowMgmt.Infrastructure.Repository
         public async Task<List<DepartmentDTO>> GetAllDepartments()
         {
             var departments = await Connection.QueryAsync<DepartmentDTO>(
-                "SELECT * FROM workflowmgmt.departments", Transaction);
+                "SELECT * FROM workflowmgmt.departments order by code", Transaction);
 
             return departments.ToList();
         }
@@ -111,6 +111,29 @@ namespace WorkflowMgmt.Infrastructure.Repository
             }, Transaction);
 
             return result > 0;
+        }
+
+        public async Task<DepartmentStatsDto> GetDepartmentStatsAsync()
+        {
+            var sql = @"
+                SELECT
+                    COUNT(*) as TotalDepartments,
+                    COUNT(CASE WHEN status = 'Active' THEN 1 END) as ActiveDepartments,
+                    COALESCE(SUM(
+                        CASE
+                            WHEN programs_offered IS NOT NULL AND programs_offered != ''
+                            THEN array_length(string_to_array(programs_offered, ','), 1)
+                            ELSE 0
+                        END
+                    ), 0) as TotalPrograms,
+                    COUNT(CASE
+                        WHEN accreditation IS NOT NULL
+                        AND UPPER(accreditation) LIKE '%NBA%'
+                        THEN 1
+                    END) as NbaAccredited
+                FROM workflowmgmt.departments";
+
+            return await Connection.QuerySingleAsync<DepartmentStatsDto>(sql, transaction: Transaction);
         }
     }
 }

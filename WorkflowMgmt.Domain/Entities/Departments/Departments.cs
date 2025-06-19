@@ -19,4 +19,12 @@ namespace WorkflowMgmt.Domain.Entities
         public string? accreditation { get; set; }
         public string status { get; set; } = "Active";
     }
+
+    public class DepartmentStatsDto
+    {
+        public int TotalDepartments { get; set; }
+        public int ActiveDepartments { get; set; }
+        public int TotalPrograms { get; set; }
+        public int NbaAccredited { get; set; }
+    }
 }
