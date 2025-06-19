@@ -12,6 +12,7 @@ namespace WorkflowMgmt.Domain.IRepository
     {
         Task<List<User>> GetAllUsers();
         Task<User?> GetUserByUserName(string userName);
+        Task<User?> GetUserById(Guid userId);
         Task UpdateLastLoginAsync(Guid userId);
         Task<Role?> GetRoleByRoleId(int roleId);
         Task<DepartmentDTO?> GetDepartmentByDepartmentId(int? departmentId);

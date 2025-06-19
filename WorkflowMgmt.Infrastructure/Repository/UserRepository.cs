@@ -29,7 +29,15 @@ namespace WorkflowMgmt.Infrastructure.Repository
         {
             return await Connection.QueryFirstOrDefaultAsync<User>(
                 "SELECT * FROM workflowmgmt.users where (username = @UserName or email = @UserName) AND is_active IS TRUE",
-                new { UserName = userName }, 
+                new { UserName = userName },
+                Transaction);
+        }
+
+        public async Task<User?> GetUserById(Guid userId)
+        {
+            return await Connection.QueryFirstOrDefaultAsync<User>(
+                "SELECT * FROM workflowmgmt.users WHERE id = @UserId AND is_active IS TRUE",
+                new { UserId = userId },
                 Transaction);
         }
         public async Task UpdateLastLoginAsync(Guid userId)

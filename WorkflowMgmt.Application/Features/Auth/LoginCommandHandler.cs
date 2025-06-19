@@ -5,6 +5,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using WorkflowMgmt.Domain.Entities;
+using WorkflowMgmt.Domain.Entities.Auth;
 using WorkflowMgmt.Domain.Interface.IUnitOfWork;
 using WorkflowMgmt.Domain.Interface.JwtToken;
 using WorkflowMgmt.Domain.Models;
@@ -29,51 +30,47 @@ namespace WorkflowMgmt.Application.Features.Auth
                 // Support login by username or email
                 var user = await _unitOfWork.UserRepository.GetUserByUserName(request.Username);
 
-
                 if (user == null || !BCrypt.Net.BCrypt.Verify(request.Password, user.password_hash))
                 {
                     return ApiResponse<LoginResponse>.ErrorResponse("Invalid credentials");
                 }
-                Role? role = new Role();
-                DepartmentDTO? department = new DepartmentDTO();
-                string token = string.Empty;
-                bool userExists = user != null;
-                LoginResponse response = new LoginResponse();
 
                 // Update last login
-                if (user != null)
+                await _unitOfWork.UserRepository.UpdateLastLoginAsync(user.id);
+
+                // Get user role and department
+                var role = await _unitOfWork.UserRepository.GetRoleByRoleId(user.role_id);
+                var department = await _unitOfWork.UserRepository.GetDepartmentByDepartmentId(user.department_id);
+
+                // Generate tokens
+                var tokens = _jwtTokenService.GenerateTokens(user, role, department);
+
+                // Create refresh token record
+                var refreshToken = new RefreshToken
                 {
-                    await _unitOfWork.UserRepository.UpdateLastLoginAsync(user.id);
-                    role = await _unitOfWork.UserRepository.GetRoleByRoleId(user.role_id);
-                    department = await _unitOfWork.UserRepository.GetDepartmentByDepartmentId(user.department_id);
-                    token = _jwtTokenService.GenerateToken(user, role, department);
-                    _unitOfWork.Commit();
+                    Id = Guid.NewGuid(),
+                    Token = tokens.RefreshToken,
+                    UserId = user.id,
+                    ExpiresAt = DateTime.UtcNow.AddDays(7), // Should come from configuration
+                    CreatedAt = DateTime.UtcNow,
+                    IsRevoked = false
+                };
 
-                    response = new LoginResponse
-                    {
-                        Token = token,
-                        Username = user.username,
-                        Email = user.email,
-                        FirstName = user.first_name,
-                        LastName = user.last_name,
-                        FullName = $"{user.first_name} {user.last_name}",
-                        Role = role?.name ?? string.Empty,
-                        RoleCode = role?.code ?? string.Empty,
-                        Department = department?.name ?? string.Empty,
-                        DepartmentCode = department?.code ?? string.Empty,
-                        UserId = user.id.ToString(),
-                        ProfileImageUrl = user.profile_image_url,
-                        LastLogin = user.last_login,
-                        Permissions = role?.permissions ?? Array.Empty<string>()
-                    };
-                }
+                await _unitOfWork.RefreshTokenRepository.CreateAsync(refreshToken);
+                _unitOfWork.Commit();
 
-
+                var response = new LoginResponse
+                {
+                    AccessToken = tokens.AccessToken,
+                    RefreshToken = tokens.RefreshToken,
+                    ExpiresAt = tokens.ExpiresAt
+                };
 
                 return ApiResponse<LoginResponse>.SuccessResponse(response, "Login successful");
             }
             catch (Exception ex)
             {
+                _unitOfWork.Rollback();
                 return ApiResponse<LoginResponse>.ErrorResponse($"Error during login: {ex.Message}");
             }
         }
