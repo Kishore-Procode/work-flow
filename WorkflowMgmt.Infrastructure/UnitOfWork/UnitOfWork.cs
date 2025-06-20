@@ -37,6 +37,9 @@ namespace WorkflowMgmt.Infrastructure
         private IWorkflowRoleRepository? workflowRoleRepository;
         private IStageAssignmentRepository? stageAssignmentRepository;
         private IWorkflowStageHistoryRepository? workflowStageHistoryRepository;
+        private IWorkflowStageRoleRepository? workflowStageRoleRepository;
+        private IWorkflowStagePermissionRepository? workflowStagePermissionRepository;
+        private IWorkflowStageDetailsRepository? workflowStageDetailsRepository;
         private ISyllabusRepository? syllabusRepository;
         private ISyllabusTemplateRepository? syllabusTemplateRepository;
 
@@ -131,6 +134,21 @@ namespace WorkflowMgmt.Infrastructure
         public IWorkflowStageHistoryRepository WorkflowStageHistoryRepository
         {
             get { return workflowStageHistoryRepository ?? (workflowStageHistoryRepository = new WorkflowStageHistoryRepository(_transaction)); }
+        }
+
+        public IWorkflowStageRoleRepository WorkflowStageRoleRepository
+        {
+            get { return workflowStageRoleRepository ?? (workflowStageRoleRepository = new WorkflowStageRoleRepository(_transaction)); }
+        }
+
+        public IWorkflowStagePermissionRepository WorkflowStagePermissionRepository
+        {
+            get { return workflowStagePermissionRepository ?? (workflowStagePermissionRepository = new WorkflowStagePermissionRepository(_transaction)); }
+        }
+
+        public IWorkflowStageDetailsRepository WorkflowStageDetailsRepository
+        {
+            get { return workflowStageDetailsRepository ?? (workflowStageDetailsRepository = new WorkflowStageDetailsRepository(_transaction)); }
         }
 
         public ISyllabusTemplateRepository SyllabusTemplateRepository

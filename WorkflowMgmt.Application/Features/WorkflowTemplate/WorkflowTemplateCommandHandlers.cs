@@ -201,10 +201,11 @@ namespace WorkflowMgmt.Application.Features.WorkflowTemplate
             {
                 return null;
             }
+            var Id = await _unitOfWork.WorkflowTemplateRepository.GetByIdSimpleAsync(request.Id);
 
             _unitOfWork.Commit();
 
-            return await _unitOfWork.WorkflowTemplateRepository.GetByIdSimpleAsync(request.Id);
+            return Id;
         }
     }
 }
