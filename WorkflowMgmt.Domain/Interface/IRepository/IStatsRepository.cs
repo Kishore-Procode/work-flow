@@ -12,6 +12,7 @@ namespace WorkflowMgmt.Domain.Interface.IRepository
     {
         Task<DepartmentStatsDto> GetDepartmentStatsAsync();
         Task<CourseStatsDto> GetCourseStatsAsync();
+        Task<SemesterStatsDto> GetSemesterStatsAsync();
         Task<int> GetTotalDepartmentsAsync();
         Task<int> GetActiveDepartmentsAsync();
         Task<int> GetTotalProgramsAsync();

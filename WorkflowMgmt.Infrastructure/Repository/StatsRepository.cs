@@ -135,6 +135,121 @@ namespace WorkflowMgmt.Infrastructure.Repository
             return courseStats;
         }
 
+        public async Task<SemesterStatsDto> GetSemesterStatsAsync()
+        {
+            var sql = @"
+                WITH semester_stats AS (
+                  SELECT
+                    -- Basic counts
+                    COUNT(*) as total_semesters,
+                    COUNT(CASE WHEN s.is_active = true THEN 1 END) as active_semesters,
+                    COUNT(CASE WHEN s.status = 'Upcoming' THEN 1 END) as upcoming_semesters,
+                    COUNT(CASE WHEN s.status = 'Ongoing' THEN 1 END) as ongoing_semesters,
+                    COUNT(CASE WHEN s.status = 'Completed' THEN 1 END) as completed_semesters,
+
+                    -- Student and duration statistics
+                    COALESCE(SUM(s.total_students), 0) as total_students,
+                    COALESCE(ROUND(AVG(s.duration_weeks::numeric), 2), 0) as average_duration_weeks,
+                    COUNT(CASE WHEN s.exam_scheduled = true THEN 1 END) as semesters_with_exams
+                  FROM workflowmgmt.semesters s
+                  WHERE s.is_active = true
+                ),
+                semesters_by_status AS (
+                  SELECT
+                    s.status,
+                    COUNT(*) as count
+                  FROM workflowmgmt.semesters s
+                  WHERE s.is_active = true
+                  GROUP BY s.status
+                ),
+                semesters_by_level AS (
+                  SELECT
+                    s.level,
+                    COUNT(*) as count
+                  FROM workflowmgmt.semesters s
+                  WHERE s.is_active = true
+                  GROUP BY s.level
+                ),
+                semesters_by_department AS (
+                  SELECT
+                    d.name as department_name,
+                    COUNT(*) as count
+                  FROM workflowmgmt.semesters s
+                  JOIN workflowmgmt.departments d ON s.department_id = d.id
+                  WHERE s.is_active = true
+                  GROUP BY d.id, d.name
+                ),
+                semesters_by_academic_year AS (
+                  SELECT
+                    s.academic_year,
+                    COUNT(*) as count
+                  FROM workflowmgmt.semesters s
+                  WHERE s.is_active = true
+                  GROUP BY s.academic_year
+                )
+
+                SELECT
+                  -- Basic statistics
+                  ss.total_semesters as TotalSemesters,
+                  ss.active_semesters as ActiveSemesters,
+                  ss.upcoming_semesters as UpcomingSemesters,
+                  ss.ongoing_semesters as OngoingSemesters,
+                  ss.completed_semesters as CompletedSemesters,
+                  ss.total_students as TotalStudents,
+                  ss.average_duration_weeks as AverageDurationWeeks,
+                  ss.semesters_with_exams as SemestersWithExams,
+
+                  -- Aggregated data as JSON objects
+                  COALESCE(
+                    (SELECT json_object_agg(status, count) FROM semesters_by_status),
+                    '{}'::json
+                  ) as semesters_by_status_json,
+
+                  COALESCE(
+                    (SELECT json_object_agg(level, count) FROM semesters_by_level),
+                    '{}'::json
+                  ) as semesters_by_level_json,
+
+                  COALESCE(
+                    (SELECT json_object_agg(department_name, count) FROM semesters_by_department),
+                    '{}'::json
+                  ) as semesters_by_department_json,
+
+                  COALESCE(
+                    (SELECT json_object_agg(academic_year, count) FROM semesters_by_academic_year),
+                    '{}'::json
+                  ) as semesters_by_academic_year_json
+
+                FROM semester_stats ss";
+
+            var result = await Connection.QuerySingleAsync<SemesterStatsQueryResultDto>(sql, transaction: Transaction);
+            var semesterStats = new SemesterStatsDto
+            {
+                TotalSemesters = result.TotalSemesters,
+                ActiveSemesters = result.ActiveSemesters,
+                UpcomingSemesters = result.UpcomingSemesters,
+                OngoingSemesters = result.OngoingSemesters,
+                CompletedSemesters = result.CompletedSemesters,
+                TotalStudents = result.TotalStudents,
+                AverageDurationWeeks = result.AverageDurationWeeks,
+                SemestersWithExams = result.SemestersWithExams,
+                SemestersByStatus = result.semesters_by_status_json != null
+                    ? JsonSerializer.Deserialize<Dictionary<string, int>>(result.semesters_by_status_json) ?? new()
+                    : new(),
+                SemestersByLevel = result.semesters_by_level_json != null
+                    ? JsonSerializer.Deserialize<Dictionary<string, int>>(result.semesters_by_level_json) ?? new()
+                    : new(),
+                SemestersByDepartment = result.semesters_by_department_json != null
+                    ? JsonSerializer.Deserialize<Dictionary<string, int>>(result.semesters_by_department_json) ?? new()
+                    : new(),
+                SemestersByAcademicYear = result.semesters_by_academic_year_json != null
+                    ? JsonSerializer.Deserialize<Dictionary<string, int>>(result.semesters_by_academic_year_json) ?? new()
+                    : new()
+            };
+
+            return semesterStats;
+        }
+
         // Keep individual methods for backward compatibility if needed
         public async Task<int> GetTotalDepartmentsAsync()
         {

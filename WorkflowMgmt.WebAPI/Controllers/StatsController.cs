@@ -26,6 +26,14 @@ namespace WorkflowMgmt.WebAPI.Controllers
             return Ok(result);
         }
 
+        [HttpGet("semesters")]
+        public async Task<IActionResult> GetSemesterStats()
+        {
+            var query = new GetSemesterStatsQuery();
+            var result = await Mediator.Send(query);
+            return Ok(result);
+        }
+
         [HttpGet("workflows")]
         public async Task<IActionResult> GetWorkflowStats()
         {

@@ -13,9 +13,7 @@ namespace WorkflowMgmt.Domain.Entities.Semesters
         public string AcademicYear { get; set; } = string.Empty;
 
         public int DepartmentId { get; set; }
-
-        public string CourseName { get; set; } = string.Empty;
-        public string CourseCode { get; set; } = string.Empty;
+        public int CourseId { get; set; }
 
         public DateTime StartDate { get; set; }
         public DateTime EndDate { get; set; }
@@ -31,5 +29,9 @@ namespace WorkflowMgmt.Domain.Entities.Semesters
         public string? Description { get; set; }
 
         public bool ExamScheduled { get; set; } = false;
+        public string? DepartmentName { get; set; }
+        public string? DepartmentCode { get; set; }
+        public string? CourseName { get; set; }
+        public string? CourseCode { get; set; }
     }
 }

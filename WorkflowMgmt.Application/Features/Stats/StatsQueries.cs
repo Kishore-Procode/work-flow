@@ -12,4 +12,5 @@ namespace WorkflowMgmt.Application.Features.Stats
 {
     public record GetDepartmentStatsQuery() : IRequest<ApiResponse<DepartmentStatsDto>>;
     public record GetCourseStatsQuery() : IRequest<ApiResponse<CourseStatsDto>>;
+    public record GetSemesterStatsQuery() : IRequest<ApiResponse<SemesterStatsDto>>;
 }

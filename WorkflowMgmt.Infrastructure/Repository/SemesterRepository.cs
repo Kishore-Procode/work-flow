@@ -20,14 +20,70 @@ namespace WorkflowMgmt.Infrastructure.Repository
 
         public async Task<List<SemesterDTO>> GetAllSemesters()
         {
-            var sql = "SELECT * FROM workflowmgmt.semesters WHERE is_active = true";
+            var sql = @"
+                SELECT
+                    s.id as Id,
+                    s.name as Name,
+                    s.code as Code,
+                    academic_year as AcademicYear,
+                    s.department_id as DepartmentId,
+                    s.course_id as CourseId,
+                    s.start_date as StartDate,
+                    s.end_date as EndDate,
+                    s.duration_weeks as DurationWeeks,
+                    s.level as Level,
+                    s.total_students as TotalStudents,
+                    s.status as Status,
+                    s.description as Description,
+                    s.exam_scheduled as ExamScheduled,
+                    s.created_date as CreatedDate,
+                    s.modified_date as ModifiedDate,
+                    s.created_by as CreatedBy,
+                    s.modified_by as ModifiedBy,
+                    s.is_active as IsActive,
+                    d.name as departmentName,
+                    d.code as departmentCode,
+                    c.name as courseName,
+                    c.code as courseCode
+                FROM workflowmgmt.semesters s
+                JOIN workflowmgmt.departments d on d.id = s.department_id
+                join workflowmgmt.courses c on c.id = s.course_id
+                ORDER BY s.academic_year DESC, s.name";
             var semesters = await Connection.QueryAsync<SemesterDTO>(sql, transaction: Transaction);
             return semesters.ToList();
         }
 
         public async Task<SemesterDTO?> GetSemesterById(int id)
         {
-            var sql = "SELECT * FROM workflowmgmt.semesters WHERE id = @Id AND is_active = true";
+            var sql = @"
+                SELECT
+                    s.id as Id,
+                    s.name as Name,
+                    s.code as Code,
+                    academic_year as AcademicYear,
+                    s.department_id as DepartmentId,
+                    s.course_id as CourseId,
+                    s.start_date as StartDate,
+                    s.end_date as EndDate,
+                    s.duration_weeks as DurationWeeks,
+                    s.level as Level,
+                    s.total_students as TotalStudents,
+                    s.status as Status,
+                    s.description as Description,
+                    s.exam_scheduled as ExamScheduled,
+                    s.created_date as CreatedDate,
+                    s.modified_date as ModifiedDate,
+                    s.created_by as CreatedBy,
+                    s.modified_by as ModifiedBy,
+                    s.is_active as IsActive,
+                    d.name as departmentName,
+                    d.code as departmentCode,
+                    c.name as courseName,
+                    c.code as courseCode
+                FROM workflowmgmt.semesters s
+                JOIN workflowmgmt.departments d on d.id = s.department_id
+                join workflowmgmt.courses c on c.id = s.course_id
+                WHERE s.id = @Id ";
             return await Connection.QueryFirstOrDefaultAsync<SemesterDTO>(sql, new { Id = id }, Transaction);
         }
 
@@ -39,8 +95,7 @@ namespace WorkflowMgmt.Infrastructure.Repository
                     code,
                     academic_year,
                     department_id,
-                    course_name,
-                    course_code,
+                    course_id,
                     start_date,
                     end_date,
                     duration_weeks,
@@ -56,8 +111,7 @@ namespace WorkflowMgmt.Infrastructure.Repository
                     @Code,
                     @AcademicYear,
                     @DepartmentId,
-                    @CourseName,
-                    @CourseCode,
+                    @CourseId,
                     @StartDate,
                     @EndDate,
                     @DurationWeeks,
@@ -82,8 +136,7 @@ namespace WorkflowMgmt.Infrastructure.Repository
                     code = @Code,
                     academic_year = @AcademicYear,
                     department_id = @DepartmentId,
-                    course_name = @CourseName,
-                    course_code = @CourseCode,
+                    course_id = @CourseId,
                     start_date = @StartDate,
                     end_date = @EndDate,
                     duration_weeks = @DurationWeeks,

@@ -56,4 +56,27 @@ namespace WorkflowMgmt.Application.Features.Stats
             }
         }
     }
+
+    public class GetSemesterStatsQueryHandler : IRequestHandler<GetSemesterStatsQuery, ApiResponse<SemesterStatsDto>>
+    {
+        private readonly IUnitOfWork _unitOfWork;
+
+        public GetSemesterStatsQueryHandler(IUnitOfWork unitOfWork)
+        {
+            _unitOfWork = unitOfWork;
+        }
+
+        public async Task<ApiResponse<SemesterStatsDto>> Handle(GetSemesterStatsQuery request, CancellationToken cancellationToken)
+        {
+            try
+            {
+                var stats = await _unitOfWork.StatsRepository.GetSemesterStatsAsync();
+                return ApiResponse<SemesterStatsDto>.SuccessResponse(stats, "Semester statistics retrieved successfully");
+            }
+            catch (Exception ex)
+            {
+                return ApiResponse<SemesterStatsDto>.ErrorResponse($"Error retrieving semester statistics: {ex.Message}");
+            }
+        }
+    }
 }
