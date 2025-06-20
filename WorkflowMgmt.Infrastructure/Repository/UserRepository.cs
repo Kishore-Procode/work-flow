@@ -8,6 +8,7 @@ using System.Text;
 using System.Threading.Tasks;
 using WorkflowMgmt.Domain.Entities;
 using WorkflowMgmt.Domain.IRepository;
+using WorkflowMgmt.Domain.Models.WorkflowManagement;
 using WorkflowMgmt.Infrastructure.RepositoryBase;
 
 namespace WorkflowMgmt.Infrastructure.Repository

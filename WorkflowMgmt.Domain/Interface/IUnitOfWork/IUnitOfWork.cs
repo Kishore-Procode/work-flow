@@ -15,15 +15,24 @@ namespace WorkflowMgmt.Domain.Interface.IUnitOfWork
         IDepartmentRepository DepartmentRepository { get; }
         ICourseRepository CourseRepository { get; }
         ISemesterRepository SemesterRepository { get; }
-        ISyllabusTemplateRepository SyllabusTemplateRepository { get; }
         IUserManagementRepository UserManagementRepository { get; }
         ILessonPlanTemplateRepository LessonPlanTemplateRepository { get; }
         IRefreshTokenRepository RefreshTokenRepository { get; }
         IStatsRepository StatsRepository { get; }
-
+        IWorkflowTemplateRepository WorkflowTemplateRepository { get; }
+        IWorkflowStageRepository WorkflowStageRepository { get; }
+        IWorkflowStageActionRepository WorkflowStageActionRepository { get; }
+        IDocumentWorkflowRepository DocumentWorkflowRepository { get; }
+        IWorkflowUserRepository WorkflowUserRepository { get; }
+        IWorkflowRoleRepository WorkflowRoleRepository { get; }
+        IStageAssignmentRepository StageAssignmentRepository { get; }
+        IWorkflowStageHistoryRepository WorkflowStageHistoryRepository { get; }
+        ISyllabusRepository SyllabusRepository { get; }
+        ISyllabusTemplateRepository SyllabusTemplateRepository { get; }
         void Begin();
         void Commit();
         void Rollback();
+        Task SaveAsync();
     }
 
 }

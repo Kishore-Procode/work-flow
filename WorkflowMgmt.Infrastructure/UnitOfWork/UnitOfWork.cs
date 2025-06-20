@@ -24,12 +24,21 @@ namespace WorkflowMgmt.Infrastructure
         private IDepartmentRepository? departmentRepository;
         private ICourseRepository? courseRepository;
         private ISemesterRepository? semesterRepository;
-        private ISyllabusTemplateRepository syllabusTemplateRepository;
         private ILessonPlanTemplateRepository lessonPlanTemplateRepository;
         private IRefreshTokenRepository? refreshTokenRepository;
 
         private IUserManagementRepository? userManagementRepository;
         private IStatsRepository statsRepository;
+        private IWorkflowTemplateRepository? workflowTemplateRepository;
+        private IWorkflowStageRepository? workflowStageRepository;
+        private IWorkflowStageActionRepository? workflowStageActionRepository;
+        private IDocumentWorkflowRepository? documentWorkflowRepository;
+        private IWorkflowUserRepository? workflowUserRepository;
+        private IWorkflowRoleRepository? workflowRoleRepository;
+        private IStageAssignmentRepository? stageAssignmentRepository;
+        private IWorkflowStageHistoryRepository? workflowStageHistoryRepository;
+        private ISyllabusRepository? syllabusRepository;
+        private ISyllabusTemplateRepository? syllabusTemplateRepository;
 
         public UnitOfWork(IDbConnectionFactory connectionFactory)
         {
@@ -60,12 +69,6 @@ namespace WorkflowMgmt.Infrastructure
             get { return userManagementRepository ?? (userManagementRepository = new UserManagementRepository(_transaction)); }
         }
 
-        public ISyllabusTemplateRepository SyllabusTemplateRepository
-        {
-            get { return syllabusTemplateRepository ?? (syllabusTemplateRepository = new SyllabusTemplateRepository(_transaction)); }
-        }
-
-
         public ILessonPlanTemplateRepository LessonPlanTemplateRepository
         {
             get
@@ -85,6 +88,56 @@ namespace WorkflowMgmt.Infrastructure
             get { return statsRepository ?? (statsRepository = new StatsRepository(_transaction)); }
         }
 
+        public IWorkflowTemplateRepository WorkflowTemplateRepository
+        {
+            get { return workflowTemplateRepository ?? (workflowTemplateRepository = new WorkflowTemplateRepository(_transaction)); }
+        }
+
+        public IWorkflowStageRepository WorkflowStageRepository
+        {
+            get { return workflowStageRepository ?? (workflowStageRepository = new WorkflowStageRepository(_transaction)); }
+        }
+
+        public IWorkflowStageActionRepository WorkflowStageActionRepository
+        {
+            get { return workflowStageActionRepository ?? (workflowStageActionRepository = new WorkflowStageActionRepository(_transaction)); }
+        }
+
+        public IDocumentWorkflowRepository DocumentWorkflowRepository
+        {
+            get { return documentWorkflowRepository ?? (documentWorkflowRepository = new DocumentWorkflowRepository(_transaction)); }
+        }
+
+        public ISyllabusRepository SyllabusRepository
+        {
+            get { return syllabusRepository ?? (syllabusRepository = new SyllabusManagementRepository(_transaction)); }
+        }
+
+        public IWorkflowUserRepository WorkflowUserRepository
+        {
+            get { return workflowUserRepository ?? (workflowUserRepository = new WorkflowUserRepository(_transaction)); }
+        }
+
+        public IWorkflowRoleRepository WorkflowRoleRepository
+        {
+            get { return workflowRoleRepository ?? (workflowRoleRepository = new WorkflowRoleRepository(_transaction)); }
+        }
+
+        public IStageAssignmentRepository StageAssignmentRepository
+        {
+            get { return stageAssignmentRepository ?? (stageAssignmentRepository = new StageAssignmentRepository(_transaction)); }
+        }
+
+        public IWorkflowStageHistoryRepository WorkflowStageHistoryRepository
+        {
+            get { return workflowStageHistoryRepository ?? (workflowStageHistoryRepository = new WorkflowStageHistoryRepository(_transaction)); }
+        }
+
+        public ISyllabusTemplateRepository SyllabusTemplateRepository
+        {
+            get { return syllabusTemplateRepository ?? (syllabusTemplateRepository = new SyllabusTemplateManagementRepository(_transaction)); }
+        }
+
         public void Begin()
         {
             if (_transaction == null)
@@ -101,6 +154,13 @@ namespace WorkflowMgmt.Infrastructure
         {
             _transaction?.Rollback();
             _connection?.Close();
+        }
+
+        public async Task SaveAsync()
+        {
+            // For now, just commit the transaction
+            // In the future, this could be extended to handle async operations
+            await Task.CompletedTask;
         }
 
         public void Dispose()
