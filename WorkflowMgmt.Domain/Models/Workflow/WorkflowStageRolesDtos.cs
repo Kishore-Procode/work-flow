@@ -36,43 +36,12 @@ namespace WorkflowMgmt.Domain.Models.Workflow
         public bool IsRequired { get; set; } = true;
     }
 
-    // Workflow Stage Permission DTOs
-    public class WorkflowStagePermissionDto
+    // Role DTO for dropdowns (reusing existing roles)
+    public class RoleOptionDto
     {
-        public string PermissionName { get; set; } = string.Empty;
-        public bool IsRequired { get; set; }
-    }
-
-    public class CreateWorkflowStagePermissionDto
-    {
-        [Required]
-        [MaxLength(100)]
-        public string PermissionName { get; set; } = string.Empty;
-
-        public bool IsRequired { get; set; } = false;
-    }
-
-    public class UpdateStagePermissionsRequest
-    {
-        [Required]
-        public List<UpdatePermissionDto> Permissions { get; set; } = new List<UpdatePermissionDto>();
-    }
-
-    public class UpdatePermissionDto
-    {
-        [Required]
-        [MaxLength(100)]
-        public string PermissionName { get; set; } = string.Empty;
-
-        public bool IsRequired { get; set; } = false;
-    }
-
-    // Available Permissions DTO
-    public class AvailablePermissionDto
-    {
-        public string PermissionName { get; set; } = string.Empty;
-        public string DisplayName { get; set; } = string.Empty;
-        public string Category { get; set; } = string.Empty;
+        public string Code { get; set; } = string.Empty;
+        public string Name { get; set; } = string.Empty;
+        public string? Description { get; set; }
     }
 
     // Enhanced Stage Details DTO
@@ -90,17 +59,8 @@ namespace WorkflowMgmt.Domain.Models.Workflow
         public bool IsActive { get; set; }
         public DateTime CreatedDate { get; set; }
         public DateTime? ModifiedDate { get; set; }
-        
-        public List<WorkflowStageRoleDto> RequiredRoles { get; set; } = new List<WorkflowStageRoleDto>();
-        public List<WorkflowStagePermissionDto> StagePermissions { get; set; } = new List<WorkflowStagePermissionDto>();
-        public List<WorkflowStageActionDto> Actions { get; set; } = new List<WorkflowStageActionDto>();
-    }
 
-    // Role DTO for dropdowns (reusing existing roles)
-    public class RoleOptionDto
-    {
-        public string Code { get; set; } = string.Empty;
-        public string Name { get; set; } = string.Empty;
-        public string? Description { get; set; }
+        public List<WorkflowStageRoleDto> RequiredRoles { get; set; } = new List<WorkflowStageRoleDto>();
+        public List<WorkflowStageActionDto> Actions { get; set; } = new List<WorkflowStageActionDto>();
     }
 }

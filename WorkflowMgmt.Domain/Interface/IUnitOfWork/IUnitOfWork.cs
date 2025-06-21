@@ -28,7 +28,6 @@ namespace WorkflowMgmt.Domain.Interface.IUnitOfWork
         IStageAssignmentRepository StageAssignmentRepository { get; }
         IWorkflowStageHistoryRepository WorkflowStageHistoryRepository { get; }
         IWorkflowStageRoleRepository WorkflowStageRoleRepository { get; }
-        IWorkflowStagePermissionRepository WorkflowStagePermissionRepository { get; }
         IWorkflowStageDetailsRepository WorkflowStageDetailsRepository { get; }
         ISyllabusRepository SyllabusRepository { get; }
         ISyllabusTemplateRepository SyllabusTemplateRepository { get; }

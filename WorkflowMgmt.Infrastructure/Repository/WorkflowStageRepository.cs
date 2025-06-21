@@ -301,6 +301,25 @@ namespace WorkflowMgmt.Infrastructure.Repository
             return rowsAffected > 0;
         }
 
+        public async Task<bool> DeactivateStagesByTemplateIdAsync(Guid templateId)
+        {
+            var sql = @"
+                UPDATE workflowmgmt.workflow_stages
+                SET is_active = false,
+                    modified_date = @ModifiedDate,
+                    modified_by = @ModifiedBy
+                WHERE workflow_template_id = @TemplateId";
+
+            var rowsAffected = await Connection.ExecuteAsync(sql, new
+            {
+                TemplateId = templateId,
+                ModifiedDate = DateTime.UtcNow,
+                ModifiedBy = "system" // TODO: Get from current user context
+            }, transaction: Transaction);
+
+            return rowsAffected >= 0; // Return true even if no rows affected (no stages to deactivate)
+        }
+
         public async Task<bool> ExistsAsync(Guid id)
         {
             var sql = "SELECT COUNT(1) FROM workflowmgmt.workflow_stages WHERE id = @Id";

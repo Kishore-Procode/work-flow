@@ -1,7 +1,7 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using WorkflowMgmt.Application.Features.WorkflowStageRoles;
-using WorkflowMgmt.Application.Features.WorkflowStagePermissions;
+using WorkflowMgmt.Domain.Models;
 
 namespace WorkflowMgmt.WebAPI.Controllers
 {
@@ -9,20 +9,13 @@ namespace WorkflowMgmt.WebAPI.Controllers
     [Route("api/workflow")]
     public class WorkflowEnhancedController : BaseApiController
     {
-        [HttpGet("available-permissions")]
-        public async Task<IActionResult> GetAvailablePermissions()
-        {
-            var query = new GetAvailablePermissionsQuery();
-            var result = await Mediator.Send(query);
-            return Ok(new { success = true, data = result });
-        }
 
         [HttpGet("active-roles")]
         public async Task<IActionResult> GetActiveRoles()
         {
             var query = new GetActiveRolesQuery();
             var result = await Mediator.Send(query);
-            return Ok(new { success = true, data = result });
+            return Ok(result);
         }
 
         [HttpGet("workflow-stage-details")]
@@ -30,12 +23,12 @@ namespace WorkflowMgmt.WebAPI.Controllers
         {
             if (workflow_template_id == Guid.Empty)
             {
-                return BadRequest(new { success = false, message = "workflow_template_id is required." });
+                return BadRequest(ApiResponse<object>.ErrorResponse("workflow_template_id is required."));
             }
 
             var query = new GetWorkflowStageDetailsQuery { WorkflowTemplateId = workflow_template_id };
             var result = await Mediator.Send(query);
-            return Ok(new { success = true, data = result });
+            return Ok(result);
         }
 
         [HttpGet("workflow-stage-details/{stageId}")]
@@ -43,18 +36,12 @@ namespace WorkflowMgmt.WebAPI.Controllers
         {
             if (stageId == Guid.Empty)
             {
-                return BadRequest(new { success = false, message = "Invalid stage ID." });
+                return BadRequest(ApiResponse<object>.ErrorResponse("Invalid stage ID."));
             }
 
             var query = new GetWorkflowStageDetailsByIdQuery { StageId = stageId };
             var result = await Mediator.Send(query);
-            
-            if (result == null)
-            {
-                return NotFound(new { success = false, message = "Workflow stage not found." });
-            }
-
-            return Ok(new { success = true, data = result });
+            return Ok(result);
         }
     }
 }

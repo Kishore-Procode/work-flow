@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using WorkflowMgmt.Application.Features.WorkflowRole;
+using WorkflowMgmt.Domain.Models.WorkflowManagement;
 
 namespace WorkflowMgmt.WebAPI.Controllers
 {
@@ -13,15 +14,13 @@ namespace WorkflowMgmt.WebAPI.Controllers
         {
             if (isActive.HasValue && isActive.Value)
             {
-                var query = new GetActiveRolesQuery();
-                var result = await Mediator.Send(query);
-                return Ok(new { success = true, data = result });
+                var result = await Mediator.Send(new GetActiveRolesQuery());
+                return Ok(result);
             }
 
             // Default: get all roles
-            var allQuery = new GetAllRolesQuery();
-            var allResult = await Mediator.Send(allQuery);
-            return Ok(new { success = true, data = allResult });
+            var allResult = await Mediator.Send(new GetAllRolesQuery());
+            return Ok(allResult);
         }
 
         [HttpGet("{id}")]
@@ -29,50 +28,22 @@ namespace WorkflowMgmt.WebAPI.Controllers
         {
             var query = new GetRoleByIdQuery { Id = id };
             var result = await Mediator.Send(query);
-            
-            if (result == null)
-            {
-                return NotFound(new { success = false, message = "Role not found." });
-            }
-
-            return Ok(new { success = true, data = result });
+            return Ok(result);
         }
 
         [HttpPost]
         public async Task<IActionResult> CreateRole([FromBody] CreateRoleCommand command)
         {
-            try
-            {
-                var result = await Mediator.Send(command);
-                return CreatedAtAction(nameof(GetRole), new { id = result.Id }, 
-                    new { success = true, data = result });
-            }
-            catch (InvalidOperationException ex)
-            {
-                return BadRequest(new { success = false, message = ex.Message });
-            }
+            var result = await Mediator.Send(command);
+            return Ok(result);
         }
 
         [HttpPut("{id}")]
         public async Task<IActionResult> UpdateRole(int id, [FromBody] UpdateRoleCommand command)
         {
             command.Id = id;
-            
-            try
-            {
-                var result = await Mediator.Send(command);
-                
-                if (result == null)
-                {
-                    return NotFound(new { success = false, message = "Role not found." });
-                }
-
-                return Ok(new { success = true, data = result });
-            }
-            catch (InvalidOperationException ex)
-            {
-                return BadRequest(new { success = false, message = ex.Message });
-            }
+            var result = await Mediator.Send(command);
+            return Ok(result);
         }
 
         [HttpDelete("{id}")]
@@ -80,13 +51,7 @@ namespace WorkflowMgmt.WebAPI.Controllers
         {
             var command = new DeleteRoleCommand { Id = id };
             var result = await Mediator.Send(command);
-            
-            if (!result)
-            {
-                return NotFound(new { success = false, message = "Role not found." });
-            }
-
-            return Ok(new { success = true, message = "Role deleted successfully." });
+            return Ok(result);
         }
 
         [HttpPatch("{id}/toggle-active")]
@@ -94,13 +59,7 @@ namespace WorkflowMgmt.WebAPI.Controllers
         {
             var command = new ToggleRoleActiveCommand { Id = id };
             var result = await Mediator.Send(command);
-            
-            if (result == null)
-            {
-                return NotFound(new { success = false, message = "Role not found." });
-            }
-
-            return Ok(new { success = true, data = result });
+            return Ok(result);
         }
     }
 }

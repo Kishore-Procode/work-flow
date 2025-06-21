@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using WorkflowMgmt.Application.Features.WorkflowTemplate;
 using WorkflowMgmt.Domain.Models.Workflow;
+using WorkflowMgmt.Domain.Models;
 
 namespace WorkflowMgmt.WebAPI.Controllers
 {
@@ -14,7 +15,7 @@ namespace WorkflowMgmt.WebAPI.Controllers
         {
             var query = new GetAllWorkflowTemplatesQuery();
             var result = await Mediator.Send(query);
-            return Ok(new { success = true, data = result });
+            return Ok(result);
         }
 
         [HttpGet("by-document-type")]
@@ -22,12 +23,12 @@ namespace WorkflowMgmt.WebAPI.Controllers
         {
             if (string.IsNullOrWhiteSpace(documentType))
             {
-                return BadRequest(new { success = false, message = "Document type is required." });
+                return BadRequest(ApiResponse<object>.ErrorResponse("Document type is required."));
             }
 
             var query = new GetWorkflowTemplatesByDocumentTypeQuery { DocumentType = documentType };
             var result = await Mediator.Send(query);
-            return Ok(new { success = true, data = result });
+            return Ok(result);
         }
 
         [HttpGet("active")]
@@ -35,7 +36,7 @@ namespace WorkflowMgmt.WebAPI.Controllers
         {
             var query = new GetActiveWorkflowTemplatesQuery();
             var result = await Mediator.Send(query);
-            return Ok(new { success = true, data = result });
+            return Ok(result);
         }
 
         [HttpGet("{id}")]
@@ -43,50 +44,22 @@ namespace WorkflowMgmt.WebAPI.Controllers
         {
             var query = new GetWorkflowTemplateByIdQuery { Id = id };
             var result = await Mediator.Send(query);
-            
-            if (result == null)
-            {
-                return NotFound(new { success = false, message = "Workflow template not found." });
-            }
-
-            return Ok(new { success = true, data = result });
+            return Ok(result);
         }
 
         [HttpPost]
         public async Task<IActionResult> CreateWorkflowTemplate([FromBody] CreateWorkflowTemplateCommand command)
         {
-            try
-            {
-                var result = await Mediator.Send(command);
-                return CreatedAtAction(nameof(GetWorkflowTemplate), new { id = result.Id }, 
-                    new { success = true, data = result });
-            }
-            catch (InvalidOperationException ex)
-            {
-                return BadRequest(new { success = false, message = ex.Message });
-            }
+            var result = await Mediator.Send(command);
+            return Ok(result);
         }
 
         [HttpPut("{id}")]
         public async Task<IActionResult> UpdateWorkflowTemplate(Guid id, [FromBody] UpdateWorkflowTemplateCommand command)
         {
             command.Id = id;
-            
-            try
-            {
-                var result = await Mediator.Send(command);
-                
-                if (result == null)
-                {
-                    return NotFound(new { success = false, message = "Workflow template not found." });
-                }
-
-                return Ok(new { success = true, data = result });
-            }
-            catch (InvalidOperationException ex)
-            {
-                return BadRequest(new { success = false, message = ex.Message });
-            }
+            var result = await Mediator.Send(command);
+            return Ok(result);
         }
 
         [HttpDelete("{id}")]
@@ -94,13 +67,7 @@ namespace WorkflowMgmt.WebAPI.Controllers
         {
             var command = new DeleteWorkflowTemplateCommand { Id = id };
             var result = await Mediator.Send(command);
-            
-            if (!result)
-            {
-                return NotFound(new { success = false, message = "Workflow template not found." });
-            }
-
-            return Ok(new { success = true, message = "Workflow template deleted successfully." });
+            return Ok(result);
         }
 
         [HttpPatch("{id}/toggle-active")]
@@ -108,13 +75,7 @@ namespace WorkflowMgmt.WebAPI.Controllers
         {
             var command = new ToggleWorkflowTemplateActiveCommand { Id = id };
             var result = await Mediator.Send(command);
-            
-            if (result == null)
-            {
-                return NotFound(new { success = false, message = "Workflow template not found." });
-            }
-
-            return Ok(new { success = true, data = result });
+            return Ok(result);
         }
     }
 }

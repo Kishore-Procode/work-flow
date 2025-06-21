@@ -15,10 +15,10 @@ namespace WorkflowMgmt.Infrastructure.Repository
         {
         }
 
-        public async Task<IEnumerable<RoleDto>> GetAllAsync()
+        public async Task<List<RoleDto>> GetAllAsync()
         {
             var sql = @"
-                SELECT 
+                SELECT
                     id as Id,
                     name as Name,
                     code as Code,
@@ -33,18 +33,18 @@ namespace WorkflowMgmt.Infrastructure.Repository
                 FROM workflowmgmt.roles
                 ORDER BY hierarchy_level, name";
 
-            return await Connection.QueryAsync<RoleDto>(sql, transaction: Transaction);
+            var result = await Connection.QueryAsync<RoleDto>(sql, transaction: Transaction);
+            return result.ToList();
         }
 
-        public async Task<IEnumerable<RoleDto>> GetActiveAsync()
+        public async Task<List<RoleDto>> GetActiveAsync()
         {
             var sql = @"
-                SELECT 
+                SELECT
                     id as Id,
                     name as Name,
                     code as Code,
                     description as Description,
-                    hierarchy_level as HierarchyLevel,
                     permissions as Permissions,
                     is_active as IsActive,
                     created_date as CreatedDate,
@@ -55,7 +55,8 @@ namespace WorkflowMgmt.Infrastructure.Repository
                 WHERE is_active = true
                 ORDER BY hierarchy_level, name";
 
-            return await Connection.QueryAsync<RoleDto>(sql, transaction: Transaction);
+            var result = await Connection.QueryAsync<RoleDto>(sql, transaction: Transaction);
+            return result.ToList();
         }
 
         public async Task<RoleDto?> GetByIdAsync(int id)

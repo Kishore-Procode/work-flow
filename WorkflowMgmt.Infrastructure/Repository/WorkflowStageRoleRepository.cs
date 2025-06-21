@@ -16,10 +16,10 @@ namespace WorkflowMgmt.Infrastructure.Repository
         {
         }
 
-        public async Task<IEnumerable<WorkflowStageRoleDto>> GetByStageIdAsync(Guid stageId)
+        public async Task<List<WorkflowStageRoleDto>> GetByStageIdAsync(Guid stageId)
         {
             var sql = @"
-                SELECT 
+                SELECT
                     wsr.role_code as RoleCode,
                     r.name as RoleName,
                     wsr.is_required as IsRequired
@@ -28,7 +28,8 @@ namespace WorkflowMgmt.Infrastructure.Repository
                 WHERE wsr.workflow_stage_id = @StageId
                 ORDER BY r.name";
 
-            return await Connection.QueryAsync<WorkflowStageRoleDto>(sql, new { StageId = stageId }, transaction: Transaction);
+            var result = await Connection.QueryAsync<WorkflowStageRoleDto>(sql, new { StageId = stageId }, transaction: Transaction);
+            return result.ToList();
         }
 
         public async Task<bool> CreateAsync(Guid stageId, CreateWorkflowStageRoleDto role)
@@ -57,7 +58,7 @@ namespace WorkflowMgmt.Infrastructure.Repository
             return rowsAffected >= 0; // Return true even if no rows deleted (stage might not have roles)
         }
 
-        public async Task<bool> UpdateStageRolesAsync(Guid stageId, IEnumerable<UpdateRoleDto> roles)
+        public async Task<bool> UpdateStageRolesAsync(Guid stageId, List<UpdateRoleDto> roles)
         {
             // Delete existing roles
             await DeleteByStageIdAsync(stageId);
@@ -67,15 +68,15 @@ namespace WorkflowMgmt.Infrastructure.Repository
             {
                 RoleCode = r.RoleCode,
                 IsRequired = r.IsRequired
-            });
+            }).ToList();
 
             return await CreateMultipleAsync(stageId, createRoles);
         }
 
-        public async Task<IEnumerable<WorkflowStageRoleDto>> GetByRoleCodeAsync(string roleCode)
+        public async Task<List<WorkflowStageRoleDto>> GetByRoleCodeAsync(string roleCode)
         {
             var sql = @"
-                SELECT 
+                SELECT
                     wsr.role_code as RoleCode,
                     r.name as RoleName,
                     wsr.is_required as IsRequired
@@ -84,7 +85,8 @@ namespace WorkflowMgmt.Infrastructure.Repository
                 WHERE wsr.role_code = @RoleCode
                 ORDER BY r.name";
 
-            return await Connection.QueryAsync<WorkflowStageRoleDto>(sql, new { RoleCode = roleCode }, transaction: Transaction);
+            var result = await Connection.QueryAsync<WorkflowStageRoleDto>(sql, new { RoleCode = roleCode }, transaction: Transaction);
+            return result.ToList();
         }
 
         public async Task<bool> ExistsAsync(Guid stageId, string roleCode)
@@ -98,13 +100,13 @@ namespace WorkflowMgmt.Infrastructure.Repository
             return count > 0;
         }
 
-        public async Task<bool> CreateMultipleAsync(Guid stageId, IEnumerable<CreateWorkflowStageRoleDto> roles)
+        public async Task<bool> CreateMultipleAsync(Guid stageId, List<CreateWorkflowStageRoleDto> roles)
         {
             if (!roles.Any())
                 return true;
 
             var sql = @"
-                INSERT INTO workflowmgmt.workflow_stage_roles 
+                INSERT INTO workflowmgmt.workflow_stage_roles
                 (workflow_stage_id, role_code, is_required, created_date, created_by)
                 VALUES (@StageId, @RoleCode, @IsRequired, @CreatedDate, @CreatedBy)";
 

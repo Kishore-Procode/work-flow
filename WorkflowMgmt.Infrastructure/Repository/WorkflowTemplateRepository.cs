@@ -16,29 +16,101 @@ namespace WorkflowMgmt.Infrastructure.Repository
         {
         }
 
-        public async Task<IEnumerable<WorkflowTemplateDto>> GetAllAsync()
+        public async Task<List<WorkflowTemplateWithStagesDto>> GetAllAsync()
         {
-            var sql = @"
-                SELECT 
-                    id as Id,
-                    name as Name,
-                    description as Description,
-                    document_type as DocumentType,
-                    is_active as IsActive,
-                    created_date as CreatedDate,
-                    modified_date as ModifiedDate,
-                    created_by as CreatedBy,
-                    modified_by as ModifiedBy
-                FROM workflowmgmt.workflow_templates
-                ORDER BY name";
+            // First get all templates with counts
+            var templateSql = @"
+                SELECT
+                    wt.id as Id,
+                    wt.name as Name,
+                    wt.description as Description,
+                    wt.document_type as DocumentType,
+                    wt.is_active as IsActive,
+                    wt.created_date as CreatedDate,
+                    wt.modified_date as ModifiedDate,
+                    wt.created_by as CreatedBy,
+                    wt.modified_by as ModifiedBy,
+                    COALESCE(stage_counts.stage_count, 0) as StageCount,
+                    COALESCE(action_counts.action_count, 0) as ActionCount,
+                    COALESCE(timed_counts.timed_count, 0) as TimedCount
+                FROM workflowmgmt.workflow_templates wt
+                LEFT JOIN (
+                    SELECT workflow_template_id, COUNT(*) as stage_count
+                    FROM workflowmgmt.workflow_stages
+                    WHERE is_active = true
+                    GROUP BY workflow_template_id
+                ) stage_counts ON wt.id = stage_counts.workflow_template_id
+                LEFT JOIN (
+                    SELECT ws.workflow_template_id, COUNT(wsa.id) as action_count
+                    FROM workflowmgmt.workflow_stages ws
+                    LEFT JOIN workflowmgmt.workflow_stage_actions wsa ON ws.id = wsa.workflow_stage_id AND wsa.is_active = true
+                    WHERE ws.is_active = true
+                    GROUP BY ws.workflow_template_id
+                ) action_counts ON wt.id = action_counts.workflow_template_id
+                LEFT JOIN (
+                    SELECT workflow_template_id, COUNT(*) as timed_count
+                    FROM workflowmgmt.workflow_stages
+                    WHERE is_active = true AND timeout_days IS NOT NULL AND timeout_days > 0
+                    GROUP BY workflow_template_id
+                ) timed_counts ON wt.id = timed_counts.workflow_template_id
+                ORDER BY wt.name";
 
-            return await Connection.QueryAsync<WorkflowTemplateDto>(sql, transaction: Transaction);
+            var templates = await Connection.QueryAsync<WorkflowTemplateWithStagesDto>(templateSql, transaction: Transaction);
+            var templateList = templates.ToList();
+
+            // Get stages for all templates
+            if (templateList.Any())
+            {
+                var templateIds = templateList.Select(t => t.Id).ToArray();
+                var stagesSql = @"
+                    SELECT
+                        ws.workflow_template_id as TemplateId,
+                        ws.id as Id,
+                        ws.stage_name as StageName,
+                        ws.stage_order as StageOrder,
+                        ws.assigned_role as AssignedRole,
+                        ws.timeout_days as TimeoutDays,
+                        ws.is_required as IsRequired
+                    FROM workflowmgmt.workflow_stages ws
+                    WHERE ws.workflow_template_id = ANY(@TemplateIds) AND ws.is_active = true
+                    ORDER BY ws.workflow_template_id, ws.stage_order";
+
+                var stages = await Connection.QueryAsync<dynamic>(stagesSql, new { TemplateIds = templateIds }, transaction: Transaction);
+
+                // Group stages by template
+                var stagesByTemplate = stages.GroupBy(s => (Guid)s.templateid).ToDictionary(g => g.Key, g => g.ToList());
+
+                // Assign stages to templates
+                foreach (var template in templateList)
+                {
+                    template.Stages = new List<WorkflowStageDto>();
+                    if (stagesByTemplate.TryGetValue(template.Id, out var templateStages))
+                    {
+                        foreach (var stage in templateStages)
+                        {
+                            template.Stages.Add(new WorkflowStageDto
+                            {
+                                Id = stage.id,
+                                StageName = stage.stagename,
+                                StageOrder = stage.stageorder,
+                                AssignedRole = stage.assignedrole,
+                                TimeoutDays = stage.timeoutdays,
+                                IsRequired = stage.isrequired,
+                                Actions = new List<WorkflowStageActionDto>(),
+                                RequiredRoles = new List<WorkflowStageRoleDto>()
+                            });
+                        }
+                    }
+                }
+            }
+
+            return templateList;
         }
 
-        public async Task<IEnumerable<WorkflowTemplateDto>> GetByDocumentTypeAsync(string documentType)
+        public async Task<List<WorkflowTemplateDto>> GetByDocumentTypeAsync(string documentType)
         {
             var sql = @"
-                SELECT 
+                SELECT
                     id as Id,
                     name as Name,
                     description as Description,
@@ -52,13 +124,14 @@ namespace WorkflowMgmt.Infrastructure.Repository
                 WHERE document_type = @DocumentType
                 ORDER BY name";
 
-            return await Connection.QueryAsync<WorkflowTemplateDto>(sql, new { DocumentType = documentType }, transaction: Transaction);
+            var result = await Connection.QueryAsync<WorkflowTemplateDto>(sql, new { DocumentType = documentType }, transaction: Transaction);
+            return result.ToList();
         }
 
-        public async Task<IEnumerable<WorkflowTemplateDto>> GetActiveAsync()
+        public async Task<List<WorkflowTemplateDto>> GetActiveAsync()
         {
             var sql = @"
-                SELECT 
+                SELECT
                     id as Id,
                     name as Name,
                     description as Description,
@@ -72,13 +145,15 @@ namespace WorkflowMgmt.Infrastructure.Repository
                 WHERE is_active = true
                 ORDER BY name";
 
-            return await Connection.QueryAsync<WorkflowTemplateDto>(sql, transaction: Transaction);
+            var result = await Connection.QueryAsync<WorkflowTemplateDto>(sql, transaction: Transaction);
+            return result.ToList();
         }
 
         public async Task<WorkflowTemplateWithStagesDto?> GetByIdAsync(Guid id)
         {
-            var sql = @"
-                SELECT 
+            // First get the template with stages and actions
+            var templateSql = @"
+                SELECT
                     wt.id as Id,
                     wt.name as Name,
                     wt.description as Description,
@@ -88,7 +163,7 @@ namespace WorkflowMgmt.Infrastructure.Repository
                     wt.modified_date as ModifiedDate,
                     wt.created_by as CreatedBy,
                     wt.modified_by as ModifiedBy,
-                    
+
                     ws.id as Id,
                     ws.workflow_template_id as WorkflowTemplateId,
                     ws.stage_name as StageName,
@@ -103,7 +178,7 @@ namespace WorkflowMgmt.Infrastructure.Repository
                     ws.modified_date as ModifiedDate,
                     ws.created_by as CreatedBy,
                     ws.modified_by as ModifiedBy,
-                    
+
                     wsa.id as Id,
                     wsa.workflow_stage_id as WorkflowStageId,
                     wsa.action_name as ActionName,
@@ -121,7 +196,7 @@ namespace WorkflowMgmt.Infrastructure.Repository
             var stageDict = new Dictionary<Guid, WorkflowStageDto>();
 
             await Connection.QueryAsync<WorkflowTemplateWithStagesDto, WorkflowStageDto, WorkflowStageActionDto, WorkflowTemplateWithStagesDto>(
-                sql,
+                templateSql,
                 (template, stage, action) =>
                 {
                     if (!templateDict.TryGetValue(template.Id, out var templateEntry))
@@ -137,6 +212,7 @@ namespace WorkflowMgmt.Infrastructure.Repository
                         {
                             stageEntry = stage;
                             stageEntry.Actions = new List<WorkflowStageActionDto>();
+                            stageEntry.RequiredRoles = new List<WorkflowStageRoleDto>();
                             stageDict.Add(stage.Id, stageEntry);
                             templateEntry.Stages.Add(stageEntry);
                         }
@@ -153,24 +229,80 @@ namespace WorkflowMgmt.Infrastructure.Repository
                 transaction: Transaction,
                 splitOn: "Id,Id");
 
-            return templateDict.Values.FirstOrDefault();
+            var result = templateDict.Values.FirstOrDefault();
+
+            // Now fetch required roles for each stage
+            if (result != null && result.Stages.Any())
+            {
+                var stageIds = result.Stages.Select(s => s.Id).ToArray();
+                var rolesSql = @"
+                    SELECT
+                        wsr.workflow_stage_id as StageId,
+                        wsr.role_code as RoleCode,
+                        r.name as RoleName,
+                        wsr.is_required as IsRequired
+                    FROM workflowmgmt.workflow_stage_roles wsr
+                    LEFT JOIN workflowmgmt.roles r ON wsr.role_code = r.code
+                    WHERE wsr.workflow_stage_id = ANY(@StageIds)
+                    ORDER BY wsr.role_code";
+
+                var stageRoles = await Connection.QueryAsync<dynamic>(rolesSql, new { StageIds = stageIds }, transaction: Transaction);
+
+                foreach (var stageRole in stageRoles)
+                {
+                    var stage = result.Stages.FirstOrDefault(s => s.Id == (Guid)stageRole.stageid);
+                    if (stage != null)
+                    {
+                        stage.RequiredRoles.Add(new WorkflowStageRoleDto
+                        {
+                            RoleCode = stageRole.rolecode,
+                            RoleName = stageRole.rolename,
+                            IsRequired = stageRole.isrequired
+                        });
+                    }
+                }
+            }
+
+            return result;
         }
 
         public async Task<WorkflowTemplateDto?> GetByIdSimpleAsync(Guid id)
         {
             var sql = @"
-                SELECT 
-                    id as Id,
-                    name as Name,
-                    description as Description,
-                    document_type as DocumentType,
-                    is_active as IsActive,
-                    created_date as CreatedDate,
-                    modified_date as ModifiedDate,
-                    created_by as CreatedBy,
-                    modified_by as ModifiedBy
-                FROM workflowmgmt.workflow_templates
-                WHERE id = @Id";
+                SELECT
+                    wt.id as Id,
+                    wt.name as Name,
+                    wt.description as Description,
+                    wt.document_type as DocumentType,
+                    wt.is_active as IsActive,
+                    wt.created_date as CreatedDate,
+                    wt.modified_date as ModifiedDate,
+                    wt.created_by as CreatedBy,
+                    wt.modified_by as ModifiedBy,
+                    COALESCE(stage_counts.stage_count, 0) as StageCount,
+                    COALESCE(action_counts.action_count, 0) as ActionCount,
+                    COALESCE(timed_counts.timed_count, 0) as TimedCount
+                FROM workflowmgmt.workflow_templates wt
+                LEFT JOIN (
+                    SELECT workflow_template_id, COUNT(*) as stage_count
+                    FROM workflowmgmt.workflow_stages
+                    WHERE is_active = true
+                    GROUP BY workflow_template_id
+                ) stage_counts ON wt.id = stage_counts.workflow_template_id
+                LEFT JOIN (
+                    SELECT ws.workflow_template_id, COUNT(wsa.id) as action_count
+                    FROM workflowmgmt.workflow_stages ws
+                    LEFT JOIN workflowmgmt.workflow_stage_actions wsa ON ws.id = wsa.workflow_stage_id AND wsa.is_active = true
+                    WHERE ws.is_active = true
+                    GROUP BY ws.workflow_template_id
+                ) action_counts ON wt.id = action_counts.workflow_template_id
+                LEFT JOIN (
+                    SELECT workflow_template_id, COUNT(*) as timed_count
+                    FROM workflowmgmt.workflow_stages
+                    WHERE is_active = true AND timeout_days IS NOT NULL AND timeout_days > 0
+                    GROUP BY workflow_template_id
+                ) timed_counts ON wt.id = timed_counts.workflow_template_id
+                WHERE wt.id = @Id";
 
             return await Connection.QuerySingleOrDefaultAsync<WorkflowTemplateDto>(sql, new { Id = id }, transaction: Transaction);
         }

@@ -8,9 +8,9 @@ namespace WorkflowMgmt.Domain.Interface.IRepository
 {
     public interface IWorkflowTemplateRepository
     {
-        Task<IEnumerable<WorkflowTemplateDto>> GetAllAsync();
-        Task<IEnumerable<WorkflowTemplateDto>> GetByDocumentTypeAsync(string documentType);
-        Task<IEnumerable<WorkflowTemplateDto>> GetActiveAsync();
+        Task<List<WorkflowTemplateWithStagesDto>> GetAllAsync();
+        Task<List<WorkflowTemplateDto>> GetByDocumentTypeAsync(string documentType);
+        Task<List<WorkflowTemplateDto>> GetActiveAsync();
         Task<WorkflowTemplateWithStagesDto?> GetByIdAsync(Guid id);
         Task<WorkflowTemplateDto?> GetByIdSimpleAsync(Guid id);
         Task<Guid> CreateAsync(CreateWorkflowTemplateDto template);

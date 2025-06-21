@@ -7,8 +7,8 @@ namespace WorkflowMgmt.Domain.Interface.IRepository
 {
     public interface IWorkflowRoleRepository
     {
-        Task<IEnumerable<RoleDto>> GetAllAsync();
-        Task<IEnumerable<RoleDto>> GetActiveAsync();
+        Task<List<RoleDto>> GetAllAsync();
+        Task<List<RoleDto>> GetActiveAsync();
         Task<RoleDto?> GetByIdAsync(int id);
         Task<RoleDto?> GetByCodeAsync(string code);
         Task<int> CreateAsync(CreateRoleDto role);

@@ -16,6 +16,9 @@ namespace WorkflowMgmt.Domain.Models.Workflow
         public DateTime? ModifiedDate { get; set; }
         public string? CreatedBy { get; set; }
         public string? ModifiedBy { get; set; }
+        public int StageCount { get; set; }
+        public int ActionCount { get; set; }
+        public int TimedCount { get; set; }
     }
 
     public class WorkflowTemplateWithStagesDto : WorkflowTemplateDto
@@ -40,6 +43,7 @@ namespace WorkflowMgmt.Domain.Models.Workflow
         public string? CreatedBy { get; set; }
         public string? ModifiedBy { get; set; }
         public List<WorkflowStageActionDto> Actions { get; set; } = new();
+        public List<WorkflowStageRoleDto> RequiredRoles { get; set; } = new();
     }
 
     public class WorkflowStageActionDto
@@ -104,6 +108,8 @@ namespace WorkflowMgmt.Domain.Models.Workflow
         [Required]
         [MaxLength(100)]
         public string DocumentType { get; set; } = string.Empty;
+
+        public List<CreateWorkflowStageDto> Stages { get; set; } = new();
     }
 
     public class CreateWorkflowStageDto
@@ -128,6 +134,8 @@ namespace WorkflowMgmt.Domain.Models.Workflow
         public int? TimeoutDays { get; set; }
 
         public List<CreateWorkflowStageActionDto> Actions { get; set; } = new();
+
+        public List<CreateWorkflowStageRoleDto> RequiredRoles { get; set; } = new();
     }
 
     public class UpdateWorkflowStageDto

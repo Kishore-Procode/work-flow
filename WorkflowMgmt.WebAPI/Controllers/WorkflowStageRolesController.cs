@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using WorkflowMgmt.Application.Features.WorkflowStageRoles;
+using WorkflowMgmt.Domain.Models;
 using WorkflowMgmt.Domain.Models.Workflow;
 
 namespace WorkflowMgmt.WebAPI.Controllers
@@ -14,12 +15,12 @@ namespace WorkflowMgmt.WebAPI.Controllers
         {
             if (workflow_stage_id == Guid.Empty)
             {
-                return BadRequest(new { success = false, message = "workflow_stage_id is required." });
+                return BadRequest(ApiResponse<object>.ErrorResponse("workflow_stage_id is required."));
             }
 
             var query = new GetWorkflowStageRolesQuery { WorkflowStageId = workflow_stage_id };
             var result = await Mediator.Send(query);
-            return Ok(new { success = true, data = result });
+            return Ok(result);
         }
 
         [HttpPut("{stageId}")]
@@ -27,30 +28,17 @@ namespace WorkflowMgmt.WebAPI.Controllers
         {
             if (stageId == Guid.Empty)
             {
-                return BadRequest(new { success = false, message = "Invalid stage ID." });
+                return BadRequest(ApiResponse<object>.ErrorResponse("Invalid stage ID."));
             }
 
-            try
+            var command = new UpdateWorkflowStageRolesCommand
             {
-                var command = new UpdateWorkflowStageRolesCommand 
-                { 
-                    StageId = stageId, 
-                    Roles = request.Roles 
-                };
+                StageId = stageId,
+                Roles = request.Roles
+            };
 
-                var result = await Mediator.Send(command);
-                
-                if (!result)
-                {
-                    return BadRequest(new { success = false, message = "Failed to update workflow stage roles." });
-                }
-
-                return Ok(new { success = true, data = result });
-            }
-            catch (InvalidOperationException ex)
-            {
-                return BadRequest(new { success = false, message = ex.Message });
-            }
+            var result = await Mediator.Send(command);
+            return Ok(result);
         }
 
         [HttpPost("{stageId}/roles")]
@@ -77,7 +65,7 @@ namespace WorkflowMgmt.WebAPI.Controllers
 
                 var result = await Mediator.Send(command);
                 
-                if (!result)
+                if (!result.Data)
                 {
                     return BadRequest(new { success = false, message = "Failed to add role to workflow stage." });
                 }
@@ -113,7 +101,7 @@ namespace WorkflowMgmt.WebAPI.Controllers
 
                 var result = await Mediator.Send(command);
                 
-                if (!result)
+                if (!result.Data)
                 {
                     return BadRequest(new { success = false, message = "Failed to remove role from workflow stage." });
                 }

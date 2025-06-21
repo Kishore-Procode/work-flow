@@ -8,16 +8,16 @@ namespace WorkflowMgmt.Domain.Interface.IRepository
     public interface IWorkflowStageRoleRepository
     {
         // Basic CRUD operations
-        Task<IEnumerable<WorkflowStageRoleDto>> GetByStageIdAsync(Guid stageId);
+        Task<List<WorkflowStageRoleDto>> GetByStageIdAsync(Guid stageId);
         Task<bool> CreateAsync(Guid stageId, CreateWorkflowStageRoleDto role);
         Task<bool> DeleteByStageIdAsync(Guid stageId);
-        Task<bool> UpdateStageRolesAsync(Guid stageId, IEnumerable<UpdateRoleDto> roles);
+        Task<bool> UpdateStageRolesAsync(Guid stageId, List<UpdateRoleDto> roles);
 
         // Query operations
-        Task<IEnumerable<WorkflowStageRoleDto>> GetByRoleCodeAsync(string roleCode);
+        Task<List<WorkflowStageRoleDto>> GetByRoleCodeAsync(string roleCode);
         Task<bool> ExistsAsync(Guid stageId, string roleCode);
 
         // Bulk operations
-        Task<bool> CreateMultipleAsync(Guid stageId, IEnumerable<CreateWorkflowStageRoleDto> roles);
+        Task<bool> CreateMultipleAsync(Guid stageId, List<CreateWorkflowStageRoleDto> roles);
     }
 }
