@@ -18,7 +18,7 @@ namespace WorkflowMgmt.Infrastructure.Repository
         {
         }
 
-        public async Task<IEnumerable<UserWithDetailsDto>> GetAllAsync()
+        public async Task<List<UserWithDetailsDto>> GetAllAsync()
         {
             var sql = @"
                 SELECT
@@ -47,10 +47,11 @@ namespace WorkflowMgmt.Infrastructure.Repository
                 INNER JOIN workflowmgmt.roles r ON u.role_id = r.id
                 ORDER BY u.last_name, u.first_name";
 
-            return await Connection.QueryAsync<UserWithDetailsDto>(sql, transaction: Transaction);
+            var result = await Connection.QueryAsync<UserWithDetailsDto>(sql, transaction: Transaction);
+            return result.ToList();
         }
 
-        public async Task<IEnumerable<UserWithDetailsDto>> GetByDepartmentAsync(int departmentId)
+        public async Task<List<UserWithDetailsDto>> GetByDepartmentAsync(int departmentId)
         {
             var sql = @"
                 SELECT
@@ -80,10 +81,11 @@ namespace WorkflowMgmt.Infrastructure.Repository
                 WHERE u.department_id = @DepartmentId
                 ORDER BY u.last_name, u.first_name";
 
-            return await Connection.QueryAsync<UserWithDetailsDto>(sql, new { DepartmentId = departmentId }, transaction: Transaction);
+            var result = await Connection.QueryAsync<UserWithDetailsDto>(sql, new { DepartmentId = departmentId }, transaction: Transaction);
+            return result.ToList();
         }
 
-        public async Task<IEnumerable<UserWithDetailsDto>> GetByRoleAsync(int roleId)
+        public async Task<List<UserWithDetailsDto>> GetByRoleAsync(int roleId)
         {
             var sql = @"
                 SELECT
@@ -113,10 +115,11 @@ namespace WorkflowMgmt.Infrastructure.Repository
                 WHERE u.role_id = @RoleId
                 ORDER BY u.last_name, u.first_name";
 
-            return await Connection.QueryAsync<UserWithDetailsDto>(sql, new { RoleId = roleId }, transaction: Transaction);
+            var result = await Connection.QueryAsync<UserWithDetailsDto>(sql, new { RoleId = roleId }, transaction: Transaction);
+            return result.ToList();
         }
 
-        public async Task<IEnumerable<UserWithDetailsDto>> GetByRoleCodeAsync(string roleCode)
+        public async Task<List<UserWithDetailsDto>> GetByRoleCodeAsync(string roleCode)
         {
             var sql = @"
                 SELECT
@@ -146,10 +149,11 @@ namespace WorkflowMgmt.Infrastructure.Repository
                 WHERE r.code = @RoleCode
                 ORDER BY u.last_name, u.first_name";
 
-            return await Connection.QueryAsync<UserWithDetailsDto>(sql, new { RoleCode = roleCode }, transaction: Transaction);
+            var result = await Connection.QueryAsync<UserWithDetailsDto>(sql, new { RoleCode = roleCode }, transaction: Transaction);
+            return result.ToList();
         }
 
-        public async Task<IEnumerable<UserWithDetailsDto>> GetActiveAsync()
+        public async Task<List<UserWithDetailsDto>> GetActiveAsync()
         {
             var sql = @"
                 SELECT
@@ -179,7 +183,8 @@ namespace WorkflowMgmt.Infrastructure.Repository
                 WHERE u.is_active = true
                 ORDER BY u.last_name, u.first_name";
 
-            return await Connection.QueryAsync<UserWithDetailsDto>(sql, transaction: Transaction);
+            var result = await Connection.QueryAsync<UserWithDetailsDto>(sql, transaction: Transaction);
+            return result.ToList();
         }
 
         public async Task<UserWithDetailsDto?> GetByIdAsync(Guid id)
@@ -473,7 +478,7 @@ namespace WorkflowMgmt.Infrastructure.Repository
             return stats;
         }
 
-        public async Task<IEnumerable<UserWithDetailsDto>> GetEligibleUsersForStageAsync(Guid stageId, int? departmentId = null)
+        public async Task<List<UserWithDetailsDto>> GetEligibleUsersForStageAsync(Guid stageId, int? departmentId = null)
         {
             var sql = @"
                 SELECT
@@ -514,7 +519,8 @@ namespace WorkflowMgmt.Infrastructure.Repository
 
             sql += " ORDER BY u.last_name, u.first_name";
 
-            return await Connection.QueryAsync<UserWithDetailsDto>(sql, parameters, transaction: Transaction);
+            var result = await Connection.QueryAsync<UserWithDetailsDto>(sql, parameters, transaction: Transaction);
+            return result.ToList();
         }
 
         public async Task<UserWithDetailsDto?> GetDefaultAssigneeForStageAsync(Guid stageId, int departmentId)

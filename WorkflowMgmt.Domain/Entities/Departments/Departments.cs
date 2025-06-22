@@ -33,8 +33,9 @@ namespace WorkflowMgmt.Domain.Entities
         public int NbaAccredited { get; set; }
     }
 
-    public class WorkflowRoleMappingDto : BaseEntity
+    public class WorkflowRoleMappingDto
     {
+        public Guid id { get; set; }
         public int department_id { get; set; }
         public int role_id { get; set; }
         public Guid user_id { get; set; }

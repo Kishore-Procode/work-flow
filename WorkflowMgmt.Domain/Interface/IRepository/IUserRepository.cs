@@ -9,11 +9,11 @@ namespace WorkflowMgmt.Domain.IRepository
     public interface IWorkflowUserRepository
     {
         // New methods
-        Task<IEnumerable<UserWithDetailsDto>> GetAllAsync();
-        Task<IEnumerable<UserWithDetailsDto>> GetByDepartmentAsync(int departmentId);
-        Task<IEnumerable<UserWithDetailsDto>> GetByRoleAsync(int roleId);
-        Task<IEnumerable<UserWithDetailsDto>> GetByRoleCodeAsync(string roleCode);
-        Task<IEnumerable<UserWithDetailsDto>> GetActiveAsync();
+        Task<List<UserWithDetailsDto>> GetAllAsync();
+        Task<List<UserWithDetailsDto>> GetByDepartmentAsync(int departmentId);
+        Task<List<UserWithDetailsDto>> GetByRoleAsync(int roleId);
+        Task<List<UserWithDetailsDto>> GetByRoleCodeAsync(string roleCode);
+        Task<List<UserWithDetailsDto>> GetActiveAsync();
         Task<UserWithDetailsDto?> GetByIdAsync(Guid id);
         Task<UserWithDetailsDto?> GetByUsernameAsync(string username);
         Task<UserWithDetailsDto?> GetByEmailAsync(string email);
@@ -26,7 +26,7 @@ namespace WorkflowMgmt.Domain.IRepository
         Task<bool> ExistsByEmailAsync(string email, Guid? excludeId = null);
         Task<bool> UpdatePasswordAsync(Guid id, string passwordHash);
         Task<UserStatsDto> GetUserStatsAsync();
-        Task<IEnumerable<UserWithDetailsDto>> GetEligibleUsersForStageAsync(Guid stageId, int? departmentId = null);
+        Task<List<UserWithDetailsDto>> GetEligibleUsersForStageAsync(Guid stageId, int? departmentId = null);
         Task<UserWithDetailsDto?> GetDefaultAssigneeForStageAsync(Guid stageId, int departmentId);
     }
 
@@ -38,5 +38,10 @@ namespace WorkflowMgmt.Domain.IRepository
         Task UpdateLastLoginAsync(Guid userId);
         Task<Role?> GetRoleByRoleId(int roleId);
         Task<DepartmentDTO?> GetDepartmentByDepartmentId(int? departmentId);
+
+        // New methods for active users with department filtering
+        Task<List<WorkflowMgmt.Domain.Entities.UserDto>> GetActiveUsers();
+        Task<List<WorkflowMgmt.Domain.Entities.UserDto>> GetActiveUsersByDepartment(int departmentId);
+        Task<List<WorkflowMgmt.Domain.Entities.UserDto>> GetActiveUsersByAllowedDepartment(int departmentId);
     }
 }

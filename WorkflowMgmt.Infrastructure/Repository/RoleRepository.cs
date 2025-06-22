@@ -23,7 +23,6 @@ namespace WorkflowMgmt.Infrastructure.Repository
                     name as Name,
                     code as Code,
                     description as Description,
-                    hierarchy_level as HierarchyLevel,
                     permissions as Permissions,
                     is_active as IsActive,
                     created_date as CreatedDate,
@@ -31,7 +30,7 @@ namespace WorkflowMgmt.Infrastructure.Repository
                     created_by as CreatedBy,
                     modified_by as ModifiedBy
                 FROM workflowmgmt.roles
-                ORDER BY hierarchy_level, name";
+                ORDER BY name";
 
             var result = await Connection.QueryAsync<RoleDto>(sql, transaction: Transaction);
             return result.ToList();
@@ -53,7 +52,7 @@ namespace WorkflowMgmt.Infrastructure.Repository
                     modified_by as ModifiedBy
                 FROM workflowmgmt.roles
                 WHERE is_active = true
-                ORDER BY hierarchy_level, name";
+                ORDER BY name";
 
             var result = await Connection.QueryAsync<RoleDto>(sql, transaction: Transaction);
             return result.ToList();
