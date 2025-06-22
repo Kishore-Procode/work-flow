@@ -112,5 +112,40 @@ namespace WorkflowMgmt.Infrastructure.Repository
 
             return result > 0;
         }
+
+        public async Task<List<DepartmentWithTemplateDTO>> GetDepartmentsWithTemplates()
+        {
+            var sql = @"
+                SELECT
+                    d.id,
+                    d.name,
+                    d.default_template_id,
+                    wt.name as default_template_name
+                FROM workflowmgmt.departments d
+                LEFT JOIN workflowmgmt.workflow_templates wt ON d.default_template_id = wt.id
+                WHERE d.is_active = true
+                ORDER BY d.name";
+
+            var departments = await Connection.QueryAsync<DepartmentWithTemplateDTO>(sql, Transaction);
+            return departments.ToList();
+        }
+
+        public async Task<bool> UpdateDepartmentDefaultTemplate(int departmentId, Guid templateId)
+        {
+            var sql = @"
+                UPDATE workflowmgmt.departments
+                SET default_template_id = @TemplateId,
+                    modified_date = NOW(),
+                    modified_by = 'system'
+                WHERE id = @DepartmentId AND is_active = true";
+
+            var rowsAffected = await Connection.ExecuteAsync(sql, new
+            {
+                DepartmentId = departmentId,
+                TemplateId = templateId
+            }, Transaction);
+
+            return rowsAffected > 0;
+        }
     }
 }

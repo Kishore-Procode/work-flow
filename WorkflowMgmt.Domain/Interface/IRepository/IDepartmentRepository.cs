@@ -10,9 +10,11 @@ namespace WorkflowMgmt.Domain.Interface.IRepository
     public interface IDepartmentRepository
     {
         Task<List<DepartmentDTO>> GetAllDepartments();
+        Task<List<DepartmentWithTemplateDTO>> GetDepartmentsWithTemplates();
         Task<DepartmentDTO?> GetDepartmentById(int id);
         Task<int> InsertDepartment(DepartmentDTO department);
         Task<bool> UpdateDepartment(DepartmentDTO department);
+        Task<bool> UpdateDepartmentDefaultTemplate(int departmentId, Guid templateId);
         Task<bool> DeleteOrRestoreDepartment(int id, string modifiedBy, bool isRestore);
     }
 }

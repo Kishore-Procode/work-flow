@@ -134,4 +134,52 @@ namespace WorkflowMgmt.Application.Features.Department
             }
         }
     }
+
+    public class GetDepartmentsWithTemplatesCommandHandler : IRequestHandler<GetDepartmentsWithTemplatesCommand, ApiResponse<List<DepartmentWithTemplateDTO>>>
+    {
+        private readonly IUnitOfWork _unitOfWork;
+
+        public GetDepartmentsWithTemplatesCommandHandler(IUnitOfWork unitOfWork)
+        {
+            _unitOfWork = unitOfWork;
+        }
+
+        public async Task<ApiResponse<List<DepartmentWithTemplateDTO>>> Handle(GetDepartmentsWithTemplatesCommand request, CancellationToken cancellationToken)
+        {
+            try
+            {
+                var departments = await _unitOfWork.DepartmentRepository.GetDepartmentsWithTemplates();
+                return ApiResponse<List<DepartmentWithTemplateDTO>>.SuccessResponse(departments, "Departments with templates retrieved successfully");
+            }
+            catch (Exception ex)
+            {
+                return ApiResponse<List<DepartmentWithTemplateDTO>>.ErrorResponse($"Error during fetching departments with templates: {ex.Message}");
+            }
+        }
+    }
+
+    public class UpdateDepartmentDefaultTemplateCommandHandler : IRequestHandler<UpdateDepartmentDefaultTemplateCommand, ApiResponse<bool>>
+    {
+        private readonly IUnitOfWork _unitOfWork;
+
+        public UpdateDepartmentDefaultTemplateCommandHandler(IUnitOfWork unitOfWork)
+        {
+            _unitOfWork = unitOfWork;
+        }
+
+        public async Task<ApiResponse<bool>> Handle(UpdateDepartmentDefaultTemplateCommand request, CancellationToken cancellationToken)
+        {
+            try
+            {
+                var success = await _unitOfWork.DepartmentRepository.UpdateDepartmentDefaultTemplate(request.departmentId, request.templateId);
+                if (success)
+                    _unitOfWork.Commit();
+                return ApiResponse<bool>.SuccessResponse(success, "Department default template updated successfully");
+            }
+            catch (Exception ex)
+            {
+                return ApiResponse<bool>.ErrorResponse($"Error updating department default template: {ex.Message}");
+            }
+        }
+    }
 }
