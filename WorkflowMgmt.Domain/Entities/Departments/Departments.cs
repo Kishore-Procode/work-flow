@@ -23,6 +23,7 @@ namespace WorkflowMgmt.Domain.Entities
         public bool sms_notify { get; set; } = false;
         public bool in_app_notify { get; set; } = false;
         public string? digest_frequency { get; set; }
+        public bool is_active { get; set; } = false;
     }
     public class DepartmentStatsDto
     {
