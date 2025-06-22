@@ -24,15 +24,6 @@ namespace WorkflowMgmt.Domain.Entities
         public bool in_app_notify { get; set; } = false;
         public string? digest_frequency { get; set; }
     }
-
-    public class DepartmentWithTemplateDTO
-    {
-        public int id { get; set; }
-        public string name { get; set; } = string.Empty;
-        public Guid? default_template_id { get; set; }
-        public string? default_template_name { get; set; }
-    }
-
     public class DepartmentStatsDto
     {
         public int TotalDepartments { get; set; }

@@ -301,8 +301,8 @@ namespace WorkflowMgmt.Application.Features.WorkflowTemplate
                     return ApiResponse<WorkflowTemplateDto?>.ErrorResponse("Workflow template not found");
                 }
 
-                _unitOfWork.Commit();
                 var result = await _unitOfWork.WorkflowTemplateRepository.GetByIdSimpleAsync(request.Id);
+                _unitOfWork.Commit();
 
                 return ApiResponse<WorkflowTemplateDto?>.SuccessResponse(result, "Workflow template status updated successfully");
             }

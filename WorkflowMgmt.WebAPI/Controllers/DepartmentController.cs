@@ -57,19 +57,5 @@ namespace WorkflowMgmt.WebAPI.Controllers
             var result = await Mediator.Send(new DeleteOrRestoreDepartmentCommand(id, modifiedBy, isRestore: true));
             return Ok(result);
         }
-
-        [HttpGet("with-templates")]
-        public async Task<IActionResult> GetDepartmentsWithTemplates()
-        {
-            var result = await Mediator.Send(new GetDepartmentsWithTemplatesCommand());
-            return Ok(result);
-        }
-
-        [HttpPut("{departmentId}/default-template/{templateId}")]
-        public async Task<IActionResult> UpdateDepartmentDefaultTemplate(int departmentId, Guid templateId)
-        {
-            var result = await Mediator.Send(new UpdateDepartmentDefaultTemplateCommand(departmentId, templateId));
-            return Ok(result);
-        }
     }
 }

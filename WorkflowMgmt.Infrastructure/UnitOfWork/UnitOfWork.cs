@@ -42,6 +42,7 @@ namespace WorkflowMgmt.Infrastructure
         private ISyllabusRepository? syllabusRepository;
         private ISyllabusTemplateRepository? syllabusTemplateRepository;
         private IWorkflowRoleMappingRepository? workflowRoleMappingRepository;
+        private IWorkflowDepartmentDocumentMappingRepository? workflowDepartmentDocumentMappingRepository;
 
         public UnitOfWork(IDbConnectionFactory connectionFactory)
         {
@@ -154,6 +155,11 @@ namespace WorkflowMgmt.Infrastructure
         public IWorkflowRoleMappingRepository WorkflowRoleMappingRepository
         {
             get { return workflowRoleMappingRepository ?? (workflowRoleMappingRepository = new WorkflowRoleMappingRepository(_transaction)); }
+        }
+
+        public IWorkflowDepartmentDocumentMappingRepository WorkflowDepartmentDocumentMappingRepository
+        {
+            get { return workflowDepartmentDocumentMappingRepository ?? (workflowDepartmentDocumentMappingRepository = new WorkflowDepartmentDocumentMappingRepository(_transaction)); }
         }
 
         public void Begin()
