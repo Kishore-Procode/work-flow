@@ -80,6 +80,7 @@ namespace WorkflowMgmt.Infrastructure.Repository
                     u.phone,
                     u.profile_image_url,
                     u.allowed_departments,
+                    u.allowed_roles,
                     r.name as role_name,
                     r.code as role_code,
                     d.name as department_name,
@@ -108,6 +109,7 @@ namespace WorkflowMgmt.Infrastructure.Repository
                     u.phone,
                     u.profile_image_url,
                     u.allowed_departments,
+                    u.allowed_roles,
                     r.name as role_name,
                     r.code as role_code,
                     d.name as department_name,
@@ -137,6 +139,7 @@ namespace WorkflowMgmt.Infrastructure.Repository
                     u.phone,
                     u.profile_image_url,
                     u.allowed_departments,
+                    u.allowed_roles,
                     r.name as role_name,
                     r.code as role_code,
                     d.name as department_name,
@@ -149,6 +152,37 @@ namespace WorkflowMgmt.Infrastructure.Repository
                 ORDER BY u.first_name, u.last_name";
 
             var users = await Connection.QueryAsync<WorkflowMgmt.Domain.Entities.UserDto>(sql, new { DepartmentId = departmentId }, Transaction);
+            return users.ToList();
+        }
+
+        public async Task<List<WorkflowMgmt.Domain.Entities.UserDto>> GetActiveUsersByAllowedDepartmentAndRole(int departmentId, int roleId)
+        {
+            var sql = @"
+                SELECT
+                    u.id,
+                    u.username,
+                    u.email,
+                    u.first_name,
+                    u.last_name,
+                    u.role_id,
+                    u.department_id,
+                    u.phone,
+                    u.profile_image_url,
+                    u.allowed_departments,
+                    u.allowed_roles,
+                    r.name as role_name,
+                    r.code as role_code,
+                    d.name as department_name,
+                    d.code as department_code
+                FROM workflowmgmt.users u
+                INNER JOIN workflowmgmt.roles r ON u.role_id = r.id
+                LEFT JOIN workflowmgmt.departments d ON u.department_id = d.id
+                WHERE u.is_active = true AND r.is_active = true
+                AND @DepartmentId = ANY(u.allowed_departments)
+                AND @RoleId = ANY(u.allowed_roles)
+                ORDER BY u.first_name, u.last_name";
+
+            var users = await Connection.QueryAsync<WorkflowMgmt.Domain.Entities.UserDto>(sql, new { DepartmentId = departmentId, RoleId = roleId }, Transaction);
             return users.ToList();
         }
     }

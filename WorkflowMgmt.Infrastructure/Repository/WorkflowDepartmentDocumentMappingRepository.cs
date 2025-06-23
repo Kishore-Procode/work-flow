@@ -30,8 +30,7 @@ namespace WorkflowMgmt.Infrastructure.Repository
                     wt.name as workflow_template_name
                 FROM workflowmgmt.workflow_department_document_mapping wddm
                 INNER JOIN workflowmgmt.workflow_templates wt ON wddm.workflow_template_id = wt.id
-                WHERE wddm.department_id = @DepartmentId
-                AND wt.is_active = true";
+                WHERE wddm.department_id = @DepartmentId";
 
             var existingMappings = await Connection.QueryAsync<DocumentTypeWorkflowMappingDto>(
                 existingMappingsSql, 
@@ -89,7 +88,7 @@ namespace WorkflowMgmt.Infrastructure.Repository
                     var templateIds = mappings.Select(m => m.workflow_template_id).Distinct().ToList();
                     var templateCheckSql = @"
                         SELECT id FROM workflowmgmt.workflow_templates 
-                        WHERE id = ANY(@TemplateIds) AND is_active = true";
+                        WHERE id = ANY(@TemplateIds)";
                     
                     var existingTemplateIds = await Connection.QueryAsync<Guid>(
                         templateCheckSql, 

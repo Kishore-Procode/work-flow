@@ -27,7 +27,7 @@ namespace WorkflowMgmt.Infrastructure.Repository
         }
         public async Task<DepartmentDTO?> GetDepartmentById(int id)
         {
-            var sql = "SELECT * FROM workflowmgmt.departments WHERE id = @Id AND is_active = true";
+            var sql = "SELECT * FROM workflowmgmt.departments WHERE id = @Id";
             var department = await Connection.QueryFirstOrDefaultAsync<DepartmentDTO>(sql, new { Id = id }, Transaction);
             return department;
         }

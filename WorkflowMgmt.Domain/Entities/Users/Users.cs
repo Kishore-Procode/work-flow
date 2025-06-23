@@ -18,6 +18,7 @@ namespace WorkflowMgmt.Domain.Entities
         public string? phone { get; set; }
         public string? profile_image_url { get; set; }
         public int[]? allowed_departments { get; set; }
+        public int[]? allowed_roles { get; set; }
         
         // Joined data
         public string? role_name { get; set; }
