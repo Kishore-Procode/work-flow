@@ -20,22 +20,23 @@ namespace WorkflowMgmt.Infrastructure.Repository
 
         public async Task<List<LessonPlanTemplateDto>> GetAllLessonPlanTemplates()
         {
-            var sql = "SELECT * FROM workflowmgmt.lesson_plan_templates WHERE is_active = true";
-            var templates = await Connection.QueryAsync<LessonPlanTemplateDto>(sql, transaction: Transaction);
+            var templates = await Connection.QueryAsync<LessonPlanTemplateDto>(
+                "SELECT * FROM workflowmgmt.lesson_plan_templates ORDER BY name", Transaction);
+
             return templates.ToList();
         }
 
         public async Task<LessonPlanTemplateDto?> GetLessonPlanTemplateById(Guid id)
         {
-            var sql = "SELECT * FROM workflowmgmt.lesson_plan_templates WHERE id = @Id AND is_active = true";
-            return await Connection.QueryFirstOrDefaultAsync<LessonPlanTemplateDto>(sql, new { Id = id }, Transaction);
+            var sql = "SELECT * FROM workflowmgmt.lesson_plan_templates WHERE id = @Id";
+            var template = await Connection.QueryFirstOrDefaultAsync<LessonPlanTemplateDto>(sql, new { Id = id }, Transaction);
+            return template;
         }
 
         public async Task<Guid> InsertLessonPlanTemplate(LessonPlanTemplateDto template)
         {
             var sql = @"
                 INSERT INTO workflowmgmt.lesson_plan_templates (
-                    id,
                     name,
                     description,
                     template_type,
@@ -45,74 +46,49 @@ namespace WorkflowMgmt.Infrastructure.Repository
                     created_date,
                     created_by
                 ) VALUES (
-                    @Id,
-                    @Name,
-                    @Description,
-                    @TemplateType,
-                    @DurationMinutes,
-                    @Sections::jsonb,
-                    @IsActive,
+                    @name,
+                    @description,
+                    @template_type,
+                    @duration_minutes,
+                    @sections::jsonb,
+                    @is_active,
                     NOW(),
                     @CreatedBy
-                ) RETURNING id;
+                )
+                RETURNING id;
             ";
 
-            template.Id = Guid.NewGuid();
-            var parameters = new
-            {
-                template.Id,
-                template.Name,
-                template.Description,
-                template.TemplateType,
-                template.DurationMinutes,
-                Sections = template.Sections?.ToJsonString(),
-                template.IsActive,
-                template.CreatedBy
-            };
-
-            return await Connection.ExecuteScalarAsync<Guid>(sql, parameters, Transaction);
+            var templateId = await Connection.ExecuteScalarAsync<Guid>(sql, template, Transaction);
+            return templateId;
         }
 
         public async Task<bool> UpdateLessonPlanTemplate(LessonPlanTemplateDto template)
         {
             var sql = @"
                 UPDATE workflowmgmt.lesson_plan_templates SET
-                    name = @Name,
-                    description = @Description,
-                    template_type = @TemplateType,
-                    duration_minutes = @DurationMinutes,
-                    sections = @Sections::jsonb,
-                    is_active = @IsActive,
-                    modified_date = NOW(),
-                    modified_by = @ModifiedBy
-                WHERE id = @Id;
-            ";
+                name = @name,
+                description = @description,
+                template_type = @template_type,
+                duration_minutes = @duration_minutes,
+                sections = @sections::jsonb,
+                is_active = @is_active,
+                modified_date = NOW(),
+                modified_by = @ModifiedBy
+                WHERE id = @id;
+           ";
 
-            var parameters = new
-            {
-                template.Id,
-                template.Name,
-                template.Description,
-                template.TemplateType,
-                template.DurationMinutes,
-                Sections = template.Sections?.ToJsonString(),
-                template.IsActive,
-                template.ModifiedBy
-            };
-
-            var affectedRows = await Connection.ExecuteAsync(sql, parameters, Transaction);
-            return affectedRows > 0;
+            var rowsAffected = await Connection.ExecuteAsync(sql, template, Transaction);
+            return rowsAffected > 0;
         }
 
         public async Task<bool> DeleteOrRestoreLessonPlanTemplate(Guid id, string modifiedBy, bool isRestore)
         {
             var sql = @"
-                UPDATE workflowmgmt.lesson_plan_templates
-                SET is_active = @IsActive,
-                    modified_by = @ModifiedBy,
-                    modified_date = NOW()
-                WHERE id = @Id AND is_active != @IsActive;
-            ";
+        UPDATE workflowmgmt.lesson_plan_templates
+        SET is_active = @IsActive,
+            modified_by = @ModifiedBy,
+            modified_date = NOW()
+        WHERE id = @Id AND is_active != @IsActive";
 
             var result = await Connection.ExecuteAsync(sql, new
             {

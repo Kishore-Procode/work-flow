@@ -33,9 +33,11 @@ namespace WorkflowMgmt.WebAPI.Controllers
         [HttpPut("{id}")]
         public async Task<IActionResult> UpdateLessonPlanTemplate(Guid id, [FromBody] LessonPlanTemplateDto template)
         {
-            template.Id = id;
-            template.ModifiedBy = User?.Identity?.Name ?? "unknown";
-            var result = await Mediator.Send(new UpdateLessonPlanTemplateCommand(template));
+            LessonPlanTemplateDto lessonTemplate = template;
+            lessonTemplate.Id = id;
+            lessonTemplate.ModifiedBy = User?.Identity?.Name ?? "unknown";
+
+            var result = await Mediator.Send(new UpdateLessonPlanTemplateCommand(lessonTemplate));
             return Ok(result);
         }
 

@@ -5,7 +5,6 @@ using System.Text;
 using System.Threading.Tasks;
 using WorkflowMgmt.Domain.Entities.LessonPlanTemplate;
 
-
 namespace WorkflowMgmt.Domain.Interface.IRepository
 {
     public interface ILessonPlanTemplateRepository
