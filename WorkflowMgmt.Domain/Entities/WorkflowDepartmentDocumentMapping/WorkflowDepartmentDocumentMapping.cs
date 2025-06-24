@@ -10,7 +10,7 @@ namespace WorkflowMgmt.Domain.Entities
     {
         public int department_id { get; set; }
         public string document_type { get; set; } = string.Empty;
-        public Guid? workflow_template_id { get; set; }
+        public Guid workflow_template_id { get; set; }
         
         // Joined data
         public string? department_name { get; set; }

@@ -65,6 +65,28 @@ namespace WorkflowMgmt.Infrastructure.Repository
             return result.OrderBy(r => r.document_type).ToList();
         }
 
+        public async Task<WorkflowDepartmentDocumentMappingDto?> GetByDepartmentAndDocumentTypeAsync(int departmentId, string documentType)
+        {
+            var sql = @"
+                SELECT
+                    wddm.department_id,
+                    wddm.document_type,
+                    wddm.workflow_template_id,
+                    d.name as department_name,
+                    wt.name as workflow_template_name
+                FROM workflowmgmt.workflow_department_document_mapping wddm
+                INNER JOIN workflowmgmt.departments d ON wddm.department_id = d.id
+                INNER JOIN workflowmgmt.workflow_templates wt ON wddm.workflow_template_id = wt.id
+                WHERE wddm.department_id = @DepartmentId AND wddm.document_type = @DocumentType";
+
+            var mapping = await Connection.QueryFirstOrDefaultAsync<WorkflowDepartmentDocumentMappingDto>(
+                sql,
+                new { DepartmentId = departmentId, DocumentType = documentType },
+                Transaction);
+
+            return mapping;
+        }
+
         public async Task<bool> UpdateDepartmentDocumentMappings(int departmentId, List<DepartmentDocumentMappingAssignmentDto> mappings)
         {
             try

@@ -7,8 +7,7 @@ namespace WorkflowMgmt.Application.Features.DocumentWorkflow
         public CreateDocumentWorkflowCommandValidator()
         {
             RuleFor(x => x.DocumentId)
-                .NotEmpty().WithMessage("Document ID is required.")
-                .MaximumLength(255).WithMessage("Document ID cannot exceed 255 characters.");
+                .NotEmpty().WithMessage("Document ID is required.");
 
             RuleFor(x => x.DocumentType)
                 .NotEmpty().WithMessage("Document type is required.")

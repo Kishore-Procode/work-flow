@@ -60,7 +60,7 @@ namespace WorkflowMgmt.Domain.Models.Workflow
     public class DocumentWorkflowDto
     {
         public Guid Id { get; set; }
-        public string DocumentId { get; set; } = string.Empty;
+        public Guid DocumentId { get; set; }
         public string DocumentType { get; set; } = string.Empty;
         public Guid WorkflowTemplateId { get; set; }
         public Guid? CurrentStageId { get; set; }

@@ -26,6 +26,7 @@ namespace WorkflowMgmt.Infrastructure.Repository
                     s.course_id as CourseId,
                     s.semester_id as SemesterId,
                     s.template_id as TemplateId,
+                    s.faculty_id as FacultyId,
                     s.faculty_name as FacultyName,
                     s.credits as Credits,
                     s.duration_weeks as DurationWeeks,
@@ -201,12 +202,12 @@ namespace WorkflowMgmt.Infrastructure.Repository
         {
             var id = Guid.NewGuid();
             var sql = @"
-                INSERT INTO workflowmgmt.syllabi 
-                (id, title, department_id, course_id, semester_id, template_id, faculty_name, faculty_email,
+                INSERT INTO workflowmgmt.syllabi
+                (id, title, department_id, course_id, semester_id, template_id, faculty_id, faculty_name,
                  credits, duration_weeks, content_creation_method, course_description, learning_objectives,
                  learning_outcomes, course_topics, assessment_methods, detailed_content, reference_materials,
                  status, is_active, created_date, created_by)
-                VALUES (@Id, @Title, @DepartmentId, @CourseId, @SemesterId, @TemplateId, @FacultyName, @FacultyEmail,
+                VALUES (@Id, @Title, @DepartmentId, @CourseId, @SemesterId, @TemplateId, @FacultyId, @FacultyName,
                         @Credits, @DurationWeeks, @ContentCreationMethod, @CourseDescription, @LearningObjectives,
                         @LearningOutcomes, @CourseTopics, @AssessmentMethods, @DetailedContent, @ReferenceMaterials,
                         'Draft', true, @CreatedDate, @CreatedBy)";
@@ -219,8 +220,8 @@ namespace WorkflowMgmt.Infrastructure.Repository
                 syllabus.CourseId,
                 syllabus.SemesterId,
                 syllabus.TemplateId,
+                syllabus.FacultyId,
                 syllabus.FacultyName,
-                syllabus.FacultyEmail,
                 syllabus.Credits,
                 syllabus.DurationWeeks,
                 syllabus.ContentCreationMethod,
@@ -245,8 +246,8 @@ namespace WorkflowMgmt.Infrastructure.Repository
                 SET title = COALESCE(@Title, title),
                     course_id = COALESCE(@CourseId, course_id),
                     semester_id = COALESCE(@SemesterId, semester_id),
+                    faculty_id = COALESCE(@FacultyId, faculty_id),
                     faculty_name = COALESCE(@FacultyName, faculty_name),
-                    faculty_email = COALESCE(@FacultyEmail, faculty_email),
                     credits = COALESCE(@Credits, credits),
                     duration_weeks = COALESCE(@DurationWeeks, duration_weeks),
                     course_description = COALESCE(@CourseDescription, course_description),
@@ -267,8 +268,8 @@ namespace WorkflowMgmt.Infrastructure.Repository
                 syllabus.Title,
                 syllabus.CourseId,
                 syllabus.SemesterId,
+                syllabus.FacultyId,
                 syllabus.FacultyName,
-                syllabus.FacultyEmail,
                 syllabus.Credits,
                 syllabus.DurationWeeks,
                 syllabus.CourseDescription,

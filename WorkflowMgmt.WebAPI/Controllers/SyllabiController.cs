@@ -69,8 +69,24 @@ namespace WorkflowMgmt.WebAPI.Controllers
         {
             try
             {
+                // Set faculty information from logged-in user
+                var userId = User?.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+                var userName = User?.FindFirst(System.Security.Claims.ClaimTypes.Name)?.Value;
+                var firstName = User?.FindFirst("firstName")?.Value;
+                var lastName = User?.FindFirst("lastName")?.Value;
+
+                if (string.IsNullOrEmpty(userId))
+                {
+                    return BadRequest(new { success = false, message = "User not authenticated." });
+                }
+
+                command.FacultyId = Guid.Parse(userId);
+                command.FacultyName = !string.IsNullOrEmpty(firstName) && !string.IsNullOrEmpty(lastName)
+                    ? $"{firstName} {lastName}"
+                    : userName ?? "Unknown User";
+
                 var result = await Mediator.Send(command);
-                return CreatedAtAction(nameof(GetSyllabus), new { id = result.Id }, 
+                return CreatedAtAction(nameof(GetSyllabus), new { id = result.Id },
                     new { success = true, data = result });
             }
             catch (InvalidOperationException ex)

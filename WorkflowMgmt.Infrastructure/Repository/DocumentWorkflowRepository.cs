@@ -259,7 +259,7 @@ namespace WorkflowMgmt.Infrastructure.Repository
             await Connection.ExecuteAsync(sql, new
             {
                 Id = id,
-                workflow.DocumentId,
+                DocumentId = Guid.Parse(workflow.DocumentId),
                 workflow.DocumentType,
                 workflow.WorkflowTemplateId,
                 CurrentStageId = firstStageId,
@@ -371,7 +371,7 @@ namespace WorkflowMgmt.Infrastructure.Repository
             var sql = @"
                 SELECT COUNT(1) 
                 FROM workflowmgmt.document_workflows 
-                WHERE document_id = @DocumentId AND is_active = true";
+                WHERE document_id = @DocumentId::uuid AND is_active = true";
             
             var count = await Connection.QuerySingleAsync<int>(sql, new { DocumentId = documentId }, transaction: Transaction);
             return count > 0;

@@ -63,12 +63,11 @@ namespace WorkflowMgmt.Application.Features.Syllabus
         [Required]
         public Guid TemplateId { get; set; }
 
-        [Required]
-        [MaxLength(255)]
-        public string FacultyName { get; set; } = string.Empty;
+        // Faculty ID will be set from logged-in user, not from form
+        public Guid FacultyId { get; set; }
 
-        [MaxLength(255)]
-        public string? FacultyEmail { get; set; }
+        // Faculty Name will be set from logged-in user, not from form
+        public string FacultyName { get; set; } = string.Empty;
 
         [Required]
         public int Credits { get; set; }
@@ -110,11 +109,10 @@ namespace WorkflowMgmt.Application.Features.Syllabus
 
         public int? SemesterId { get; set; }
 
-        [MaxLength(255)]
-        public string? FacultyName { get; set; }
+        public Guid? FacultyId { get; set; }
 
         [MaxLength(255)]
-        public string? FacultyEmail { get; set; }
+        public string? FacultyName { get; set; }
 
         public int? Credits { get; set; }
 

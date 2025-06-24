@@ -6,6 +6,8 @@ using System.Threading;
 using System.Threading.Tasks;
 using WorkflowMgmt.Domain.Interface.IUnitOfWork;
 using WorkflowMgmt.Domain.Models.Syllabus;
+using WorkflowMgmt.Domain.Models.DocumentUpload;
+using WorkflowMgmt.Domain.Models.Workflow;
 using WorkflowMgmt.Application.Features.DocumentWorkflow;
 
 namespace WorkflowMgmt.Application.Features.Syllabus
@@ -138,8 +140,8 @@ namespace WorkflowMgmt.Application.Features.Syllabus
                 CourseId = request.CourseId,
                 SemesterId = request.SemesterId,
                 TemplateId = request.TemplateId,
+                FacultyId = request.FacultyId,
                 FacultyName = request.FacultyName,
-                FacultyEmail = request.FacultyEmail,
                 Credits = request.Credits,
                 DurationWeeks = request.DurationWeeks,
                 ContentCreationMethod = request.ContentCreationMethod,
@@ -161,33 +163,92 @@ namespace WorkflowMgmt.Application.Features.Syllabus
                 await _unitOfWork.SyllabusRepository.UpdateDocumentUrlAsync(syllabusId, documentUrl);
             }
 
-            await _unitOfWork.SaveAsync();
+            // Handle file upload and create document upload record if present
+            if (request.DocumentFile != null)
+            {
+                try
+                {
+                    // Create uploads directory if it doesn't exist
+                    var uploadsPath = Path.Combine("wwwroot", "uploads", "syllabi", syllabusId.ToString());
+                    Directory.CreateDirectory(uploadsPath);
+
+                    // Generate unique filename to avoid conflicts
+                    var fileExtension = Path.GetExtension(request.DocumentFile.FileName);
+                    var uniqueFileName = $"{Guid.NewGuid()}{fileExtension}";
+                    var filePath = Path.Combine(uploadsPath, uniqueFileName);
+
+                    // Save file to disk
+                    using (var stream = new FileStream(filePath, FileMode.Create))
+                    {
+                        await request.DocumentFile.CopyToAsync(stream);
+                    }
+
+                    // Create document upload record
+                    var documentUpload = new CreateDocumentUploadDto
+                    {
+                        DocumentId = syllabusId,
+                        DocumentType = "syllabus",
+                        OriginalFilename = request.DocumentFile.FileName,
+                        FileSize = request.DocumentFile.Length,
+                        FileType = request.DocumentFile.ContentType ?? "application/octet-stream",
+                        FileUrl = $"/uploads/syllabi/{syllabusId}/{uniqueFileName}",
+                        UploadStatus = "completed",
+                        UploadedBy = request.FacultyId
+                    };
+
+                    await _unitOfWork.DocumentUploadRepository.CreateAsync(documentUpload);
+
+                    Console.WriteLine($"✅ File uploaded successfully: {filePath}");
+                }
+                catch (Exception uploadError)
+                {
+                    Console.WriteLine($"Failed to upload file: {uploadError.Message}");
+                    // Don't fail the syllabus creation if file upload fails
+                }
+            }
 
             // Auto-create workflow if requested (default: true)
             if (request.AutoCreateWorkflow)
             {
                 try
                 {
-                    // Get default workflow template for syllabus
-                    var workflowTemplates = await _unitOfWork.WorkflowTemplateRepository.GetByDocumentTypeAsync("syllabus");
-                    var defaultTemplate = workflowTemplates.FirstOrDefault(t => t.IsActive);
+                    // Get workflow template from department document mapping
+                    var workflowMapping = await _unitOfWork.WorkflowDepartmentDocumentMappingRepository
+                        .GetByDepartmentAndDocumentTypeAsync(request.DepartmentId, "syllabus");
 
-                    if (defaultTemplate != null)
+                    if (workflowMapping != null)
                     {
                         var createWorkflowCommand = new CreateDocumentWorkflowCommand
                         {
                             DocumentId = syllabusId.ToString(),
                             DocumentType = "syllabus",
-                            WorkflowTemplateId = defaultTemplate.Id
+                            WorkflowTemplateId = workflowMapping.workflow_template_id,
+                            InitiatedBy = request.FacultyId
                         };
 
                         var workflow = await _mediator.Send(createWorkflowCommand, cancellationToken);
 
-                        // Update syllabus with workflow ID
-                        await _unitOfWork.SyllabusRepository.UpdateWorkflowIdAsync(syllabusId, workflow.Id);
-                        await _unitOfWork.SaveAsync();
+                        // Create initial workflow stage history record
+                        if (workflow.CurrentStageId.HasValue)
+                        {
+                            var stageHistory = new CreateWorkflowStageHistoryDto
+                            {
+                                DocumentWorkflowId = workflow.Id,
+                                StageId = workflow.CurrentStageId.Value,
+                                ActionTaken = "initiated",
+                                ProcessedBy = request.FacultyId,
+                                Comments = "Workflow initiated upon syllabus creation"
+                            };
+
+                            await _unitOfWork.WorkflowStageHistoryRepository.CreateAsync(stageHistory);
+                            Console.WriteLine($"✅ Workflow stage history created for workflow {workflow.Id}");
+                        }
 
                         Console.WriteLine($"✅ Workflow created for syllabus {syllabusId}: {workflow.Id}");
+                    }
+                    else
+                    {
+                        Console.WriteLine($"⚠️ No workflow mapping found for department {request.DepartmentId} and document type 'syllabus'");
                     }
                 }
                 catch (Exception workflowError)
@@ -204,6 +265,8 @@ namespace WorkflowMgmt.Application.Features.Syllabus
                 throw new InvalidOperationException("Failed to retrieve created syllabus.");
             }
 
+            _unitOfWork.Commit();
+
             // Convert to SyllabusDto
             return new SyllabusDto
             {
@@ -213,8 +276,8 @@ namespace WorkflowMgmt.Application.Features.Syllabus
                 CourseId = result.CourseId,
                 SemesterId = result.SemesterId,
                 TemplateId = result.TemplateId,
+                FacultyId = result.FacultyId,
                 FacultyName = result.FacultyName,
-                FacultyEmail = result.FacultyEmail,
                 Credits = result.Credits,
                 DurationWeeks = result.DurationWeeks,
                 ContentCreationMethod = result.ContentCreationMethod,

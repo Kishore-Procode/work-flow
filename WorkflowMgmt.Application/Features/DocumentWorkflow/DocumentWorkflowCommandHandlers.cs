@@ -163,13 +163,13 @@ namespace WorkflowMgmt.Application.Features.DocumentWorkflow
 
             var workflowId = await _unitOfWork.DocumentWorkflowRepository.CreateAsync(createDto);
 
-            await _unitOfWork.SaveAsync();
-
             var result = await _unitOfWork.DocumentWorkflowRepository.GetByIdAsync(workflowId);
             if (result == null)
             {
                 throw new InvalidOperationException("Failed to retrieve created document workflow.");
             }
+
+            _unitOfWork.Commit();
 
             return new DocumentWorkflowDto
             {

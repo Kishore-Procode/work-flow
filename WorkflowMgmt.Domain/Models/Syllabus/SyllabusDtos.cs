@@ -13,8 +13,8 @@ namespace WorkflowMgmt.Domain.Models.Syllabus
         public int? CourseId { get; set; }
         public int? SemesterId { get; set; }
         public Guid TemplateId { get; set; }
+        public Guid FacultyId { get; set; }
         public string FacultyName { get; set; } = string.Empty;
-        public string? FacultyEmail { get; set; }
         public int Credits { get; set; }
         public int DurationWeeks { get; set; }
         public string ContentCreationMethod { get; set; } = "form_entry";
@@ -64,11 +64,11 @@ namespace WorkflowMgmt.Domain.Models.Syllabus
         public Guid TemplateId { get; set; }
 
         [Required]
+        public Guid FacultyId { get; set; }
+
+        [Required]
         [MaxLength(255)]
         public string FacultyName { get; set; } = string.Empty;
-
-        [MaxLength(255)]
-        public string? FacultyEmail { get; set; }
 
         [Required]
         public int Credits { get; set; }
@@ -108,11 +108,10 @@ namespace WorkflowMgmt.Domain.Models.Syllabus
 
         public int? SemesterId { get; set; }
 
-        [MaxLength(255)]
-        public string? FacultyName { get; set; }
+        public Guid? FacultyId { get; set; }
 
         [MaxLength(255)]
-        public string? FacultyEmail { get; set; }
+        public string? FacultyName { get; set; }
 
         public int? Credits { get; set; }
 
