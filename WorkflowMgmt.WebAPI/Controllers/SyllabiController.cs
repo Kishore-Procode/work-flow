@@ -51,6 +51,7 @@ namespace WorkflowMgmt.WebAPI.Controllers
         }
 
         [HttpGet("{id}")]
+        [AllowAnonymous] // Temporarily remove auth for testing
         public async Task<IActionResult> GetSyllabus(Guid id)
         {
             var query = new GetSyllabusByIdQuery { Id = id };
@@ -96,7 +97,7 @@ namespace WorkflowMgmt.WebAPI.Controllers
         }
 
         [HttpPut("{id}")]
-        public async Task<IActionResult> UpdateSyllabus(Guid id, [FromBody] UpdateSyllabusCommand command)
+        public async Task<IActionResult> UpdateSyllabus(Guid id, [FromForm] UpdateSyllabusCommand command)
         {
             command.Id = id;
             

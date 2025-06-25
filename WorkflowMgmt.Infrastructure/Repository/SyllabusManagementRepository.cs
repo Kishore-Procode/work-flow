@@ -6,6 +6,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using WorkflowMgmt.Domain.Interface.IRepository;
 using WorkflowMgmt.Domain.Models.Syllabus;
+using WorkflowMgmt.Domain.Models.Workflow;
 using WorkflowMgmt.Infrastructure.RepositoryBase;
 
 namespace WorkflowMgmt.Infrastructure.Repository
@@ -195,7 +196,33 @@ namespace WorkflowMgmt.Infrastructure.Repository
                 splitOn: "Template_Id,Department_Id,Course_Id,Semester_Id,Workflow_Id,CurrentStage_Id",
                 transaction: Transaction);
 
-            return result.FirstOrDefault();
+            var syllabusResult = result.FirstOrDefault();
+
+            // If syllabus has a current stage, fetch the stage actions
+            if (syllabusResult?.Workflow?.CurrentStage != null)
+            {
+                var actionsSql = @"
+                    SELECT
+                        id as Id,
+                        workflow_stage_id as WorkflowStageId,
+                        action_name as ActionName,
+                        action_type as ActionType,
+                        next_stage_id as NextStageId,
+                        is_active as IsActive,
+                        created_date as CreatedDate
+                    FROM workflowmgmt.workflow_stage_actions
+                    WHERE workflow_stage_id = @StageId AND is_active = true
+                    ORDER BY action_name";
+
+                var actions = await Connection.QueryAsync<WorkflowStageActionDto>(
+                    actionsSql,
+                    new { StageId = syllabusResult.Workflow.CurrentStage.Id },
+                    transaction: Transaction);
+
+                syllabusResult.Workflow.CurrentStage.Actions = actions.ToArray();
+            }
+
+            return syllabusResult;
         }
 
         public async Task<Guid> CreateAsync(CreateSyllabusDto syllabus)

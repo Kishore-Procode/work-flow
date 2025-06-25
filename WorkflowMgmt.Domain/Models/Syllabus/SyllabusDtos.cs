@@ -1,5 +1,6 @@
 using System;
 using System.ComponentModel.DataAnnotations;
+using WorkflowMgmt.Domain.Models.Workflow;
 using Microsoft.AspNetCore.Http;
 
 namespace WorkflowMgmt.Domain.Models.Syllabus
@@ -133,6 +134,12 @@ namespace WorkflowMgmt.Domain.Models.Syllabus
 
         [MaxLength(50)]
         public string? Status { get; set; }
+
+        [MaxLength(500)]
+        public string? DocumentUrl { get; set; }
+
+        [MaxLength(255)]
+        public string? OriginalFilename { get; set; }
     }
 
     // Supporting DTOs
@@ -169,6 +176,7 @@ namespace WorkflowMgmt.Domain.Models.Syllabus
         public Guid Id { get; set; }
         public string StageName { get; set; } = string.Empty;
         public string AssignedRole { get; set; } = string.Empty;
+        public WorkflowStageActionDto[] Actions { get; set; } = Array.Empty<WorkflowStageActionDto>();
     }
 
     // Workflow Action DTOs

@@ -134,6 +134,8 @@ namespace WorkflowMgmt.Application.Features.Syllabus
 
         [MaxLength(50)]
         public string? Status { get; set; }
+
+        public IFormFile? DocumentFile { get; set; }
     }
 
     public class DeleteSyllabusCommand : IRequest<bool>
