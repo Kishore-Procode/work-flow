@@ -32,8 +32,8 @@ namespace WorkflowMgmt.Infrastructure.Repository
                     df.is_active as IsActive,
                     df.created_date as CreatedDate,
                     df.modified_date as ModifiedDate,
-                    fp.name as FeedbackProviderName,
-                    ab.name as AddressedByName,
+                    fp.username as FeedbackProviderName,
+                    ab.username as AddressedByName,
                     ws.stage_name as StageName
                 FROM workflowmgmt.document_feedback df
                 LEFT JOIN workflowmgmt.users fp ON df.feedback_provider = fp.id

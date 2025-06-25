@@ -6,27 +6,26 @@ using System.Threading.Tasks;
 using MediatR;
 using WorkflowMgmt.Domain.Interface.IUnitOfWork;
 using WorkflowMgmt.Domain.Models.Workflow;
-using WorkflowMgmt.Application.Services;
 using WorkflowMgmt.Domain.Models;
 
 namespace WorkflowMgmt.Application.Features.DocumentLifecycle
 {
     // Query Handlers
-    public class GetDocumentsAssignedToUserQueryHandler : IRequestHandler<GetDocumentsAssignedToUserQuery, ApiResponse<List<DocumentLifecycleDto>>>
+    public class GetDocumentsAssignedToUserCommandHandler : IRequestHandler<GetDocumentsAssignedToUserCommand, ApiResponse<List<DocumentLifecycleDto>>>
     {
         private readonly IUnitOfWork _unitOfWork;
 
-        public GetDocumentsAssignedToUserQueryHandler(IUnitOfWork unitOfWork)
+        public GetDocumentsAssignedToUserCommandHandler(IUnitOfWork unitOfWork)
         {
             _unitOfWork = unitOfWork;
         }
 
-        public async Task<ApiResponse<List<DocumentLifecycleDto>>> Handle(GetDocumentsAssignedToUserQuery request, CancellationToken cancellationToken)
+        public async Task<ApiResponse<List<DocumentLifecycleDto>>> Handle(GetDocumentsAssignedToUserCommand request, CancellationToken cancellationToken)
         {
             try
             {
                 var documents = await _unitOfWork.DocumentLifecycleRepository.GetDocumentsAssignedToUserAsync(request.UserId, request.DocumentType);
-                return ApiResponse<List<DocumentLifecycleDto>>.SuccessResponse(documents.ToList(), "Documents retrieved successfully");
+                return ApiResponse<List<DocumentLifecycleDto>>.SuccessResponse(documents, "Documents retrieved successfully");
             }
             catch (Exception ex)
             {
@@ -35,16 +34,16 @@ namespace WorkflowMgmt.Application.Features.DocumentLifecycle
         }
     }
 
-    public class GetDocumentLifecycleQueryHandler : IRequestHandler<GetDocumentLifecycleQuery, ApiResponse<DocumentLifecycleDto?>>
+    public class GetDocumentLifecycleByIdCommandHandler : IRequestHandler<GetDocumentLifecycleByIdCommand, ApiResponse<DocumentLifecycleDto?>>
     {
         private readonly IUnitOfWork _unitOfWork;
 
-        public GetDocumentLifecycleQueryHandler(IUnitOfWork unitOfWork)
+        public GetDocumentLifecycleByIdCommandHandler(IUnitOfWork unitOfWork)
         {
             _unitOfWork = unitOfWork;
         }
 
-        public async Task<ApiResponse<DocumentLifecycleDto?>> Handle(GetDocumentLifecycleQuery request, CancellationToken cancellationToken)
+        public async Task<ApiResponse<DocumentLifecycleDto?>> Handle(GetDocumentLifecycleByIdCommand request, CancellationToken cancellationToken)
         {
             try
             {
@@ -58,21 +57,21 @@ namespace WorkflowMgmt.Application.Features.DocumentLifecycle
         }
     }
 
-    public class GetAvailableActionsQueryHandler : IRequestHandler<GetAvailableActionsQuery, ApiResponse<List<WorkflowStageActionDto>>>
+    public class GetAvailableActionsCommandHandler : IRequestHandler<GetAvailableActionsCommand, ApiResponse<List<WorkflowStageActionDto>>>
     {
         private readonly IUnitOfWork _unitOfWork;
 
-        public GetAvailableActionsQueryHandler(IUnitOfWork unitOfWork)
+        public GetAvailableActionsCommandHandler(IUnitOfWork unitOfWork)
         {
             _unitOfWork = unitOfWork;
         }
 
-        public async Task<ApiResponse<List<WorkflowStageActionDto>>> Handle(GetAvailableActionsQuery request, CancellationToken cancellationToken)
+        public async Task<ApiResponse<List<WorkflowStageActionDto>>> Handle(GetAvailableActionsCommand request, CancellationToken cancellationToken)
         {
             try
             {
                 var actions = await _unitOfWork.DocumentLifecycleRepository.GetAvailableActionsAsync(request.UserId, request.DocumentId, request.DocumentType);
-                return ApiResponse<List<WorkflowStageActionDto>>.SuccessResponse(actions.ToList(), "Available actions retrieved successfully");
+                return ApiResponse<List<WorkflowStageActionDto>>.SuccessResponse(actions, "Available actions retrieved successfully");
             }
             catch (Exception ex)
             {
@@ -81,16 +80,16 @@ namespace WorkflowMgmt.Application.Features.DocumentLifecycle
         }
     }
 
-    public class CanUserPerformActionQueryHandler : IRequestHandler<CanUserPerformActionQuery, ApiResponse<bool>>
+    public class CanUserPerformActionCommandHandler : IRequestHandler<CanUserPerformActionCommand, ApiResponse<bool>>
     {
         private readonly IUnitOfWork _unitOfWork;
 
-        public CanUserPerformActionQueryHandler(IUnitOfWork unitOfWork)
+        public CanUserPerformActionCommandHandler(IUnitOfWork unitOfWork)
         {
             _unitOfWork = unitOfWork;
         }
 
-        public async Task<ApiResponse<bool>> Handle(CanUserPerformActionQuery request, CancellationToken cancellationToken)
+        public async Task<ApiResponse<bool>> Handle(CanUserPerformActionCommand request, CancellationToken cancellationToken)
         {
             try
             {
@@ -107,18 +106,36 @@ namespace WorkflowMgmt.Application.Features.DocumentLifecycle
     // Command Handlers
     public class ProcessDocumentActionCommandHandler : IRequestHandler<ProcessDocumentActionCommand, ApiResponse<bool>>
     {
-        private readonly IWorkflowActionProcessorService _actionProcessorService;
+        private readonly IUnitOfWork _unitOfWork;
 
-        public ProcessDocumentActionCommandHandler(IWorkflowActionProcessorService actionProcessorService)
+        public ProcessDocumentActionCommandHandler(IUnitOfWork unitOfWork)
         {
-            _actionProcessorService = actionProcessorService;
+            _unitOfWork = unitOfWork;
         }
 
         public async Task<ApiResponse<bool>> Handle(ProcessDocumentActionCommand request, CancellationToken cancellationToken)
         {
             try
             {
-                // Create the action DTO
+                // Step 1: Validate the action
+                var validationResult = await ValidateUserActionAsync(request.ProcessedBy, request.DocumentId, request.DocumentType, request.ActionId);
+                if (!validationResult.IsValid)
+                {
+                    _unitOfWork.Rollback();
+                    return ApiResponse<bool>.ErrorResponse(validationResult.ErrorMessage ?? "Validation failed");
+                }
+
+                // Step 2: Get action and document details
+                var action = await _unitOfWork.WorkflowStageActionRepository.GetByIdAsync(request.ActionId);
+                var documentWorkflow = await _unitOfWork.DocumentWorkflowRepository.GetByDocumentIdAsync(request.DocumentId.ToString());
+
+                if (action == null || documentWorkflow == null)
+                {
+                    _unitOfWork.Rollback();
+                    return ApiResponse<bool>.ErrorResponse("Action or document workflow not found");
+                }
+
+                // Step 3: Create the action DTO
                 var actionDto = new ProcessDocumentActionDto
                 {
                     DocumentId = request.DocumentId,
@@ -127,24 +144,97 @@ namespace WorkflowMgmt.Application.Features.DocumentLifecycle
                     Comments = request.Comments,
                     FeedbackType = request.FeedbackType
                 };
+                // Step 4: Process the action using the repository
+                var success = await _unitOfWork.DocumentLifecycleRepository.ProcessDocumentActionAsync(actionDto, request.ProcessedBy);
 
-                // Process the action using the enhanced service
-                var result = await _actionProcessorService.ProcessActionAsync(actionDto, request.ProcessedBy);
-
-                if (!result.IsSuccess)
+                if (!success)
                 {
-                    return ApiResponse<bool>.ErrorResponse(result.Message);
+                    _unitOfWork.Rollback();
+                    return ApiResponse<bool>.ErrorResponse("Failed to process document action");
                 }
 
-                return ApiResponse<bool>.SuccessResponse(true, result.Message);
+                // Step 5: Commit the transaction
+                _unitOfWork.Commit();
+
+                return ApiResponse<bool>.SuccessResponse(true, "Document action processed successfully");
             }
             catch (Exception ex)
             {
+                try
+                {
+                    _unitOfWork.Rollback();
+                }
+                catch
+                {
+                    // Ignore rollback errors
+                }
                 return ApiResponse<bool>.ErrorResponse($"Failed to process document action: {ex.Message}");
             }
         }
 
+        private async Task<ValidationResult> ValidateUserActionAsync(Guid userId, Guid documentId, string documentType, Guid actionId)
+        {
+            try
+            {
+                // Check if user can perform this action using existing repository method
+                var canPerform = await _unitOfWork.DocumentLifecycleRepository.CanUserPerformActionAsync(
+                    userId, documentId, documentType, actionId);
 
+                if (!canPerform)
+                {
+                    return ValidationResult.Failure("User is not authorized to perform this action");
+                }
+
+                // Validate document state
+                var workflow = await _unitOfWork.DocumentWorkflowRepository.GetByDocumentIdAsync(documentId.ToString());
+                if (workflow == null)
+                {
+                    return ValidationResult.Failure("Document workflow not found");
+                }
+
+                // Check if workflow is in a valid state for actions
+                if (workflow.Status == "Completed")
+                {
+                    return ValidationResult.Failure("Cannot perform actions on completed workflow");
+                }
+
+                if (workflow.Status == "Cancelled")
+                {
+                    return ValidationResult.Failure("Cannot perform actions on cancelled workflow");
+                }
+
+                // Get action details for stage transition validation
+                var action = await _unitOfWork.WorkflowStageActionRepository.GetByIdAsync(actionId);
+                if (action == null)
+                {
+                    return ValidationResult.Failure("Action not found");
+                }
+
+                // Validate stage transition
+                if (action.WorkflowStageId != workflow.CurrentStageId)
+                {
+                    return ValidationResult.Failure("Action does not belong to the current workflow stage");
+                }
+
+                return ValidationResult.Success();
+            }
+            catch (Exception ex)
+            {
+                return ValidationResult.Failure($"Validation error: {ex.Message}");
+            }
+        }
+
+
+    }
+
+    // Simple validation result class
+    public class ValidationResult
+    {
+        public bool IsValid { get; set; }
+        public string? ErrorMessage { get; set; }
+
+        public static ValidationResult Success() => new() { IsValid = true };
+        public static ValidationResult Failure(string errorMessage) => new() { IsValid = false, ErrorMessage = errorMessage };
     }
 
     public class CreateDocumentFeedbackCommandHandler : IRequestHandler<CreateDocumentFeedbackCommand, ApiResponse<DocumentFeedbackDto>>
@@ -220,21 +310,21 @@ namespace WorkflowMgmt.Application.Features.DocumentLifecycle
         }
     }
 
-    public class GetDocumentFeedbackQueryHandler : IRequestHandler<GetDocumentFeedbackQuery, ApiResponse<List<DocumentFeedbackDto>>>
+    public class GetDocumentFeedbackCommandHandler : IRequestHandler<GetDocumentFeedbackCommand, ApiResponse<List<DocumentFeedbackDto>>>
     {
         private readonly IUnitOfWork _unitOfWork;
 
-        public GetDocumentFeedbackQueryHandler(IUnitOfWork unitOfWork)
+        public GetDocumentFeedbackCommandHandler(IUnitOfWork unitOfWork)
         {
             _unitOfWork = unitOfWork;
         }
 
-        public async Task<ApiResponse<List<DocumentFeedbackDto>>> Handle(GetDocumentFeedbackQuery request, CancellationToken cancellationToken)
+        public async Task<ApiResponse<List<DocumentFeedbackDto>>> Handle(GetDocumentFeedbackCommand request, CancellationToken cancellationToken)
         {
             try
             {
                 var feedback = await _unitOfWork.DocumentFeedbackRepository.GetByDocumentIdAsync(request.DocumentId, request.DocumentType);
-                return ApiResponse<List<DocumentFeedbackDto>>.SuccessResponse(feedback.ToList(), "Feedback retrieved successfully");
+                return ApiResponse<List<DocumentFeedbackDto>>.SuccessResponse(feedback, "Feedback retrieved successfully");
             }
             catch (Exception ex)
             {

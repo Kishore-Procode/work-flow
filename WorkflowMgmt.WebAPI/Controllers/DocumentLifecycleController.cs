@@ -18,13 +18,8 @@ namespace WorkflowMgmt.WebAPI.Controllers
                 return Unauthorized("User not authenticated");
             }
 
-            var query = new GetDocumentsAssignedToUserQuery
-            {
-                UserId = userId,
-                DocumentType = documentType
-            };
-
-            var result = await Mediator.Send(query);
+            var command = new GetDocumentsAssignedToUserCommand(userId, documentType);
+            var result = await Mediator.Send(command);
             return Ok(result);
         }
 
@@ -37,14 +32,8 @@ namespace WorkflowMgmt.WebAPI.Controllers
                 return Unauthorized("User not authenticated");
             }
 
-            var query = new GetDocumentLifecycleQuery
-            {
-                DocumentId = documentId,
-                DocumentType = documentType,
-                UserId = userId
-            };
-
-            var result = await Mediator.Send(query);
+            var command = new GetDocumentLifecycleByIdCommand(documentId, documentType, userId);
+            var result = await Mediator.Send(command);
             return Ok(result);
         }
 
@@ -57,14 +46,8 @@ namespace WorkflowMgmt.WebAPI.Controllers
                 return Unauthorized("User not authenticated");
             }
 
-            var query = new GetAvailableActionsQuery
-            {
-                UserId = userId,
-                DocumentId = documentId,
-                DocumentType = documentType
-            };
-
-            var result = await Mediator.Send(query);
+            var command = new GetAvailableActionsCommand(userId, documentId, documentType);
+            var result = await Mediator.Send(command);
             return Ok(result);
         }
 
@@ -77,15 +60,8 @@ namespace WorkflowMgmt.WebAPI.Controllers
                 return Unauthorized("User not authenticated");
             }
 
-            var query = new CanUserPerformActionQuery
-            {
-                UserId = userId,
-                DocumentId = documentId,
-                DocumentType = documentType,
-                ActionId = actionId
-            };
-
-            var result = await Mediator.Send(query);
+            var command = new CanUserPerformActionCommand(userId, documentId, documentType, actionId);
+            var result = await Mediator.Send(command);
             return Ok(result);
         }
 
@@ -98,16 +74,7 @@ namespace WorkflowMgmt.WebAPI.Controllers
                 return Unauthorized("User not authenticated");
             }
 
-            var command = new ProcessDocumentActionCommand
-            {
-                DocumentId = documentId,
-                DocumentType = request.DocumentType,
-                ActionId = actionId,
-                ProcessedBy = userId,
-                Comments = request.Comments,
-                FeedbackType = request.FeedbackType
-            };
-
+            var command = new ProcessDocumentActionCommand(documentId, request.DocumentType, actionId, userId, request.Comments, request.FeedbackType ?? "general");
             var result = await Mediator.Send(command);
             return Ok(result);
         }
@@ -115,13 +82,8 @@ namespace WorkflowMgmt.WebAPI.Controllers
         [HttpGet("{documentId}/feedback")]
         public async Task<IActionResult> GetDocumentFeedback(Guid documentId, [FromQuery] string documentType = "syllabus")
         {
-            var query = new GetDocumentFeedbackQuery
-            {
-                DocumentId = documentId,
-                DocumentType = documentType
-            };
-
-            var result = await Mediator.Send(query);
+            var command = new GetDocumentFeedbackCommand(documentId, documentType);
+            var result = await Mediator.Send(command);
             return Ok(result);
         }
 
@@ -134,16 +96,7 @@ namespace WorkflowMgmt.WebAPI.Controllers
                 return Unauthorized("User not authenticated");
             }
 
-            var command = new CreateDocumentFeedbackCommand
-            {
-                DocumentId = documentId,
-                DocumentType = request.DocumentType,
-                WorkflowStageId = request.WorkflowStageId,
-                FeedbackProvider = userId,
-                FeedbackText = request.FeedbackText,
-                FeedbackType = request.FeedbackType
-            };
-
+            var command = new CreateDocumentFeedbackCommand(documentId, request.DocumentType, userId, request.FeedbackText, request.WorkflowStageId, request.FeedbackType);
             var result = await Mediator.Send(command);
             return Ok(result);
         }
@@ -151,14 +104,7 @@ namespace WorkflowMgmt.WebAPI.Controllers
         [HttpPut("feedback/{feedbackId}")]
         public async Task<IActionResult> UpdateDocumentFeedback(Guid feedbackId, [FromBody] UpdateDocumentFeedbackRequest request)
         {
-            var command = new UpdateDocumentFeedbackCommand
-            {
-                Id = feedbackId,
-                FeedbackText = request.FeedbackText,
-                FeedbackType = request.FeedbackType,
-                IsAddressed = request.IsAddressed
-            };
-
+            var command = new UpdateDocumentFeedbackCommand(feedbackId, request.FeedbackText, request.FeedbackType, request.IsAddressed);
             var result = await Mediator.Send(command);
             return Ok(result);
         }
@@ -172,12 +118,7 @@ namespace WorkflowMgmt.WebAPI.Controllers
                 return Unauthorized("User not authenticated");
             }
 
-            var command = new MarkFeedbackAsAddressedCommand
-            {
-                FeedbackId = feedbackId,
-                AddressedBy = userId
-            };
-
+            var command = new MarkFeedbackAsAddressedCommand(feedbackId, userId);
             var result = await Mediator.Send(command);
             return Ok(result);
         }
