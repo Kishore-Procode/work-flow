@@ -172,6 +172,12 @@ namespace WorkflowMgmt.Domain.Models.Workflow
         public string ActionType { get; set; } = string.Empty;
 
         public Guid? NextStageId { get; set; }
+
+        /// <summary>
+        /// Stage order for next stage (will be converted to NextStageId during processing)
+        /// -1 = Complete workflow, null/undefined = Stay in current stage or auto-advance
+        /// </summary>
+        public int? NextStageOrder { get; set; }
     }
 
     public class UpdateWorkflowStageActionDto

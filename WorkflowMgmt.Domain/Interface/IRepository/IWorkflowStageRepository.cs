@@ -17,6 +17,7 @@ namespace WorkflowMgmt.Domain.Interface.IRepository
         Task<Guid> CreateAsync(Guid templateId, CreateWorkflowStageDto stage);
         Task<bool> UpdateAsync(Guid id, UpdateWorkflowStageDto stage);
         Task<bool> DeleteAsync(Guid id);
+        Task<bool> DeleteByTemplateIdAsync(Guid templateId);
         Task<bool> DeactivateStagesByTemplateIdAsync(Guid templateId);
         Task<bool> ExistsAsync(Guid id);
         Task<bool> ExistsInTemplateAsync(Guid templateId, int stageOrder, Guid? excludeId = null);

@@ -11,6 +11,7 @@ namespace WorkflowMgmt.Domain.Interface.IRepository
         Task<List<WorkflowStageRoleDto>> GetByStageIdAsync(Guid stageId);
         Task<bool> CreateAsync(Guid stageId, CreateWorkflowStageRoleDto role);
         Task<bool> DeleteByStageIdAsync(Guid stageId);
+        Task<bool> DeleteByTemplateIdAsync(Guid templateId);
         Task<bool> UpdateStageRolesAsync(Guid stageId, List<UpdateRoleDto> roles);
 
         // Query operations

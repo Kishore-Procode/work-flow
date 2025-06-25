@@ -223,7 +223,7 @@ namespace WorkflowMgmt.Infrastructure.Repository
                 FROM workflowmgmt.document_workflows dw
                 INNER JOIN workflowmgmt.workflow_templates wt ON dw.workflow_template_id = wt.id
                 LEFT JOIN workflowmgmt.workflow_stages ws ON dw.current_stage_id = ws.id
-                WHERE dw.document_id = @DocumentId AND dw.is_active = true
+                WHERE dw.document_id = @DocumentId::uuid AND dw.is_active = true
                 ORDER BY dw.initiated_date DESC
                 LIMIT 1";
 

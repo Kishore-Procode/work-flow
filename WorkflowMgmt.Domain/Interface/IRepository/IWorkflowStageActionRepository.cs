@@ -18,5 +18,6 @@ namespace WorkflowMgmt.Domain.Interface.IRepository
         Task<bool> ExistsAsync(Guid id);
         Task<bool> ExistsByStageAndActionTypeAsync(Guid stageId, string actionType, Guid? excludeId = null);
         Task<bool> DeleteByStageIdAsync(Guid stageId);
+        Task<bool> DeleteByTemplateIdAsync(Guid templateId);
     }
 }

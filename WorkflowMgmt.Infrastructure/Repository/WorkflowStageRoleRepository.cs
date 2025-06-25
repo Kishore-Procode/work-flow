@@ -58,6 +58,18 @@ namespace WorkflowMgmt.Infrastructure.Repository
             return rowsAffected >= 0; // Return true even if no rows deleted (stage might not have roles)
         }
 
+        public async Task<bool> DeleteByTemplateIdAsync(Guid templateId)
+        {
+            var sql = @"
+                DELETE FROM workflowmgmt.workflow_stage_roles
+                WHERE workflow_stage_id IN (
+                    SELECT id FROM workflowmgmt.workflow_stages
+                    WHERE workflow_template_id = @TemplateId
+                )";
+            var rowsAffected = await Connection.ExecuteAsync(sql, new { TemplateId = templateId }, transaction: Transaction);
+            return rowsAffected >= 0; // Return true even if no rows deleted
+        }
+
         public async Task<bool> UpdateStageRolesAsync(Guid stageId, List<UpdateRoleDto> roles)
         {
             // Delete existing roles

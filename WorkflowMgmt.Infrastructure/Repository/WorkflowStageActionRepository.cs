@@ -158,5 +158,17 @@ namespace WorkflowMgmt.Infrastructure.Repository
             var rowsAffected = await Connection.ExecuteAsync(sql, new { StageId = stageId }, transaction: Transaction);
             return rowsAffected >= 0; // Return true even if no rows were deleted (stage had no actions)
         }
+
+        public async Task<bool> DeleteByTemplateIdAsync(Guid templateId)
+        {
+            var sql = @"
+                DELETE FROM workflowmgmt.workflow_stage_actions
+                WHERE workflow_stage_id IN (
+                    SELECT id FROM workflowmgmt.workflow_stages
+                    WHERE workflow_template_id = @TemplateId
+                )";
+            var rowsAffected = await Connection.ExecuteAsync(sql, new { TemplateId = templateId }, transaction: Transaction);
+            return rowsAffected >= 0; // Return true even if no rows were deleted
+        }
     }
 }

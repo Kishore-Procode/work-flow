@@ -171,10 +171,27 @@ namespace WorkflowMgmt.Application.Features.WorkflowTemplate
 
                         foreach (var action in actions)
                         {
-                            // If action has a next_stage_id specified, use it
-                            // Otherwise, set it to the next stage in order
-                            if (!action.NextStageId.HasValue)
+                            // Handle nextStageOrder conversion to nextStageId
+                            if (action.NextStageOrder.HasValue)
                             {
+                                if (action.NextStageOrder.Value == -1)
+                                {
+                                    // -1 means complete workflow (no next stage)
+                                    action.NextStageId = null;
+                                }
+                                else if (stageOrderToIdMap.ContainsKey(action.NextStageOrder.Value))
+                                {
+                                    action.NextStageId = stageOrderToIdMap[action.NextStageOrder.Value];
+                                }
+                                else
+                                {
+                                    // Invalid stage order, leave as null
+                                    action.NextStageId = null;
+                                }
+                            }
+                            else if (!action.NextStageId.HasValue)
+                            {
+                                // If no next stage order or ID specified, default to next stage in sequence
                                 var nextStageOrder = currentStageOrder + 1;
                                 if (stageOrderToIdMap.ContainsKey(nextStageOrder))
                                 {
@@ -239,16 +256,30 @@ namespace WorkflowMgmt.Application.Features.WorkflowTemplate
                     return ApiResponse<WorkflowTemplateDto?>.ErrorResponse("Failed to update workflow template");
                 }
 
-                // Update stages if provided
+                // Always delete existing stages, actions, and roles for this template during update
+                // This ensures a clean slate for the new configuration
+                // Order matters: delete actions first, then roles, then stages (due to foreign key constraints)
+                await _unitOfWork.WorkflowStageActionRepository.DeleteByTemplateIdAsync(request.Id);
+                await _unitOfWork.WorkflowStageRoleRepository.DeleteByTemplateIdAsync(request.Id);
+                await _unitOfWork.WorkflowStageRepository.DeleteByTemplateIdAsync(request.Id);
+
+                // Create new stages if provided
                 if (request.Stages?.Count > 0)
                 {
-                    // First, deactivate existing stages
-                    await _unitOfWork.WorkflowStageRepository.DeactivateStagesByTemplateIdAsync(request.Id);
 
-                    // Create new stages
+                    // First pass: Create all stages and collect stage mappings
+                    var stageOrderToIdMap = new Dictionary<int, Guid>();
+                    var stageIdToActionsMap = new Dictionary<Guid, List<CreateWorkflowStageActionDto>>();
+
                     foreach (var stage in request.Stages)
                     {
                         var stageId = await _unitOfWork.WorkflowStageRepository.CreateAsync(request.Id, stage);
+                        stageOrderToIdMap[stage.StageOrder] = stageId;
+
+                        if (stage.Actions?.Count > 0)
+                        {
+                            stageIdToActionsMap[stageId] = stage.Actions;
+                        }
 
                         // Create stage roles if provided
                         if (stage.RequiredRoles?.Count > 0)
@@ -258,14 +289,47 @@ namespace WorkflowMgmt.Application.Features.WorkflowTemplate
                                 await _unitOfWork.WorkflowStageRoleRepository.CreateAsync(stageId, role);
                             }
                         }
+                    }
 
-                        // Create stage actions if provided
-                        if (stage.Actions?.Count > 0)
+                    // Second pass: Create actions with proper next_stage_id mapping
+                    foreach (var kvp in stageIdToActionsMap)
+                    {
+                        var stageId = kvp.Key;
+                        var actions = kvp.Value;
+                        var currentStageOrder = stageOrderToIdMap.First(x => x.Value == stageId).Key;
+
+                        foreach (var action in actions)
                         {
-                            foreach (var action in stage.Actions)
+                            // Handle nextStageOrder conversion to nextStageId
+                            if (action.NextStageOrder.HasValue)
                             {
-                                await _unitOfWork.WorkflowStageActionRepository.CreateAsync(stageId, action);
+                                if (action.NextStageOrder.Value == -1)
+                                {
+                                    // -1 means complete workflow (no next stage)
+                                    action.NextStageId = null;
+                                }
+                                else if (stageOrderToIdMap.ContainsKey(action.NextStageOrder.Value))
+                                {
+                                    action.NextStageId = stageOrderToIdMap[action.NextStageOrder.Value];
+                                }
+                                else
+                                {
+                                    // Invalid stage order, leave as null
+                                    action.NextStageId = null;
+                                }
                             }
+                            else
+                            {
+                                // If no next stage order specified, default to next stage in sequence
+                                var nextStageOrder = currentStageOrder + 1;
+                                if (stageOrderToIdMap.ContainsKey(nextStageOrder))
+                                {
+                                    action.NextStageId = stageOrderToIdMap[nextStageOrder];
+                                }
+                                // If no next stage exists, leave NextStageId as null (workflow completion)
+                            }
+
+                            await _unitOfWork.WorkflowStageActionRepository.CreateAsync(stageId, action);
                         }
                     }
                 }
