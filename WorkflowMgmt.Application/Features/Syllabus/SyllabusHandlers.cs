@@ -127,10 +127,8 @@ namespace WorkflowMgmt.Application.Features.Syllabus
             string? originalFilename = null;
             if (request.DocumentFile != null)
             {
-                // TODO: Implement file upload logic
-                // For now, just store the filename
                 originalFilename = request.DocumentFile.FileName;
-                // documentUrl = await UploadFileAsync(request.DocumentFile);
+                // DocumentUrl will be set after file upload
             }
 
             var createDto = new CreateSyllabusDto
@@ -152,7 +150,8 @@ namespace WorkflowMgmt.Application.Features.Syllabus
                 AssessmentMethods = request.AssessmentMethods,
                 DetailedContent = request.DetailedContent,
                 ReferenceMaterials = request.ReferenceMaterials,
-                DocumentFile = request.DocumentFile
+                DocumentFile = request.DocumentFile,
+                OriginalFilename = originalFilename
             };
 
             var syllabusId = await _unitOfWork.SyllabusRepository.CreateAsync(createDto);
@@ -198,6 +197,15 @@ namespace WorkflowMgmt.Application.Features.Syllabus
 
                     await _unitOfWork.DocumentUploadRepository.CreateAsync(documentUpload);
 
+                    // Update syllabus with document URL and processing status
+                    var updateDto = new UpdateSyllabusDto
+                    {
+                        DocumentUrl = $"/uploads/syllabi/{syllabusId}/{uniqueFileName}",
+                        FileProcessingStatus = "completed",
+                        FileProcessingNotes = $"File uploaded on {DateTime.UtcNow:yyyy-MM-dd HH:mm:ss} UTC"
+                    };
+                    await _unitOfWork.SyllabusRepository.UpdateAsync(syllabusId, updateDto);
+
                     Console.WriteLine($"✅ File uploaded successfully: {filePath}");
                 }
                 catch (Exception uploadError)
@@ -223,7 +231,8 @@ namespace WorkflowMgmt.Application.Features.Syllabus
                             DocumentId = syllabusId.ToString(),
                             DocumentType = "syllabus",
                             WorkflowTemplateId = workflowMapping.workflow_template_id,
-                            InitiatedBy = request.FacultyId
+                            InitiatedBy = request.FacultyId,
+                            AssignedTo = request.FacultyId // Initially assign to the creator
                         };
 
                         var workflow = await _mediator.Send(createWorkflowCommand, cancellationToken);
@@ -237,6 +246,7 @@ namespace WorkflowMgmt.Application.Features.Syllabus
                                 StageId = workflow.CurrentStageId.Value,
                                 ActionTaken = "initiated",
                                 ProcessedBy = request.FacultyId,
+                                AssignedTo = request.FacultyId, // Initially assign to the creator
                                 Comments = "Workflow initiated upon syllabus creation"
                             };
 
@@ -335,6 +345,78 @@ namespace WorkflowMgmt.Application.Features.Syllabus
                 }
             }
 
+            // Handle file upload if present
+            string? documentUrl = null;
+            string? originalFilename = null;
+            if (request.DocumentFile != null)
+            {
+                try
+                {
+                    // Get existing syllabus to check for old file
+                    var existingSyllabus = await _unitOfWork.SyllabusRepository.GetByIdAsync(request.Id);
+
+                    // Delete old file if it exists
+                    if (existingSyllabus != null && !string.IsNullOrEmpty(existingSyllabus.DocumentUrl))
+                    {
+                        try
+                        {
+                            var oldFilePath = Path.Combine("wwwroot", existingSyllabus.DocumentUrl.TrimStart('/'));
+                            if (File.Exists(oldFilePath))
+                            {
+                                File.Delete(oldFilePath);
+                                Console.WriteLine($"🗑️ Deleted old file: {oldFilePath}");
+                            }
+                        }
+                        catch (Exception deleteError)
+                        {
+                            Console.WriteLine($"Warning: Failed to delete old file: {deleteError.Message}");
+                            // Continue with upload even if old file deletion fails
+                        }
+                    }
+
+                    // Create uploads directory if it doesn't exist
+                    var uploadsPath = Path.Combine("wwwroot", "uploads", "syllabi", request.Id.ToString());
+                    Directory.CreateDirectory(uploadsPath);
+
+                    // Generate unique filename to avoid conflicts
+                    var fileExtension = Path.GetExtension(request.DocumentFile.FileName);
+                    var uniqueFileName = $"{Guid.NewGuid()}{fileExtension}";
+                    var filePath = Path.Combine(uploadsPath, uniqueFileName);
+
+                    // Save new file to disk
+                    using (var stream = new FileStream(filePath, FileMode.Create))
+                    {
+                        await request.DocumentFile.CopyToAsync(stream);
+                    }
+
+                    // Set the document URL and original filename
+                    documentUrl = $"/uploads/syllabi/{request.Id}/{uniqueFileName}";
+                    originalFilename = request.DocumentFile.FileName;
+
+                    // Create new document upload record
+                    var documentUpload = new CreateDocumentUploadDto
+                    {
+                        DocumentId = request.Id,
+                        DocumentType = "syllabus",
+                        OriginalFilename = request.DocumentFile.FileName,
+                        FileSize = request.DocumentFile.Length,
+                        FileType = request.DocumentFile.ContentType ?? "application/octet-stream",
+                        FileUrl = documentUrl,
+                        UploadStatus = "completed",
+                        UploadedBy = request.FacultyId ?? Guid.Empty
+                    };
+
+                    await _unitOfWork.DocumentUploadRepository.CreateAsync(documentUpload);
+
+                    Console.WriteLine($"✅ File replaced successfully during update: {filePath}");
+                }
+                catch (Exception uploadError)
+                {
+                    Console.WriteLine($"Failed to upload file during update: {uploadError.Message}");
+                    // Don't fail the syllabus update if file upload fails
+                }
+            }
+
             var updateDto = new UpdateSyllabusDto
             {
                 Title = request.Title,
@@ -351,7 +433,11 @@ namespace WorkflowMgmt.Application.Features.Syllabus
                 AssessmentMethods = request.AssessmentMethods,
                 DetailedContent = request.DetailedContent,
                 ReferenceMaterials = request.ReferenceMaterials,
-                Status = request.Status
+                Status = request.Status,
+                DocumentUrl = documentUrl, // Only update if new file was uploaded
+                OriginalFilename = originalFilename, // Only update if new file was uploaded
+                FileProcessingStatus = documentUrl != null ? "completed" : null, // Update processing status if file was uploaded
+                FileProcessingNotes = documentUrl != null ? $"File updated on {DateTime.UtcNow:yyyy-MM-dd HH:mm:ss} UTC" : null
             };
 
             var success = await _unitOfWork.SyllabusRepository.UpdateAsync(request.Id, updateDto);
@@ -425,14 +511,14 @@ namespace WorkflowMgmt.Application.Features.Syllabus
                 }
             }
 
-            await _unitOfWork.SaveAsync();
-
             // Return the updated syllabus
             var result = await _unitOfWork.SyllabusRepository.GetByIdAsync(request.Id);
             if (result == null)
             {
                 return null;
             }
+            
+            _unitOfWork.Commit();
 
             // Convert to SyllabusDto
             return new SyllabusDto

@@ -13,6 +13,7 @@ namespace WorkflowMgmt.Domain.Interface.IRepository
         Task<IEnumerable<WorkflowStageDto>> GetByRoleAsync(string role);
         Task<WorkflowStageDto?> GetFirstStageByTemplateIdAsync(Guid templateId);
         Task<WorkflowStageDto?> GetNextStageAsync(Guid currentStageId, string actionType);
+        Task<WorkflowStageDto?> GetNextStageAsync(Guid templateId, int currentStageOrder);
         Task<Guid> CreateAsync(Guid templateId, CreateWorkflowStageDto stage);
         Task<bool> UpdateAsync(Guid id, UpdateWorkflowStageDto stage);
         Task<bool> DeleteAsync(Guid id);

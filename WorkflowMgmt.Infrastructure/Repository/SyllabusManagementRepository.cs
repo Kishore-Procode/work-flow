@@ -118,6 +118,7 @@ namespace WorkflowMgmt.Infrastructure.Repository
                     s.course_id as CourseId,
                     s.semester_id as SemesterId,
                     s.template_id as TemplateId,
+                    s.faculty_id as FacultyId,
                     s.faculty_name as FacultyName,
                     s.credits as Credits,
                     s.duration_weeks as DurationWeeks,
@@ -233,11 +234,11 @@ namespace WorkflowMgmt.Infrastructure.Repository
                 (id, title, department_id, course_id, semester_id, template_id, faculty_id, faculty_name,
                  credits, duration_weeks, content_creation_method, course_description, learning_objectives,
                  learning_outcomes, course_topics, assessment_methods, detailed_content, reference_materials,
-                 status, is_active, created_date, created_by)
+                 document_url, original_filename, status, is_active, created_date, created_by)
                 VALUES (@Id, @Title, @DepartmentId, @CourseId, @SemesterId, @TemplateId, @FacultyId, @FacultyName,
                         @Credits, @DurationWeeks, @ContentCreationMethod, @CourseDescription, @LearningObjectives,
                         @LearningOutcomes, @CourseTopics, @AssessmentMethods, @DetailedContent, @ReferenceMaterials,
-                        'Draft', true, @CreatedDate, @CreatedBy)";
+                        @DocumentUrl, @OriginalFilename, 'Draft', true, @CreatedDate, @CreatedBy)";
 
             await Connection.ExecuteAsync(sql, new
             {
@@ -259,6 +260,8 @@ namespace WorkflowMgmt.Infrastructure.Repository
                 syllabus.AssessmentMethods,
                 syllabus.DetailedContent,
                 syllabus.ReferenceMaterials,
+                syllabus.DocumentUrl,
+                syllabus.OriginalFilename,
                 CreatedDate = DateTime.UtcNow,
                 CreatedBy = "system" // TODO: Get from current user context
             }, transaction: Transaction);
@@ -284,6 +287,10 @@ namespace WorkflowMgmt.Infrastructure.Repository
                     assessment_methods = COALESCE(@AssessmentMethods, assessment_methods),
                     detailed_content = COALESCE(@DetailedContent, detailed_content),
                     reference_materials = COALESCE(@ReferenceMaterials, reference_materials),
+                    document_url = COALESCE(@DocumentUrl, document_url),
+                    original_filename = COALESCE(@OriginalFilename, original_filename),
+                    file_processing_status = COALESCE(@FileProcessingStatus, file_processing_status),
+                    file_processing_notes = COALESCE(@FileProcessingNotes, file_processing_notes),
                     status = COALESCE(@Status, status),
                     modified_date = @ModifiedDate,
                     modified_by = @ModifiedBy
@@ -306,6 +313,10 @@ namespace WorkflowMgmt.Infrastructure.Repository
                 syllabus.AssessmentMethods,
                 syllabus.DetailedContent,
                 syllabus.ReferenceMaterials,
+                syllabus.DocumentUrl,
+                syllabus.OriginalFilename,
+                syllabus.FileProcessingStatus,
+                syllabus.FileProcessingNotes,
                 syllabus.Status,
                 ModifiedDate = DateTime.UtcNow,
                 ModifiedBy = "system" // TODO: Get from current user context
@@ -443,6 +454,7 @@ namespace WorkflowMgmt.Infrastructure.Repository
                     s.course_id as CourseId,
                     s.semester_id as SemesterId,
                     s.template_id as TemplateId,
+                    s.faculty_id as FacultyId,
                     s.faculty_name as FacultyName,
                     s.faculty_email as FacultyEmail,
                     s.credits as Credits,
@@ -631,6 +643,7 @@ namespace WorkflowMgmt.Infrastructure.Repository
                     s.course_id as CourseId,
                     s.semester_id as SemesterId,
                     s.template_id as TemplateId,
+                    s.faculty_id as FacultyId,
                     s.faculty_name as FacultyName,
                     s.faculty_email as FacultyEmail,
                     s.credits as Credits,
@@ -725,6 +738,7 @@ namespace WorkflowMgmt.Infrastructure.Repository
                     s.course_id as CourseId,
                     s.semester_id as SemesterId,
                     s.template_id as TemplateId,
+                    s.faculty_id as FacultyId,
                     s.faculty_name as FacultyName,
                     s.faculty_email as FacultyEmail,
                     s.credits as Credits,
@@ -819,6 +833,7 @@ namespace WorkflowMgmt.Infrastructure.Repository
                     s.course_id as CourseId,
                     s.semester_id as SemesterId,
                     s.template_id as TemplateId,
+                    s.faculty_id as FacultyId,
                     s.faculty_name as FacultyName,
                     s.faculty_email as FacultyEmail,
                     s.credits as Credits,

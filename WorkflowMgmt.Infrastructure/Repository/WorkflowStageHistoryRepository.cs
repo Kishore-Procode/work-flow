@@ -178,10 +178,10 @@ namespace WorkflowMgmt.Infrastructure.Repository
         {
             var id = Guid.NewGuid();
             var sql = @"
-                INSERT INTO workflowmgmt.workflow_stage_history 
-                (id, document_workflow_id, stage_id, action_taken, processed_by, processed_date, 
+                INSERT INTO workflowmgmt.workflow_stage_history
+                (id, document_workflow_id, stage_id, action_taken, processed_by, assigned_to, processed_date,
                  comments, attachments, created_date)
-                VALUES (@Id, @DocumentWorkflowId, @StageId, @ActionTaken, @ProcessedBy, @ProcessedDate, 
+                VALUES (@Id, @DocumentWorkflowId, @StageId, @ActionTaken, @ProcessedBy, @AssignedTo, @ProcessedDate,
                         @Comments, @Attachments, @CreatedDate)";
 
             await Connection.ExecuteAsync(sql, new
@@ -191,6 +191,7 @@ namespace WorkflowMgmt.Infrastructure.Repository
                 history.StageId,
                 history.ActionTaken,
                 history.ProcessedBy,
+                history.AssignedTo,
                 ProcessedDate = DateTime.UtcNow,
                 history.Comments,
                 history.Attachments,

@@ -10,6 +10,7 @@ namespace WorkflowMgmt.Domain.Models.Workflow
         public Guid StageId { get; set; }
         public string ActionTaken { get; set; } = string.Empty;
         public Guid ProcessedBy { get; set; }
+        public Guid? AssignedTo { get; set; }
         public DateTime ProcessedDate { get; set; }
         public string? Comments { get; set; }
         public string[]? Attachments { get; set; }
@@ -40,6 +41,8 @@ namespace WorkflowMgmt.Domain.Models.Workflow
 
         [Required]
         public Guid ProcessedBy { get; set; }
+
+        public Guid? AssignedTo { get; set; }
 
         public string? Comments { get; set; }
 

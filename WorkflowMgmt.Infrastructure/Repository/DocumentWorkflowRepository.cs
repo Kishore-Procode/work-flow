@@ -250,11 +250,11 @@ namespace WorkflowMgmt.Infrastructure.Repository
                 transaction: Transaction);
 
             var sql = @"
-                INSERT INTO workflowmgmt.document_workflows 
-                (id, document_id, document_type, workflow_template_id, current_stage_id, 
-                 status, initiated_by, initiated_date, is_active, created_date)
-                VALUES (@Id, @DocumentId, @DocumentType, @WorkflowTemplateId, @CurrentStageId, 
-                        'In Progress', @InitiatedBy, @InitiatedDate, true, @CreatedDate)";
+                INSERT INTO workflowmgmt.document_workflows
+                (id, document_id, document_type, workflow_template_id, current_stage_id,
+                 status, initiated_by, assigned_to, initiated_date, is_active, created_date)
+                VALUES (@Id, @DocumentId, @DocumentType, @WorkflowTemplateId, @CurrentStageId,
+                        'In Progress', @InitiatedBy, @AssignedTo, @InitiatedDate, true, @CreatedDate)";
 
             await Connection.ExecuteAsync(sql, new
             {
@@ -264,6 +264,7 @@ namespace WorkflowMgmt.Infrastructure.Repository
                 workflow.WorkflowTemplateId,
                 CurrentStageId = firstStageId,
                 workflow.InitiatedBy,
+                AssignedTo = workflow.AssignedTo,
                 InitiatedDate = DateTime.UtcNow,
                 CreatedDate = DateTime.UtcNow
             }, transaction: Transaction);

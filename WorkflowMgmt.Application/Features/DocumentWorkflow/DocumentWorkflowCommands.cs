@@ -61,6 +61,8 @@ namespace WorkflowMgmt.Application.Features.DocumentWorkflow
 
         [Required]
         public Guid InitiatedBy { get; set; }
+
+        public Guid? AssignedTo { get; set; }
     }
 
     public class UpdateDocumentWorkflowCommand : IRequest<DocumentWorkflowDto?>

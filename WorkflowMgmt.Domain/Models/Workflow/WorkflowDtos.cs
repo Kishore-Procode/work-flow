@@ -66,6 +66,7 @@ namespace WorkflowMgmt.Domain.Models.Workflow
         public Guid? CurrentStageId { get; set; }
         public string Status { get; set; } = string.Empty;
         public Guid InitiatedBy { get; set; }
+        public Guid? AssignedTo { get; set; }
         public DateTime InitiatedDate { get; set; }
         public DateTime? CompletedDate { get; set; }
         public bool IsActive { get; set; }
@@ -201,6 +202,8 @@ namespace WorkflowMgmt.Domain.Models.Workflow
 
         [Required]
         public Guid InitiatedBy { get; set; }
+
+        public Guid? AssignedTo { get; set; }
     }
 
     public class UpdateDocumentWorkflowDto

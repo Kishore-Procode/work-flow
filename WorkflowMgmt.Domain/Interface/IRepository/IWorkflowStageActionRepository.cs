@@ -9,6 +9,7 @@ namespace WorkflowMgmt.Domain.Interface.IRepository
     public interface IWorkflowStageActionRepository
     {
         Task<IEnumerable<WorkflowStageActionDto>> GetByStageIdAsync(Guid stageId);
+        Task<IEnumerable<WorkflowStageActionDto>> GetActiveByStageIdAsync(Guid stageId);
         Task<WorkflowStageActionDto?> GetByIdAsync(Guid id);
         Task<WorkflowStageActionDto?> GetByStageAndActionTypeAsync(Guid stageId, string actionType);
         Task<Guid> CreateAsync(Guid stageId, CreateWorkflowStageActionDto action);

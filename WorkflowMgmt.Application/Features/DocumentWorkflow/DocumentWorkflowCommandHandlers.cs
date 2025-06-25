@@ -158,7 +158,8 @@ namespace WorkflowMgmt.Application.Features.DocumentWorkflow
                 DocumentId = request.DocumentId,
                 DocumentType = request.DocumentType,
                 WorkflowTemplateId = request.WorkflowTemplateId,
-                InitiatedBy = request.InitiatedBy
+                InitiatedBy = request.InitiatedBy,
+                AssignedTo = request.AssignedTo
             };
 
             var workflowId = await _unitOfWork.DocumentWorkflowRepository.CreateAsync(createDto);
@@ -180,6 +181,7 @@ namespace WorkflowMgmt.Application.Features.DocumentWorkflow
                 CurrentStageId = result.CurrentStageId,
                 Status = result.Status,
                 InitiatedBy = result.InitiatedBy,
+                AssignedTo = result.AssignedTo,
                 InitiatedDate = result.InitiatedDate,
                 CompletedDate = result.CompletedDate,
                 IsActive = result.IsActive,

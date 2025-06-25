@@ -234,6 +234,43 @@ namespace WorkflowMgmt.Infrastructure.Repository
             return stage;
         }
 
+        public async Task<WorkflowStageDto?> GetNextStageAsync(Guid templateId, int currentStageOrder)
+        {
+            var sql = @"
+                SELECT
+                    ws.id as Id,
+                    ws.workflow_template_id as WorkflowTemplateId,
+                    ws.stage_name as StageName,
+                    ws.stage_order as StageOrder,
+                    ws.assigned_role as AssignedRole,
+                    ws.description as Description,
+                    ws.is_required as IsRequired,
+                    ws.auto_approve as AutoApprove,
+                    ws.timeout_days as TimeoutDays,
+                    ws.is_active as IsActive,
+                    ws.created_date as CreatedDate,
+                    ws.modified_date as ModifiedDate,
+                    ws.created_by as CreatedBy,
+                    ws.modified_by as ModifiedBy
+                FROM workflowmgmt.workflow_stages ws
+                WHERE ws.workflow_template_id = @TemplateId
+                AND ws.stage_order > @CurrentStageOrder
+                AND ws.is_active = true
+                ORDER BY ws.stage_order
+                LIMIT 1";
+
+            var stage = await Connection.QuerySingleOrDefaultAsync<WorkflowStageDto>(sql,
+                new { TemplateId = templateId, CurrentStageOrder = currentStageOrder },
+                transaction: Transaction);
+
+            if (stage != null)
+            {
+                stage.Actions = new List<WorkflowStageActionDto>();
+            }
+
+            return stage;
+        }
+
         public async Task<Guid> CreateAsync(Guid templateId, CreateWorkflowStageDto stage)
         {
             var id = Guid.NewGuid();

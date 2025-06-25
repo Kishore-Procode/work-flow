@@ -138,9 +138,19 @@ namespace WorkflowMgmt.Application.Features.WorkflowTemplate
                 // Create stages if provided
                 if (request.Stages?.Count > 0)
                 {
+                    // First pass: Create all stages and collect stage mappings
+                    var stageOrderToIdMap = new Dictionary<int, Guid>();
+                    var stageIdToActionsMap = new Dictionary<Guid, List<CreateWorkflowStageActionDto>>();
+
                     foreach (var stage in request.Stages)
                     {
                         var stageId = await _unitOfWork.WorkflowStageRepository.CreateAsync(templateId, stage);
+                        stageOrderToIdMap[stage.StageOrder] = stageId;
+
+                        if (stage.Actions?.Count > 0)
+                        {
+                            stageIdToActionsMap[stageId] = stage.Actions;
+                        }
 
                         // Create stage roles if provided
                         if (stage.RequiredRoles?.Count > 0)
@@ -150,14 +160,30 @@ namespace WorkflowMgmt.Application.Features.WorkflowTemplate
                                 await _unitOfWork.WorkflowStageRoleRepository.CreateAsync(stageId, role);
                             }
                         }
+                    }
 
-                        // Create stage actions if provided
-                        if (stage.Actions?.Count > 0)
+                    // Second pass: Create actions with proper next_stage_id mapping
+                    foreach (var kvp in stageIdToActionsMap)
+                    {
+                        var stageId = kvp.Key;
+                        var actions = kvp.Value;
+                        var currentStageOrder = stageOrderToIdMap.First(x => x.Value == stageId).Key;
+
+                        foreach (var action in actions)
                         {
-                            foreach (var action in stage.Actions)
+                            // If action has a next_stage_id specified, use it
+                            // Otherwise, set it to the next stage in order
+                            if (!action.NextStageId.HasValue)
                             {
-                                await _unitOfWork.WorkflowStageActionRepository.CreateAsync(stageId, action);
+                                var nextStageOrder = currentStageOrder + 1;
+                                if (stageOrderToIdMap.ContainsKey(nextStageOrder))
+                                {
+                                    action.NextStageId = stageOrderToIdMap[nextStageOrder];
+                                }
+                                // If no next stage exists, leave NextStageId as null (workflow completion)
                             }
+
+                            await _unitOfWork.WorkflowStageActionRepository.CreateAsync(stageId, action);
                         }
                     }
                 }

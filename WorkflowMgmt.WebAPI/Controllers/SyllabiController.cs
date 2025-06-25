@@ -100,11 +100,32 @@ namespace WorkflowMgmt.WebAPI.Controllers
         public async Task<IActionResult> UpdateSyllabus(Guid id, [FromForm] UpdateSyllabusCommand command)
         {
             command.Id = id;
-            
+
+            // Set faculty information from logged-in user if not provided
+            if (command.FacultyId == null || command.FacultyId == Guid.Empty)
+            {
+                var userId = User?.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+                var userName = User?.FindFirst(System.Security.Claims.ClaimTypes.Name)?.Value;
+                var firstName = User?.FindFirst("firstName")?.Value;
+                var lastName = User?.FindFirst("lastName")?.Value;
+
+                if (!string.IsNullOrEmpty(userId))
+                {
+                    command.FacultyId = Guid.Parse(userId);
+
+                    if (string.IsNullOrEmpty(command.FacultyName))
+                    {
+                        command.FacultyName = !string.IsNullOrEmpty(firstName) && !string.IsNullOrEmpty(lastName)
+                            ? $"{firstName} {lastName}"
+                            : userName ?? "Unknown User";
+                    }
+                }
+            }
+
             try
             {
                 var result = await Mediator.Send(command);
-                
+
                 if (result == null)
                 {
                     return NotFound(new { success = false, message = "Syllabus not found." });

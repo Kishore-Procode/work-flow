@@ -33,6 +33,12 @@ namespace WorkflowMgmt.Infrastructure.Repository
             return await Connection.QueryAsync<WorkflowStageActionDto>(sql, new { StageId = stageId }, transaction: Transaction);
         }
 
+        public async Task<IEnumerable<WorkflowStageActionDto>> GetActiveByStageIdAsync(Guid stageId)
+        {
+            // This is the same as GetByStageIdAsync since it already filters by is_active = true
+            return await GetByStageIdAsync(stageId);
+        }
+
         public async Task<WorkflowStageActionDto?> GetByIdAsync(Guid id)
         {
             var sql = @"

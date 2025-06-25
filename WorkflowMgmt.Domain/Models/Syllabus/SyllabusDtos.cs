@@ -97,6 +97,12 @@ namespace WorkflowMgmt.Domain.Models.Syllabus
 
         public IFormFile? DocumentFile { get; set; }
 
+        [MaxLength(500)]
+        public string? DocumentUrl { get; set; }
+
+        [MaxLength(255)]
+        public string? OriginalFilename { get; set; }
+
         public bool AutoCreateWorkflow { get; set; } = true;
     }
 
@@ -140,6 +146,12 @@ namespace WorkflowMgmt.Domain.Models.Syllabus
 
         [MaxLength(255)]
         public string? OriginalFilename { get; set; }
+
+        [MaxLength(50)]
+        public string? FileProcessingStatus { get; set; }
+
+        [MaxLength(1000)]
+        public string? FileProcessingNotes { get; set; }
     }
 
     // Supporting DTOs
