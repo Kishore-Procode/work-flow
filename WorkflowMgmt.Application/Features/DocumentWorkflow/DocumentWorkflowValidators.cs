@@ -38,7 +38,7 @@ namespace WorkflowMgmt.Application.Features.DocumentWorkflow
             RuleFor(x => x.ActionType)
                 .NotEmpty().WithMessage("Action type is required.")
                 .MaximumLength(100).WithMessage("Action type cannot exceed 100 characters.")
-                .Must(BeValidActionType).WithMessage("Action type must be 'approve', 'reject', 'return', or 'complete'.");
+                .Must(BeValidActionType).WithMessage("Action type must be 'approve', 'reject', 'return', 'request_revision' or 'complete'.");
 
             RuleFor(x => x.Comments)
                 .MaximumLength(1000).WithMessage("Comments cannot exceed 1000 characters.")
@@ -47,7 +47,7 @@ namespace WorkflowMgmt.Application.Features.DocumentWorkflow
 
         private bool BeValidActionType(string actionType)
         {
-            var validTypes = new[] { "approve", "reject", "return", "complete" };
+            var validTypes = new[] { "approve", "reject", "return", "complete", "request_revision" };
             return validTypes.Contains(actionType.ToLower());
         }
     }

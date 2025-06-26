@@ -3,7 +3,9 @@ using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Linq;
+using System.Reflection.Metadata;
 using System.Threading.Tasks;
+using WorkflowMgmt.Domain.Entities;
 using WorkflowMgmt.Domain.Interface.IRepository;
 using WorkflowMgmt.Domain.Models.Workflow;
 using WorkflowMgmt.Infrastructure.RepositoryBase;
@@ -319,7 +321,7 @@ namespace WorkflowMgmt.Infrastructure.Repository
                 }, transaction: Transaction);
 
                 // Update document status in syllabus table
-                await UpdateDocumentStatusAsync(actionDto.DocumentId, actionDto.DocumentType, newDocumentStatus);
+                await UpdateDocumentStatusAsync(actionDto.DocumentId, actionDto.DocumentType, newWorkflowStatus);
 
                 // Create workflow stage history with enhanced details
                 var historyId = Guid.NewGuid();
@@ -371,19 +373,19 @@ namespace WorkflowMgmt.Infrastructure.Repository
             // Status logic as per requirements
             if (actionType.ToLower() == "approve" && !hasNextStage)
             {
-                return "published";
+                return "Published";
             }
             else if (actionName.ToLower().Contains("review"))
             {
-                return "review";
+                return "Review";
             }
             else if (actionType.ToLower() == "reject")
             {
-                return "draft";
+                return "Draft";
             }
             else
             {
-                return "in_progress";
+                return "In Progress";
             }
         }
 
@@ -488,24 +490,36 @@ namespace WorkflowMgmt.Infrastructure.Repository
 
         public async Task<bool> UpdateDocumentStatusAsync(Guid documentId, string documentType, string status)
         {
-            if (documentType.ToLower() == "syllabus")
-            {
-                var sql = @"
-                    UPDATE workflowmgmt.syllabi 
+            var tableName = GetTableName(documentType);
+
+            var sql = $@"
+                    UPDATE workflowmgmt.{tableName} 
                     SET status = @Status, modified_date = @ModifiedDate
                     WHERE id = @DocumentId";
 
-                var rowsAffected = await Connection.ExecuteAsync(sql, new
-                {
-                    DocumentId = documentId,
-                    Status = status,
-                    ModifiedDate = DateTime.UtcNow
-                }, transaction: Transaction);
+            var rowsAffected = await Connection.ExecuteAsync(sql, new
+            {
+                DocumentId = documentId,
+                Status = status,
+                ModifiedDate = DateTime.UtcNow
+            }, transaction: Transaction);
 
-                return rowsAffected > 0;
+            return rowsAffected > 0 ? true : false;
+        }
+
+        public static string GetTableName(string documentType)
+        {
+            switch (documentType.ToLower())
+            {
+                case "syllabus":
+                    return "syllabi";
+                case "lesson":
+                    return "lesson";
+                case "session":
+                    return "session";
+                default:
+                    throw new ArgumentException($"Unknown document type: {documentType}");
             }
-
-            return false;
         }
     }
 }
