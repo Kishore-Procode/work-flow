@@ -13,6 +13,10 @@ namespace WorkflowMgmt.Application.Features.Semester
 
     public record GetSemesterByIdCommand(int Id) : IRequest<ApiResponse<SemesterDTO>>;
 
+    public record GetSemestersByDepartmentCommand(int DepartmentId) : IRequest<ApiResponse<List<SemesterDTO>>>;
+
+    public record GetSemestersByDepartmentAndCourseCommand(int DepartmentId, int CourseId) : IRequest<ApiResponse<List<SemesterDTO>>>;
+
     public record CreateSemesterCommand(SemesterDTO Semester) : IRequest<ApiResponse<int>>;
 
     public record UpdateSemesterCommand(SemesterDTO Semester) : IRequest<ApiResponse<bool>>;

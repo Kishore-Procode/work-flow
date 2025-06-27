@@ -13,7 +13,7 @@ namespace WorkflowMgmt.Domain.Entities.Semesters
         public string AcademicYear { get; set; } = string.Empty;
 
         public int DepartmentId { get; set; }
-        public int CourseId { get; set; }
+        // Note: Semesters don't have CourseId - courses have semester_id instead
 
         public DateTime StartDate { get; set; }
         public DateTime EndDate { get; set; }

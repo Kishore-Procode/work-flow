@@ -11,6 +11,8 @@ namespace WorkflowMgmt.Domain.Interface.IRepository
     {
         Task<List<SemesterDTO>> GetAllSemesters();
         Task<SemesterDTO?> GetSemesterById(int id);
+        Task<List<SemesterDTO>> GetSemestersByDepartmentAsync(int departmentId);
+        Task<List<SemesterDTO>> GetSemestersByDepartmentAndCourseAsync(int departmentId, int courseId);
         Task<int> InsertSemester(SemesterDTO semester);
         Task<bool> UpdateSemester(SemesterDTO semester);
         Task<bool> DeleteOrRestoreSemester(int id, string modifiedBy, bool isRestore);

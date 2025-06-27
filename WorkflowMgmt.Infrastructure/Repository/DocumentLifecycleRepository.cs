@@ -288,10 +288,17 @@ namespace WorkflowMgmt.Infrastructure.Repository
                         CreatedDate = DateTime.UtcNow
                     }, transaction: Transaction);
                 }
-
+                var isDraftStatus = await CheckDraftStatus(action.next_stage_id);
+                bool isDocumentRejected = action.action_type.ToLower() == "reject";
                 // Determine document status and workflow status based on action
-                var newDocumentStatus = DetermineDocumentStatus(action.action_type, action.action_name, action.next_stage_id != null);
+                var newDocumentStatus = isDraftStatus ? "Draft" : DetermineDocumentStatus(action.action_type, action.action_name, action.next_stage_id != null);
                 var newWorkflowStatus = DetermineWorkflowStatus(action.action_type, action.next_stage_id != null);
+
+                if(isDocumentRejected)
+                {
+                    newDocumentStatus = "Rejected";
+                    newWorkflowStatus = "Cancelled";
+                }
 
                 // Determine next stage assignment
                 Guid? nextAssignedTo = null;
@@ -313,7 +320,7 @@ namespace WorkflowMgmt.Infrastructure.Repository
                 await Connection.ExecuteAsync(updateWorkflowSql, new
                 {
                     Id = documentWorkflow.id,
-                    CurrentStageId = action.next_stage_id,
+                    CurrentStageId = isDocumentRejected ? documentWorkflow.current_stage_id : action.next_stage_id,
                     Status = newWorkflowStatus,
                     AssignedTo = nextAssignedTo,
                     CompletedDate = newWorkflowStatus == "Completed" ? DateTime.UtcNow : (DateTime?)null,
@@ -321,7 +328,7 @@ namespace WorkflowMgmt.Infrastructure.Repository
                 }, transaction: Transaction);
 
                 // Update document status in syllabus table
-                await UpdateDocumentStatusAsync(actionDto.DocumentId, actionDto.DocumentType, newWorkflowStatus);
+                await UpdateDocumentStatusAsync(actionDto.DocumentId, actionDto.DocumentType, newDocumentStatus);
 
                 // Create workflow stage history with enhanced details
                 var historyId = Guid.NewGuid();
@@ -377,11 +384,11 @@ namespace WorkflowMgmt.Infrastructure.Repository
             }
             else if (actionName.ToLower().Contains("review"))
             {
-                return "Review";
+                return "Under Review";
             }
             else if (actionType.ToLower() == "reject")
             {
-                return "Draft";
+                return "Rejected";
             }
             else
             {
@@ -406,10 +413,55 @@ namespace WorkflowMgmt.Infrastructure.Repository
             }
         }
 
+        private async Task<bool> CheckDraftStatus(Guid? nextStageId)
+        {
+            if (!nextStageId.HasValue) return false;
+
+            var stageInfoSql = @"
+                SELECT stage_order
+                FROM workflowmgmt.workflow_stages
+                WHERE id = @StageId";
+
+            var stageOrder = await Connection.QuerySingleOrDefaultAsync<int?>(stageInfoSql,
+                new { StageId = nextStageId },
+                transaction: Transaction);
+
+            return stageOrder == 1 ? true : false;
+        }
         private async Task<Guid?> GetNextStageAssigneeAsync(Guid? nextStageId, Guid documentId)
         {
             if (!nextStageId.HasValue) return null;
 
+            // First, check if this stage is marked as a faculty stage (stage_order = 1)
+            var stageInfoSql = @"
+                SELECT stage_order
+                FROM workflowmgmt.workflow_stages
+                WHERE id = @StageId";
+
+            var stageOrder = await Connection.QuerySingleOrDefaultAsync<int?>(stageInfoSql,
+                new { StageId = nextStageId },
+                transaction: Transaction);
+
+            // If stage_order = 1, assign to faculty_id from syllabi table
+            if (stageOrder == 1)
+            {
+                var facultyAssignmentSql = @"
+                    SELECT faculty_id
+                    FROM workflowmgmt.syllabi
+                    WHERE id = @DocumentId
+                    AND faculty_id IS NOT NULL";
+
+                var facultyId = await Connection.QuerySingleOrDefaultAsync<Guid?>(facultyAssignmentSql,
+                    new { DocumentId = documentId },
+                    transaction: Transaction);
+
+                if (facultyId.HasValue)
+                {
+                    return facultyId;
+                }
+            }
+
+            // Continue with current functionality for other stages
             // Get the primary user assigned to the next stage roles for this document's department
             var assignmentSql = @"
                 SELECT DISTINCT wrm.user_id

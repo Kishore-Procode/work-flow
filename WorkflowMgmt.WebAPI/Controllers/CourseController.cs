@@ -12,10 +12,16 @@ namespace WorkflowMgmt.WebAPI.Controllers
     public class CourseController : BaseApiController
     {
         [HttpGet]
-        public async Task<IActionResult> GetAllCourses()
+        public async Task<IActionResult> GetAllCourses([FromQuery] int? departmentId = null)
         {
-            var result = await Mediator.Send(new GetCourseCommand());
-            return Ok(result);
+            if (departmentId.HasValue)
+            {
+                var result = await Mediator.Send(new GetCoursesByDepartmentCommand(departmentId.Value));
+                return Ok(result);
+            }
+
+            var allResult = await Mediator.Send(new GetCourseCommand());
+            return Ok(allResult);
         }
         [HttpGet("{id}")]
         public async Task<IActionResult> GetCourseById(int id)
