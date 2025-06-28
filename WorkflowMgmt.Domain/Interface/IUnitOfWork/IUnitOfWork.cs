@@ -18,6 +18,7 @@ namespace WorkflowMgmt.Domain.Interface.IUnitOfWork
         IUserManagementRepository UserManagementRepository { get; }
         ILessonPlanTemplateRepository LessonPlanTemplateRepository { get; }
         ILessonPlanRepository LessonPlanRepository { get; }
+        ISessionRepository SessionRepository { get; }
         IDocumentUploadRepository DocumentUploadRepository { get; }
         IRefreshTokenRepository RefreshTokenRepository { get; }
         IStatsRepository StatsRepository { get; }

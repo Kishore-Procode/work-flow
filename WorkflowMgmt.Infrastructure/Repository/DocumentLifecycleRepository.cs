@@ -708,6 +708,13 @@ namespace WorkflowMgmt.Infrastructure.Repository
                         WHERE id = @DocumentId
                         AND faculty_id IS NOT NULL";
 
+                case "session":
+                    return @"
+                        SELECT faculty_id
+                        FROM workflowmgmt.sessions
+                        WHERE id = @DocumentId
+                        AND faculty_id IS NOT NULL";
+
                 default:
                     throw new ArgumentException($"Unsupported document type for faculty assignment: {documentType}");
             }
@@ -748,6 +755,21 @@ namespace WorkflowMgmt.Infrastructure.Repository
                         {orderBy}
                         LIMIT 1";
 
+                case "session":
+                    return $@"
+                        SELECT DISTINCT wrm.user_id
+                        FROM workflowmgmt.workflow_stage_roles wsr
+                        INNER JOIN workflowmgmt.roles r ON r.code = wsr.role_code
+                        INNER JOIN workflowmgmt.workflow_role_mapping wrm ON r.id = wrm.role_id
+                        INNER JOIN workflowmgmt.sessions sess ON sess.id = @DocumentId
+                        INNER JOIN workflowmgmt.lesson_plans lp ON sess.lesson_plan_id = lp.id
+                        INNER JOIN workflowmgmt.syllabi syl ON lp.syllabus_id = syl.id AND wrm.department_id = syl.department_id
+                        WHERE wsr.workflow_stage_id = @StageId
+                        {primaryFilter}
+                        AND wsr.is_required = true
+                        {orderBy}
+                        LIMIT 1";
+
                 default:
                     throw new ArgumentException($"Unsupported document type for role assignment: {documentType}");
             }
@@ -762,7 +784,7 @@ namespace WorkflowMgmt.Infrastructure.Repository
                 case "lesson":
                     return "lesson_plans";
                 case "session":
-                    return "session";
+                    return "sessions";
                 default:
                     throw new ArgumentException($"Unknown document type: {documentType}");
             }

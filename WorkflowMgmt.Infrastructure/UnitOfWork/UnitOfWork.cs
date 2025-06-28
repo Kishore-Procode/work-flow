@@ -26,6 +26,7 @@ namespace WorkflowMgmt.Infrastructure
         private ISemesterRepository? semesterRepository;
         private ILessonPlanTemplateRepository lessonPlanTemplateRepository;
         private ILessonPlanRepository? lessonPlanRepository;
+        private ISessionRepository? sessionRepository;
         private IDocumentUploadRepository? documentUploadRepository;
         private IRefreshTokenRepository? refreshTokenRepository;
 
@@ -89,6 +90,11 @@ namespace WorkflowMgmt.Infrastructure
         public ILessonPlanRepository LessonPlanRepository
         {
             get { return lessonPlanRepository ?? (lessonPlanRepository = new LessonPlanManagementRepository(_transaction)); }
+        }
+
+        public ISessionRepository SessionRepository
+        {
+            get { return sessionRepository ?? (sessionRepository = new SessionRepository(_transaction)); }
         }
 
         public IDocumentUploadRepository DocumentUploadRepository
