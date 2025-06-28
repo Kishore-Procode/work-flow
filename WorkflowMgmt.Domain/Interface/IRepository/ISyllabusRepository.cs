@@ -22,6 +22,7 @@ namespace WorkflowMgmt.Domain.Interface.IRepository
         Task<IEnumerable<SyllabusWithDetailsDto>> GetByTemplateAsync(Guid templateId);
         Task<IEnumerable<SyllabusWithDetailsDto>> GetByCourseAsync(int courseId);
         Task<IEnumerable<SyllabusWithDetailsDto>> GetBySemesterAsync(int semesterId);
+        Task<SyllabusWithDetailsDto?> GetByLessonPlanAsync(Guid lessonPlanId);
 
         // Workflow operations
         Task<bool> UpdateStatusAsync(Guid id, string status);

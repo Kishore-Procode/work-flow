@@ -87,6 +87,21 @@ namespace WorkflowMgmt.Application.Features.Syllabus
         }
     }
 
+    public class GetSyllabusByLessonPlanQueryHandler : IRequestHandler<GetSyllabusByLessonPlanQuery, SyllabusWithDetailsDto?>
+    {
+        private readonly IUnitOfWork _unitOfWork;
+
+        public GetSyllabusByLessonPlanQueryHandler(IUnitOfWork unitOfWork)
+        {
+            _unitOfWork = unitOfWork;
+        }
+
+        public async Task<SyllabusWithDetailsDto?> Handle(GetSyllabusByLessonPlanQuery request, CancellationToken cancellationToken)
+        {
+            return await _unitOfWork.SyllabusRepository.GetByLessonPlanAsync(request.LessonPlanId);
+        }
+    }
+
     public class GetSyllabusByIdQueryHandler : IRequestHandler<GetSyllabusByIdQuery, SyllabusWithDetailsDto?>
     {
         private readonly IUnitOfWork _unitOfWork;

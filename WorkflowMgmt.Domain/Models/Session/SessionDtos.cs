@@ -39,6 +39,7 @@ namespace WorkflowMgmt.Domain.Models.Session
         public int? DepartmentId { get; set; }
         public string? DepartmentName { get; set; }
         public string? LessonPlanTitle { get; set; }
+        public Guid? SyllabusId { get; set; }
         public string? SyllabusTitle { get; set; }
     }
 
@@ -75,6 +76,7 @@ namespace WorkflowMgmt.Domain.Models.Session
         public TimeSpan? SessionTime { get; set; }
         public int? DurationMinutes { get; set; }
         public string? Instructor { get; set; }
+        public string? ContentCreationMethod { get; set; }
         public string? SessionDescription { get; set; }
         public string? SessionObjectives { get; set; }
         public string? SessionActivities { get; set; }

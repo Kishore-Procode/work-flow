@@ -346,6 +346,146 @@ namespace WorkflowMgmt.WebAPI.Controllers
             }
         }
 
+        // Session File Endpoints
+        [HttpGet("sessions/{sessionId}/{fileName}")]
+        [AllowAnonymous] // Allow anonymous access but validate token manually
+        public async Task<IActionResult> GetSessionFile(Guid sessionId, string fileName, [FromQuery] string? token = null)
+        {
+            try
+            {
+                // Check authentication - either from header or query parameter
+                bool isAuthenticated = User.Identity?.IsAuthenticated == true;
+                if (!isAuthenticated && !string.IsNullOrEmpty(token))
+                {
+                    isAuthenticated = ValidateTokenFromQuery(token);
+                }
+
+                if (!isAuthenticated)
+                {
+                    return Unauthorized(new { success = false, message = "Authentication required." });
+                }
+
+                // Validate file name to prevent directory traversal attacks
+                if (string.IsNullOrEmpty(fileName) || fileName.Contains("..") || fileName.Contains("/") || fileName.Contains("\\"))
+                {
+                    return BadRequest(new { success = false, message = "Invalid file name." });
+                }
+
+                // Construct the file path
+                var uploadsPath = Path.Combine(_environment.WebRootPath, "uploads", "sessions", sessionId.ToString());
+                var filePath = Path.Combine(uploadsPath, fileName);
+
+                // Check if file exists
+                if (!System.IO.File.Exists(filePath))
+                {
+                    return NotFound(new { success = false, message = "File not found." });
+                }
+
+                // Read file
+                var fileBytes = await System.IO.File.ReadAllBytesAsync(filePath);
+
+                // Determine content type
+                var fileExtension = Path.GetExtension(fileName).ToLowerInvariant();
+                var contentType = GetContentType(fileExtension);
+
+                // Set headers for inline viewing
+                Response.Headers.Add("Content-Disposition", $"inline; filename=\"{fileName}\"");
+                Response.Headers.Add("X-Content-Type-Options", "nosniff");
+
+                // Return file with appropriate headers
+                return File(fileBytes, contentType, fileName);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error accessing file: sessions/{SessionId}/{FileName}", sessionId, fileName);
+                return StatusCode(500, new { success = false, message = "Internal server error." });
+            }
+        }
+
+        [HttpGet("sessions/{sessionId}/{fileName}/download")]
+        public async Task<IActionResult> DownloadSessionFile(Guid sessionId, string fileName)
+        {
+            try
+            {
+                // Validate file name to prevent directory traversal attacks
+                if (string.IsNullOrEmpty(fileName) || fileName.Contains("..") || fileName.Contains("/") || fileName.Contains("\\"))
+                {
+                    return BadRequest(new { success = false, message = "Invalid file name." });
+                }
+
+                // Construct the file path
+                var uploadsPath = Path.Combine(_environment.WebRootPath, "uploads", "sessions", sessionId.ToString());
+                var filePath = Path.Combine(uploadsPath, fileName);
+
+                // Check if file exists
+                if (!System.IO.File.Exists(filePath))
+                {
+                    return NotFound(new { success = false, message = "File not found." });
+                }
+
+                // Get file info
+                var fileInfo = new FileInfo(filePath);
+                var fileExtension = Path.GetExtension(fileName).ToLowerInvariant();
+
+                // Determine content type
+                var contentType = GetContentType(fileExtension);
+
+                // Read file content
+                var fileBytes = await System.IO.File.ReadAllBytesAsync(filePath);
+
+                // Return file as download
+                return File(fileBytes, contentType, fileName);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error downloading file: sessions/{SessionId}/{FileName}", sessionId, fileName);
+                return StatusCode(500, new { success = false, message = "Internal server error." });
+            }
+        }
+
+        [HttpGet("sessions/{sessionId}/{fileName}/info")]
+        public IActionResult GetSessionFileInfo(Guid sessionId, string fileName)
+        {
+            try
+            {
+                // Validate file name to prevent directory traversal attacks
+                if (string.IsNullOrEmpty(fileName) || fileName.Contains("..") || fileName.Contains("/") || fileName.Contains("\\"))
+                {
+                    return BadRequest(new { success = false, message = "Invalid file name." });
+                }
+
+                // Construct the file path
+                var uploadsPath = Path.Combine(_environment.WebRootPath, "uploads", "sessions", sessionId.ToString());
+                var filePath = Path.Combine(uploadsPath, fileName);
+
+                // Check if file exists
+                if (!System.IO.File.Exists(filePath))
+                {
+                    return NotFound(new { success = false, message = "File not found." });
+                }
+
+                // Get file info
+                var fileInfo = new FileInfo(filePath);
+
+                return Ok(new
+                {
+                    success = true,
+                    data = new
+                    {
+                        fileName = fileName,
+                        fileSize = fileInfo.Length,
+                        lastModified = fileInfo.LastWriteTime,
+                        contentType = GetContentType(Path.GetExtension(fileName).ToLowerInvariant())
+                    }
+                });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error getting file info: sessions/{SessionId}/{FileName}", sessionId, fileName);
+                return StatusCode(500, new { success = false, message = "Internal server error." });
+            }
+        }
+
         private static string GetContentType(string fileExtension)
         {
             return fileExtension switch

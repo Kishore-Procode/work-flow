@@ -93,6 +93,9 @@ namespace WorkflowMgmt.Application.Features.Session
 
         public int? DurationMinutes { get; set; }
 
+        [MaxLength(50)]
+        public string? ContentCreationMethod { get; set; }
+
         public string? SessionDescription { get; set; }
 
         public string? SessionObjectives { get; set; }

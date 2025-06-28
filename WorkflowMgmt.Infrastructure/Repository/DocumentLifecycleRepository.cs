@@ -24,7 +24,7 @@ namespace WorkflowMgmt.Infrastructure.Repository
 
             // Define document types to query
             var documentTypes = string.IsNullOrEmpty(documentType)
-                ? new[] { "syllabus", "lesson" }
+                ? new[] { "syllabus", "lesson", "session" }
                 : new[] { documentType };
 
             foreach (var docType in documentTypes)
@@ -107,6 +107,36 @@ namespace WorkflowMgmt.Infrastructure.Repository
                         WHERE dw.assigned_to = @UserId
                         AND dw.status IN ('In Progress', 'On Hold')
                         AND lp.is_active = true
+                        AND dw.document_type = @DocumentType";
+
+                case "session":
+                    return @"
+                        SELECT DISTINCT
+                            sess.id as DocumentId,
+                            'session' as DocumentType,
+                            sess.title as Title,
+                            sess.status as Status,
+                            sess.created_date as CreatedDate,
+                            sess.modified_date as ModifiedDate,
+                            sess.faculty_id as FacultyId,
+                            sess.instructor as FacultyName,
+                            syl.department_id as DepartmentId,
+                            d.name as DepartmentName,
+                            dw.id as WorkflowId,
+                            dw.status as WorkflowStatus,
+                            ws.stage_name as CurrentStageName,
+                            u.username as AssignedToName
+                        FROM workflowmgmt.sessions sess
+                        INNER JOIN workflowmgmt.lesson_plans lp ON sess.lesson_plan_id = lp.id
+                        INNER JOIN workflowmgmt.syllabi syl ON lp.syllabus_id = syl.id
+                        INNER JOIN workflowmgmt.departments d ON syl.department_id = d.id
+                        INNER JOIN workflowmgmt.document_workflows dw ON sess.id = dw.document_id
+                        INNER JOIN workflowmgmt.workflow_templates wt ON dw.workflow_template_id = wt.id
+                        LEFT JOIN workflowmgmt.workflow_stages ws ON dw.current_stage_id = ws.id
+                        LEFT JOIN workflowmgmt.users u ON dw.assigned_to = u.id
+                        WHERE dw.assigned_to = @UserId
+                        AND dw.status IN ('In Progress', 'On Hold')
+                        AND sess.is_active = true
                         AND dw.document_type = @DocumentType";
 
                 default:
@@ -192,6 +222,36 @@ namespace WorkflowMgmt.Infrastructure.Repository
                         AND dw.document_type = @DocumentType
                         AND lp.is_active = true";
 
+                case "session":
+                    return @"
+                        SELECT
+                            sess.id as DocumentId,
+                            'session' as DocumentType,
+                            sess.title as Title,
+                            sess.status as Status,
+                            COALESCE(d.name, 'N/A') as DepartmentName,
+                            sess.instructor as FacultyName,
+                            sess.created_date as CreatedDate,
+                            sess.modified_date as ModifiedDate,
+                            dw.id as WorkflowId,
+                            wt.name as WorkflowTemplateName,
+                            dw.current_stage_id as CurrentStageId,
+                            ws.stage_name as CurrentStageName,
+                            ws.stage_order as CurrentStageOrder,
+                            dw.assigned_to as AssignedTo,
+                            u.name as AssignedToName
+                        FROM workflowmgmt.sessions sess
+                        LEFT JOIN workflowmgmt.lesson_plans lp ON sess.lesson_plan_id = lp.id
+                        LEFT JOIN workflowmgmt.syllabi s ON lp.syllabus_id = s.id
+                        LEFT JOIN workflowmgmt.departments d ON s.department_id = d.id
+                        INNER JOIN workflowmgmt.document_workflows dw ON sess.id::text = dw.document_id AND dw.document_type = 'session'
+                        INNER JOIN workflowmgmt.workflow_templates wt ON dw.workflow_template_id = wt.id
+                        LEFT JOIN workflowmgmt.workflow_stages ws ON dw.current_stage_id = ws.id
+                        LEFT JOIN workflowmgmt.users u ON dw.assigned_to = u.id
+                        WHERE sess.id = @DocumentId
+                        AND dw.document_type = @DocumentType
+                        AND sess.is_active = true";
+
                 default:
                     throw new ArgumentException($"Unsupported document type: {documentType}");
             }
@@ -238,6 +298,25 @@ namespace WorkflowMgmt.Infrastructure.Repository
                         INNER JOIN workflowmgmt.roles r ON r.code = wsr.role_code
                         INNER JOIN workflowmgmt.workflow_role_mapping wrm ON r.id = wrm.role_id
                         INNER JOIN workflowmgmt.lesson_plans lp ON dw.document_id = lp.id
+                        LEFT JOIN workflowmgmt.syllabi s ON lp.syllabus_id = s.id
+                        WHERE dw.document_id = @DocumentId
+                        AND dw.document_type = @DocumentType
+                        AND wsa.id = @ActionId
+                        AND wrm.user_id = @UserId
+                        AND (wrm.department_id = s.department_id OR s.department_id IS NULL)
+                        AND wsa.is_active = true
+                        AND dw.status <> 'Completed'";
+
+                case "session":
+                    return @"
+                        SELECT COUNT(1)
+                        FROM workflowmgmt.document_workflows dw
+                        INNER JOIN workflowmgmt.workflow_stage_actions wsa ON dw.current_stage_id = wsa.workflow_stage_id
+                        INNER JOIN workflowmgmt.workflow_stage_roles wsr ON dw.current_stage_id = wsr.workflow_stage_id
+                        INNER JOIN workflowmgmt.roles r ON r.code = wsr.role_code
+                        INNER JOIN workflowmgmt.workflow_role_mapping wrm ON r.id = wrm.role_id
+                        INNER JOIN workflowmgmt.sessions sess ON dw.document_id = sess.id
+                        LEFT JOIN workflowmgmt.lesson_plans lp ON sess.lesson_plan_id = lp.id
                         LEFT JOIN workflowmgmt.syllabi s ON lp.syllabus_id = s.id
                         WHERE dw.document_id = @DocumentId
                         AND dw.document_type = @DocumentType
@@ -306,6 +385,32 @@ namespace WorkflowMgmt.Infrastructure.Repository
                         INNER JOIN workflowmgmt.roles r ON r.code = wsr.role_code
                         INNER JOIN workflowmgmt.workflow_role_mapping wrm ON r.id = wrm.role_id
                         INNER JOIN workflowmgmt.lesson_plans lp ON dw.document_id = lp.id
+                        LEFT JOIN workflowmgmt.syllabi s ON lp.syllabus_id = s.id
+                        WHERE dw.document_id = @DocumentId
+                        AND dw.document_type = @DocumentType
+                        AND wrm.user_id = @UserId
+                        AND (wrm.department_id = s.department_id OR s.department_id IS NULL)
+                        AND wsa.is_active = true
+                        AND dw.status <> 'Completed'
+                        ORDER BY wsa.action_name";
+
+                case "session":
+                    return @"
+                        SELECT DISTINCT
+                            wsa.id as Id,
+                            wsa.workflow_stage_id as WorkflowStageId,
+                            wsa.action_name as ActionName,
+                            wsa.action_type as ActionType,
+                            wsa.next_stage_id as NextStageId,
+                            wsa.is_active as IsActive,
+                            wsa.created_date as CreatedDate
+                        FROM workflowmgmt.document_workflows dw
+                        INNER JOIN workflowmgmt.workflow_stage_actions wsa ON dw.current_stage_id = wsa.workflow_stage_id
+                        INNER JOIN workflowmgmt.workflow_stage_roles wsr ON dw.current_stage_id = wsr.workflow_stage_id
+                        INNER JOIN workflowmgmt.roles r ON r.code = wsr.role_code
+                        INNER JOIN workflowmgmt.workflow_role_mapping wrm ON r.id = wrm.role_id
+                        INNER JOIN workflowmgmt.sessions sess ON dw.document_id = sess.id
+                        LEFT JOIN workflowmgmt.lesson_plans lp ON sess.lesson_plan_id = lp.id
                         LEFT JOIN workflowmgmt.syllabi s ON lp.syllabus_id = s.id
                         WHERE dw.document_id = @DocumentId
                         AND dw.document_type = @DocumentType

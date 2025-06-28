@@ -432,6 +432,7 @@ namespace WorkflowMgmt.Application.Features.Session
                 SessionTime = request.SessionTime,
                 DurationMinutes = request.DurationMinutes,
                 Instructor = request.Instructor,
+                ContentCreationMethod = request.ContentCreationMethod,
                 SessionDescription = request.SessionDescription,
                 SessionObjectives = request.SessionObjectives,
                 SessionActivities = request.SessionActivities,

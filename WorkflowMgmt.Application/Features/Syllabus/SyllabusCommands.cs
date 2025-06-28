@@ -32,6 +32,11 @@ namespace WorkflowMgmt.Application.Features.Syllabus
         public Guid TemplateId { get; set; }
     }
 
+    public class GetSyllabusByLessonPlanQuery : IRequest<SyllabusWithDetailsDto?>
+    {
+        public Guid LessonPlanId { get; set; }
+    }
+
     public class GetSyllabusByIdQuery : IRequest<SyllabusWithDetailsDto?>
     {
         public Guid Id { get; set; }

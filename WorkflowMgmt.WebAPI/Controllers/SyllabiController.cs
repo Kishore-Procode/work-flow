@@ -56,10 +56,24 @@ namespace WorkflowMgmt.WebAPI.Controllers
         {
             var query = new GetSyllabusByIdQuery { Id = id };
             var result = await Mediator.Send(query);
-            
+
             if (result == null)
             {
                 return NotFound(new { success = false, message = "Syllabus not found." });
+            }
+
+            return Ok(new { success = true, data = result });
+        }
+
+        [HttpGet("by-lesson-plan/{lessonPlanId}")]
+        public async Task<IActionResult> GetSyllabusByLessonPlan(Guid lessonPlanId)
+        {
+            var query = new GetSyllabusByLessonPlanQuery { LessonPlanId = lessonPlanId };
+            var result = await Mediator.Send(query);
+
+            if (result == null)
+            {
+                return NotFound(new { success = false, message = "Syllabus not found for the specified lesson plan." });
             }
 
             return Ok(new { success = true, data = result });
