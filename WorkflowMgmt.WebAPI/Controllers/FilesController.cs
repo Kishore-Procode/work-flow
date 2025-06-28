@@ -204,6 +204,142 @@ namespace WorkflowMgmt.WebAPI.Controllers
             }
         }
 
+        // Lesson Plan File Endpoints
+        [HttpGet("lesson-plans/{lessonPlanId}/{fileName}")]
+        [AllowAnonymous] // Allow anonymous access but validate token manually
+        public async Task<IActionResult> GetLessonPlanFile(Guid lessonPlanId, string fileName, [FromQuery] string? token = null)
+        {
+            try
+            {
+                // Validate token from query parameter for iframe access
+                if (!ValidateTokenFromQuery(token))
+                {
+                    return Unauthorized(new { success = false, message = "Invalid or missing token." });
+                }
+
+                // Validate file name to prevent directory traversal attacks
+                if (string.IsNullOrEmpty(fileName) || fileName.Contains("..") || fileName.Contains("/") || fileName.Contains("\\"))
+                {
+                    return BadRequest(new { success = false, message = "Invalid file name." });
+                }
+
+                // Construct the file path
+                var uploadsPath = Path.Combine(_environment.WebRootPath, "uploads", "lesson-plans", lessonPlanId.ToString());
+                var filePath = Path.Combine(uploadsPath, fileName);
+
+                // Check if file exists
+                if (!System.IO.File.Exists(filePath))
+                {
+                    return NotFound(new { success = false, message = "File not found." });
+                }
+
+                // Read file
+                var fileBytes = await System.IO.File.ReadAllBytesAsync(filePath);
+
+                // Determine content type
+                var fileExtension = Path.GetExtension(fileName).ToLowerInvariant();
+                var contentType = GetContentType(fileExtension);
+
+                // Set headers for inline viewing
+                Response.Headers.Add("Content-Disposition", $"inline; filename=\"{fileName}\"");
+                Response.Headers.Add("X-Content-Type-Options", "nosniff");
+
+                // Return file with appropriate headers
+                return File(fileBytes, contentType, fileName);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error accessing file: lesson-plans/{LessonPlanId}/{FileName}", lessonPlanId, fileName);
+                return StatusCode(500, new { success = false, message = "Internal server error." });
+            }
+        }
+
+        [HttpGet("lesson-plans/{lessonPlanId}/{fileName}/download")]
+        public async Task<IActionResult> DownloadLessonPlanFile(Guid lessonPlanId, string fileName)
+        {
+            try
+            {
+                // Validate file name to prevent directory traversal attacks
+                if (string.IsNullOrEmpty(fileName) || fileName.Contains("..") || fileName.Contains("/") || fileName.Contains("\\"))
+                {
+                    return BadRequest(new { success = false, message = "Invalid file name." });
+                }
+
+                // Construct the file path
+                var uploadsPath = Path.Combine(_environment.WebRootPath, "uploads", "lesson-plans", lessonPlanId.ToString());
+                var filePath = Path.Combine(uploadsPath, fileName);
+
+                // Check if file exists
+                if (!System.IO.File.Exists(filePath))
+                {
+                    return NotFound(new { success = false, message = "File not found." });
+                }
+
+                // Read file
+                var fileBytes = await System.IO.File.ReadAllBytesAsync(filePath);
+
+                // Determine content type
+                var fileExtension = Path.GetExtension(fileName).ToLowerInvariant();
+                var contentType = GetContentType(fileExtension);
+
+                // Set headers for download
+                Response.Headers.Add("Content-Disposition", $"attachment; filename=\"{fileName}\"");
+                Response.Headers.Add("X-Content-Type-Options", "nosniff");
+
+                // Return file as download with appropriate headers
+                return File(fileBytes, contentType, fileName, enableRangeProcessing: true);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error downloading file: lesson-plans/{LessonPlanId}/{FileName}", lessonPlanId, fileName);
+                return StatusCode(500, new { success = false, message = "Internal server error." });
+            }
+        }
+
+        [HttpGet("lesson-plans/{lessonPlanId}/{fileName}/info")]
+        public IActionResult GetLessonPlanFileInfo(Guid lessonPlanId, string fileName)
+        {
+            try
+            {
+                // Validate file name to prevent directory traversal attacks
+                if (string.IsNullOrEmpty(fileName) || fileName.Contains("..") || fileName.Contains("/") || fileName.Contains("\\"))
+                {
+                    return BadRequest(new { success = false, message = "Invalid file name." });
+                }
+
+                // Construct the file path
+                var uploadsPath = Path.Combine(_environment.WebRootPath, "uploads", "lesson-plans", lessonPlanId.ToString());
+                var filePath = Path.Combine(uploadsPath, fileName);
+
+                // Check if file exists
+                if (!System.IO.File.Exists(filePath))
+                {
+                    return NotFound(new { success = false, message = "File not found." });
+                }
+
+                // Get file info
+                var fileInfo = new FileInfo(filePath);
+                var result = new
+                {
+                    success = true,
+                    data = new
+                    {
+                        fileName = fileName,
+                        fileSize = fileInfo.Length,
+                        lastModified = fileInfo.LastWriteTime,
+                        contentType = GetContentType(Path.GetExtension(fileName).ToLowerInvariant())
+                    }
+                };
+
+                return Ok(result);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error getting file info: lesson-plans/{LessonPlanId}/{FileName}", lessonPlanId, fileName);
+                return StatusCode(500, new { success = false, message = "Internal server error." });
+            }
+        }
+
         private static string GetContentType(string fileExtension)
         {
             return fileExtension switch

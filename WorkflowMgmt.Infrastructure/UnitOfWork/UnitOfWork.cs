@@ -88,7 +88,7 @@ namespace WorkflowMgmt.Infrastructure
 
         public ILessonPlanRepository LessonPlanRepository
         {
-            get { return lessonPlanRepository ?? (lessonPlanRepository = new LessonPlanRepository(_transaction)); }
+            get { return lessonPlanRepository ?? (lessonPlanRepository = new LessonPlanManagementRepository(_transaction)); }
         }
 
         public IDocumentUploadRepository DocumentUploadRepository
