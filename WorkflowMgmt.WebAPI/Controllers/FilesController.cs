@@ -211,10 +211,16 @@ namespace WorkflowMgmt.WebAPI.Controllers
         {
             try
             {
-                // Validate token from query parameter for iframe access
-                if (!ValidateTokenFromQuery(token))
+                // Check authentication - either from header or query parameter
+                bool isAuthenticated = User.Identity?.IsAuthenticated == true;
+                if (!isAuthenticated && !string.IsNullOrEmpty(token))
                 {
-                    return Unauthorized(new { success = false, message = "Invalid or missing token." });
+                    isAuthenticated = ValidateTokenFromQuery(token);
+                }
+
+                if (!isAuthenticated)
+                {
+                    return Unauthorized(new { success = false, message = "Authentication required." });
                 }
 
                 // Validate file name to prevent directory traversal attacks

@@ -7,6 +7,8 @@ using MediatR;
 using WorkflowMgmt.Domain.Interface.IUnitOfWork;
 using WorkflowMgmt.Domain.Models.LessonPlan;
 using WorkflowMgmt.Domain.Models.DocumentUpload;
+using WorkflowMgmt.Application.Features.DocumentWorkflow;
+using WorkflowMgmt.Domain.Models.Workflow;
 
 namespace WorkflowMgmt.Application.Features.LessonPlan
 {
@@ -118,10 +120,12 @@ namespace WorkflowMgmt.Application.Features.LessonPlan
     public class CreateLessonPlanCommandHandler : IRequestHandler<CreateLessonPlanCommand, LessonPlanDto>
     {
         private readonly IUnitOfWork _unitOfWork;
+        private readonly IMediator _mediator;
 
-        public CreateLessonPlanCommandHandler(IUnitOfWork unitOfWork)
+        public CreateLessonPlanCommandHandler(IUnitOfWork unitOfWork, IMediator mediator)
         {
             _unitOfWork = unitOfWork;
+            _mediator = mediator;
         }
 
         public async Task<LessonPlanDto> Handle(CreateLessonPlanCommand request, CancellationToken cancellationToken)
@@ -198,7 +202,7 @@ namespace WorkflowMgmt.Application.Features.LessonPlan
                         FileType = request.DocumentFile.ContentType ?? "application/octet-stream",
                         FileUrl = $"/uploads/lesson-plans/{lessonPlanId}/{uniqueFileName}",
                         UploadStatus = "completed",
-                        UploadedBy = request.FacultyId // TODO: Get from current user context
+                        UploadedBy = null // Set to null to avoid foreign key constraint issues
                     };
 
                     await _unitOfWork.DocumentUploadRepository.CreateAsync(documentUpload);
@@ -217,6 +221,77 @@ namespace WorkflowMgmt.Application.Features.LessonPlan
                 {
                     Console.WriteLine($"Failed to upload file: {uploadError.Message}");
                     // Don't fail the lesson plan creation if file upload fails
+                }
+            }
+
+            // Auto-create workflow if requested
+            if (request.AutoCreateWorkflow)
+            {
+                try
+                {
+                    // Get department ID from syllabus if available
+                    int? departmentId = null;
+                    if (request.SyllabusId.HasValue)
+                    {
+                        var syllabus = await _unitOfWork.SyllabusRepository.GetByIdAsync(request.SyllabusId.Value);
+                        if (syllabus != null)
+                        {
+                            departmentId = syllabus.DepartmentId;
+                        }
+                    }
+
+                    if (departmentId.HasValue)
+                    {
+                        // Get workflow template from department document mapping
+                        var workflowMapping = await _unitOfWork.WorkflowDepartmentDocumentMappingRepository
+                            .GetByDepartmentAndDocumentTypeAsync(departmentId.Value, "lesson");
+
+                        if (workflowMapping != null)
+                        {
+                            var createWorkflowCommand = new CreateDocumentWorkflowCommand
+                            {
+                                DocumentId = lessonPlanId.ToString(),
+                                DocumentType = "lesson",
+                                WorkflowTemplateId = workflowMapping.workflow_template_id,
+                                InitiatedBy = request.FacultyId,
+                                AssignedTo = request.FacultyId // Initially assign to the creator
+                            };
+
+                            var workflow = await _mediator.Send(createWorkflowCommand, cancellationToken);
+
+                            // Create initial workflow stage history record
+                            if (workflow.CurrentStageId.HasValue)
+                            {
+                                var stageHistory = new CreateWorkflowStageHistoryDto
+                                {
+                                    DocumentWorkflowId = workflow.Id,
+                                    StageId = workflow.CurrentStageId.Value,
+                                    ActionTaken = "initiated",
+                                    ProcessedBy = request.FacultyId,
+                                    AssignedTo = request.FacultyId, // Initially assign to the creator
+                                    Comments = "Workflow initiated upon lesson plan creation"
+                                };
+
+                                await _unitOfWork.WorkflowStageHistoryRepository.CreateAsync(stageHistory);
+                                Console.WriteLine($"✅ Workflow stage history created for workflow {workflow.Id}");
+                            }
+
+                            Console.WriteLine($"✅ Workflow created for lesson plan {lessonPlanId}: {workflow.Id}");
+                        }
+                        else
+                        {
+                            Console.WriteLine($"⚠️ No workflow mapping found for department {departmentId} and document type 'lesson'");
+                        }
+                    }
+                    else
+                    {
+                        Console.WriteLine($"⚠️ Cannot create workflow for lesson plan {lessonPlanId}: No department ID available (lesson plan not linked to syllabus)");
+                    }
+                }
+                catch (Exception workflowError)
+                {
+                    Console.WriteLine($"⚠️ Failed to create workflow for lesson plan: {workflowError.Message}");
+                    // Don't fail the lesson plan creation if workflow creation fails
                 }
             }
 
@@ -319,7 +394,7 @@ namespace WorkflowMgmt.Application.Features.LessonPlan
                         FileType = request.DocumentFile.ContentType ?? "application/octet-stream",
                         FileUrl = documentUrl,
                         UploadStatus = "completed",
-                        UploadedBy = Guid.Empty // TODO: Get from current user context
+                        UploadedBy = null // Set to null to avoid foreign key constraint issues
                     };
 
                     await _unitOfWork.DocumentUploadRepository.CreateAsync(documentUpload);
@@ -363,8 +438,6 @@ namespace WorkflowMgmt.Application.Features.LessonPlan
                 throw new InvalidOperationException("Failed to update lesson plan.");
             }
 
-            _unitOfWork.Commit();
-
             // Return the updated lesson plan
             var updatedLessonPlan = await _unitOfWork.LessonPlanRepository.GetByIdAsync(request.Id);
             if (updatedLessonPlan == null)
@@ -372,6 +445,8 @@ namespace WorkflowMgmt.Application.Features.LessonPlan
                 throw new InvalidOperationException("Failed to retrieve updated lesson plan");
             }
 
+
+            _unitOfWork.Commit();
             // Convert LessonPlanWithDetailsDto to LessonPlanDto
             return new LessonPlanDto
             {

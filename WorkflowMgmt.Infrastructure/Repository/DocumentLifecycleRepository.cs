@@ -20,47 +20,21 @@ namespace WorkflowMgmt.Infrastructure.Repository
 
         public async Task<List<DocumentLifecycleDto>> GetDocumentsAssignedToUserAsync(Guid userId, string? documentType = null)
         {
-            var sql = @"
-                SELECT DISTINCT
-                    s.id as DocumentId,
-                    'syllabus' as DocumentType,
-                    s.title as Title,
-                    s.status as Status,
-                    d.name as DepartmentName,
-                    s.faculty_name as FacultyName,
-                    s.created_date as CreatedDate,
-                    s.modified_date as ModifiedDate,
-                    dw.id as WorkflowId,
-                    wt.name as WorkflowTemplateName,
-                    dw.current_stage_id as CurrentStageId,
-                    ws.stage_name as CurrentStageName,
-                    ws.stage_order as CurrentStageOrder,
-                    dw.assigned_to as AssignedTo,
-                    u.username as AssignedToName
-                FROM workflowmgmt.syllabi s
-                INNER JOIN workflowmgmt.departments d ON s.department_id = d.id
-                INNER JOIN workflowmgmt.document_workflows dw ON s.id = dw.document_id AND dw.document_type = 'syllabus'
-                INNER JOIN workflowmgmt.workflow_templates wt ON dw.workflow_template_id = wt.id
-                LEFT JOIN workflowmgmt.workflow_stages ws ON dw.current_stage_id = ws.id
-                LEFT JOIN workflowmgmt.users u ON dw.assigned_to = u.id
-                WHERE dw.assigned_to = @UserId 
-                AND dw.status IN ('In Progress', 'On Hold')
-                AND s.is_active = true";
+            var documents = new List<DocumentLifecycleDto>();
 
-            sql += " ORDER BY s.modified_date DESC";
+            // Define document types to query
+            var documentTypes = string.IsNullOrEmpty(documentType)
+                ? new[] { "syllabus", "lesson" }
+                : new[] { documentType };
 
-            object parameters;
-            if (!string.IsNullOrEmpty(documentType))
+            foreach (var docType in documentTypes)
             {
-                sql = sql.Replace("AND s.is_active = true", "AND s.is_active = true AND dw.document_type = @DocumentType");
-                parameters = new { UserId = userId, DocumentType = documentType };
+                var sql = BuildDocumentQuery(docType);
+                var docTypeDocuments = await Connection.QueryAsync<DocumentLifecycleDto>(sql,
+                    new { UserId = userId, DocumentType = docType },
+                    transaction: Transaction);
+                documents.AddRange(docTypeDocuments);
             }
-            else
-            {
-                parameters = new { UserId = userId };
-            }
-
-            var documents = await Connection.QueryAsync<DocumentLifecycleDto>(sql, parameters, transaction: Transaction);
 
             // Get available actions and recent feedback for each document
             foreach (var doc in documents)
@@ -69,40 +43,83 @@ namespace WorkflowMgmt.Infrastructure.Repository
                 doc.RecentFeedback = (await GetRecentFeedbackAsync(doc.DocumentId, doc.DocumentType)).ToList();
             }
 
-            return documents.ToList();
+            return documents.OrderByDescending(d => d.ModifiedDate ?? d.CreatedDate).ToList();
+        }
+
+        private string BuildDocumentQuery(string documentType)
+        {
+            switch (documentType.ToLower())
+            {
+                case "syllabus":
+                    return @"
+                        SELECT DISTINCT
+                            s.id as DocumentId,
+                            'syllabus' as DocumentType,
+                            s.title as Title,
+                            s.status as Status,
+                            d.name as DepartmentName,
+                            s.faculty_name as FacultyName,
+                            s.created_date as CreatedDate,
+                            s.modified_date as ModifiedDate,
+                            dw.id as WorkflowId,
+                            wt.name as WorkflowTemplateName,
+                            dw.current_stage_id as CurrentStageId,
+                            ws.stage_name as CurrentStageName,
+                            ws.stage_order as CurrentStageOrder,
+                            dw.assigned_to as AssignedTo,
+                            u.username as AssignedToName
+                        FROM workflowmgmt.syllabi s
+                        INNER JOIN workflowmgmt.departments d ON s.department_id = d.id
+                        INNER JOIN workflowmgmt.document_workflows dw ON s.id = dw.document_id AND dw.document_type = 'syllabus'
+                        INNER JOIN workflowmgmt.workflow_templates wt ON dw.workflow_template_id = wt.id
+                        LEFT JOIN workflowmgmt.workflow_stages ws ON dw.current_stage_id = ws.id
+                        LEFT JOIN workflowmgmt.users u ON dw.assigned_to = u.id
+                        WHERE dw.assigned_to = @UserId
+                        AND dw.status IN ('In Progress', 'On Hold')
+                        AND s.is_active = true
+                        AND dw.document_type = @DocumentType";
+
+                case "lesson":
+                    return @"
+                        SELECT DISTINCT
+                            lp.id as DocumentId,
+                            'lesson' as DocumentType,
+                            lp.title as Title,
+                            lp.status as Status,
+                            COALESCE(d.name, 'N/A') as DepartmentName,
+                            lp.faculty_name as FacultyName,
+                            lp.created_date as CreatedDate,
+                            lp.modified_date as ModifiedDate,
+                            dw.id as WorkflowId,
+                            wt.name as WorkflowTemplateName,
+                            dw.current_stage_id as CurrentStageId,
+                            ws.stage_name as CurrentStageName,
+                            ws.stage_order as CurrentStageOrder,
+                            dw.assigned_to as AssignedTo,
+                            u.username as AssignedToName
+                        FROM workflowmgmt.lesson_plans lp
+                        LEFT JOIN workflowmgmt.syllabi s ON lp.syllabus_id = s.id
+                        LEFT JOIN workflowmgmt.departments d ON s.department_id = d.id
+                        INNER JOIN workflowmgmt.document_workflows dw ON lp.id = dw.document_id AND dw.document_type = 'lesson'
+                        INNER JOIN workflowmgmt.workflow_templates wt ON dw.workflow_template_id = wt.id
+                        LEFT JOIN workflowmgmt.workflow_stages ws ON dw.current_stage_id = ws.id
+                        LEFT JOIN workflowmgmt.users u ON dw.assigned_to = u.id
+                        WHERE dw.assigned_to = @UserId
+                        AND dw.status IN ('In Progress', 'On Hold')
+                        AND lp.is_active = true
+                        AND dw.document_type = @DocumentType";
+
+                default:
+                    throw new ArgumentException($"Unsupported document type: {documentType}");
+            }
         }
 
         public async Task<DocumentLifecycleDto?> GetDocumentLifecycleAsync(Guid documentId, string documentType, Guid userId)
         {
-            var sql = @"
-                SELECT 
-                    s.id as DocumentId,
-                    'syllabus' as DocumentType,
-                    s.title as Title,
-                    s.status as Status,
-                    d.name as DepartmentName,
-                    s.faculty_name as FacultyName,
-                    s.created_date as CreatedDate,
-                    s.modified_date as ModifiedDate,
-                    dw.id as WorkflowId,
-                    wt.name as WorkflowTemplateName,
-                    dw.current_stage_id as CurrentStageId,
-                    ws.stage_name as CurrentStageName,
-                    ws.stage_order as CurrentStageOrder,
-                    dw.assigned_to as AssignedTo,
-                    u.name as AssignedToName
-                FROM workflowmgmt.syllabi s
-                INNER JOIN workflowmgmt.departments d ON s.department_id = d.id
-                INNER JOIN workflowmgmt.document_workflows dw ON s.id::text = dw.document_id AND dw.document_type = 'syllabus'
-                INNER JOIN workflowmgmt.workflow_templates wt ON dw.workflow_template_id = wt.id
-                LEFT JOIN workflowmgmt.workflow_stages ws ON dw.current_stage_id = ws.id
-                LEFT JOIN workflowmgmt.users u ON dw.assigned_to = u.id
-                WHERE s.id = @DocumentId 
-                AND dw.document_type = @DocumentType
-                AND s.is_active = true";
+            var sql = BuildDocumentLifecycleQuery(documentType);
 
-            var document = await Connection.QuerySingleOrDefaultAsync<DocumentLifecycleDto>(sql, 
-                new { DocumentId = documentId, DocumentType = documentType }, 
+            var document = await Connection.QuerySingleOrDefaultAsync<DocumentLifecycleDto>(sql,
+                new { DocumentId = documentId, DocumentType = documentType },
                 transaction: Transaction);
 
             if (document != null)
@@ -114,60 +131,193 @@ namespace WorkflowMgmt.Infrastructure.Repository
             return document;
         }
 
+        private string BuildDocumentLifecycleQuery(string documentType)
+        {
+            switch (documentType.ToLower())
+            {
+                case "syllabus":
+                    return @"
+                        SELECT
+                            s.id as DocumentId,
+                            'syllabus' as DocumentType,
+                            s.title as Title,
+                            s.status as Status,
+                            d.name as DepartmentName,
+                            s.faculty_name as FacultyName,
+                            s.created_date as CreatedDate,
+                            s.modified_date as ModifiedDate,
+                            dw.id as WorkflowId,
+                            wt.name as WorkflowTemplateName,
+                            dw.current_stage_id as CurrentStageId,
+                            ws.stage_name as CurrentStageName,
+                            ws.stage_order as CurrentStageOrder,
+                            dw.assigned_to as AssignedTo,
+                            u.name as AssignedToName
+                        FROM workflowmgmt.syllabi s
+                        INNER JOIN workflowmgmt.departments d ON s.department_id = d.id
+                        INNER JOIN workflowmgmt.document_workflows dw ON s.id::text = dw.document_id AND dw.document_type = 'syllabus'
+                        INNER JOIN workflowmgmt.workflow_templates wt ON dw.workflow_template_id = wt.id
+                        LEFT JOIN workflowmgmt.workflow_stages ws ON dw.current_stage_id = ws.id
+                        LEFT JOIN workflowmgmt.users u ON dw.assigned_to = u.id
+                        WHERE s.id = @DocumentId
+                        AND dw.document_type = @DocumentType
+                        AND s.is_active = true";
+
+                case "lesson":
+                    return @"
+                        SELECT
+                            lp.id as DocumentId,
+                            'lesson' as DocumentType,
+                            lp.title as Title,
+                            lp.status as Status,
+                            COALESCE(d.name, 'N/A') as DepartmentName,
+                            lp.faculty_name as FacultyName,
+                            lp.created_date as CreatedDate,
+                            lp.modified_date as ModifiedDate,
+                            dw.id as WorkflowId,
+                            wt.name as WorkflowTemplateName,
+                            dw.current_stage_id as CurrentStageId,
+                            ws.stage_name as CurrentStageName,
+                            ws.stage_order as CurrentStageOrder,
+                            dw.assigned_to as AssignedTo,
+                            u.name as AssignedToName
+                        FROM workflowmgmt.lesson_plans lp
+                        LEFT JOIN workflowmgmt.syllabi s ON lp.syllabus_id = s.id
+                        LEFT JOIN workflowmgmt.departments d ON s.department_id = d.id
+                        INNER JOIN workflowmgmt.document_workflows dw ON lp.id::text = dw.document_id AND dw.document_type = 'lesson'
+                        INNER JOIN workflowmgmt.workflow_templates wt ON dw.workflow_template_id = wt.id
+                        LEFT JOIN workflowmgmt.workflow_stages ws ON dw.current_stage_id = ws.id
+                        LEFT JOIN workflowmgmt.users u ON dw.assigned_to = u.id
+                        WHERE lp.id = @DocumentId
+                        AND dw.document_type = @DocumentType
+                        AND lp.is_active = true";
+
+                default:
+                    throw new ArgumentException($"Unsupported document type: {documentType}");
+            }
+        }
+
         public async Task<bool> CanUserPerformActionAsync(Guid userId, Guid documentId, string documentType, Guid actionId)
         {
-            var sql = @"
-                SELECT COUNT(1)
-                FROM workflowmgmt.document_workflows dw
-                INNER JOIN workflowmgmt.workflow_stage_actions wsa ON dw.current_stage_id = wsa.workflow_stage_id
-                INNER JOIN workflowmgmt.workflow_stage_roles wsr ON dw.current_stage_id = wsr.workflow_stage_id
-                INNER JOIN workflowmgmt.roles r ON r.code = wsr.role_code
-                INNER JOIN workflowmgmt.workflow_role_mapping wrm ON r.id = wrm.role_id
-                INNER JOIN workflowmgmt.syllabi s ON dw.document_id = s.id
-                WHERE dw.document_id = @DocumentId
-                AND dw.document_type = @DocumentType
-                AND wsa.id = @ActionId
-                AND wrm.user_id = @UserId
-                AND wrm.department_id = s.department_id
-                AND wsa.is_active = true
-                AND dw.status <> 'Completed'";
+            var sql = BuildCanUserPerformActionQuery(documentType);
 
-            var count = await Connection.QuerySingleAsync<int>(sql, 
-                new { UserId = userId, DocumentId = documentId, DocumentType = documentType, ActionId = actionId }, 
+            var count = await Connection.QuerySingleAsync<int>(sql,
+                new { UserId = userId, DocumentId = documentId, DocumentType = documentType, ActionId = actionId },
                 transaction: Transaction);
 
             return count > 0;
         }
 
+        private string BuildCanUserPerformActionQuery(string documentType)
+        {
+            switch (documentType.ToLower())
+            {
+                case "syllabus":
+                    return @"
+                        SELECT COUNT(1)
+                        FROM workflowmgmt.document_workflows dw
+                        INNER JOIN workflowmgmt.workflow_stage_actions wsa ON dw.current_stage_id = wsa.workflow_stage_id
+                        INNER JOIN workflowmgmt.workflow_stage_roles wsr ON dw.current_stage_id = wsr.workflow_stage_id
+                        INNER JOIN workflowmgmt.roles r ON r.code = wsr.role_code
+                        INNER JOIN workflowmgmt.workflow_role_mapping wrm ON r.id = wrm.role_id
+                        INNER JOIN workflowmgmt.syllabi s ON dw.document_id = s.id
+                        WHERE dw.document_id = @DocumentId
+                        AND dw.document_type = @DocumentType
+                        AND wsa.id = @ActionId
+                        AND wrm.user_id = @UserId
+                        AND wrm.department_id = s.department_id
+                        AND wsa.is_active = true
+                        AND dw.status <> 'Completed'";
+
+                case "lesson":
+                    return @"
+                        SELECT COUNT(1)
+                        FROM workflowmgmt.document_workflows dw
+                        INNER JOIN workflowmgmt.workflow_stage_actions wsa ON dw.current_stage_id = wsa.workflow_stage_id
+                        INNER JOIN workflowmgmt.workflow_stage_roles wsr ON dw.current_stage_id = wsr.workflow_stage_id
+                        INNER JOIN workflowmgmt.roles r ON r.code = wsr.role_code
+                        INNER JOIN workflowmgmt.workflow_role_mapping wrm ON r.id = wrm.role_id
+                        INNER JOIN workflowmgmt.lesson_plans lp ON dw.document_id = lp.id
+                        LEFT JOIN workflowmgmt.syllabi s ON lp.syllabus_id = s.id
+                        WHERE dw.document_id = @DocumentId
+                        AND dw.document_type = @DocumentType
+                        AND wsa.id = @ActionId
+                        AND wrm.user_id = @UserId
+                        AND (wrm.department_id = s.department_id OR s.department_id IS NULL)
+                        AND wsa.is_active = true
+                        AND dw.status <> 'Completed'";
+
+                default:
+                    throw new ArgumentException($"Unsupported document type: {documentType}");
+            }
+        }
+
         public async Task<List<WorkflowStageActionDto>> GetAvailableActionsAsync(Guid userId, Guid documentId, string documentType)
         {
-            var sql = @"
-                SELECT DISTINCT
-                    wsa.id as Id,
-                    wsa.workflow_stage_id as WorkflowStageId,
-                    wsa.action_name as ActionName,
-                    wsa.action_type as ActionType,
-                    wsa.next_stage_id as NextStageId,
-                    wsa.is_active as IsActive,
-                    wsa.created_date as CreatedDate
-                FROM workflowmgmt.document_workflows dw
-                INNER JOIN workflowmgmt.workflow_stage_actions wsa ON dw.current_stage_id = wsa.workflow_stage_id
-                INNER JOIN workflowmgmt.workflow_stage_roles wsr ON dw.current_stage_id = wsr.workflow_stage_id
-                INNER JOIN workflowmgmt.roles r ON r.code = wsr.role_code
-                INNER JOIN workflowmgmt.workflow_role_mapping wrm ON r.id = wrm.role_id
-                INNER JOIN workflowmgmt.syllabi s ON dw.document_id = s.id
-                WHERE dw.document_id = @DocumentId
-                AND dw.document_type = @DocumentType
-                AND wrm.user_id = @UserId
-                AND wrm.department_id = s.department_id
-                AND wsa.is_active = true
-                AND dw.status <> 'Completed'
-                ORDER BY wsa.action_name";
+            var sql = BuildAvailableActionsQuery(documentType);
 
             var actions = await Connection.QueryAsync<WorkflowStageActionDto>(sql,
                 new { UserId = userId, DocumentId = documentId, DocumentType = documentType },
                 transaction: Transaction);
             return actions.ToList();
+        }
+
+        private string BuildAvailableActionsQuery(string documentType)
+        {
+            switch (documentType.ToLower())
+            {
+                case "syllabus":
+                    return @"
+                        SELECT DISTINCT
+                            wsa.id as Id,
+                            wsa.workflow_stage_id as WorkflowStageId,
+                            wsa.action_name as ActionName,
+                            wsa.action_type as ActionType,
+                            wsa.next_stage_id as NextStageId,
+                            wsa.is_active as IsActive,
+                            wsa.created_date as CreatedDate
+                        FROM workflowmgmt.document_workflows dw
+                        INNER JOIN workflowmgmt.workflow_stage_actions wsa ON dw.current_stage_id = wsa.workflow_stage_id
+                        INNER JOIN workflowmgmt.workflow_stage_roles wsr ON dw.current_stage_id = wsr.workflow_stage_id
+                        INNER JOIN workflowmgmt.roles r ON r.code = wsr.role_code
+                        INNER JOIN workflowmgmt.workflow_role_mapping wrm ON r.id = wrm.role_id
+                        INNER JOIN workflowmgmt.syllabi s ON dw.document_id = s.id
+                        WHERE dw.document_id = @DocumentId
+                        AND dw.document_type = @DocumentType
+                        AND wrm.user_id = @UserId
+                        AND wrm.department_id = s.department_id
+                        AND wsa.is_active = true
+                        AND dw.status <> 'Completed'
+                        ORDER BY wsa.action_name";
+
+                case "lesson":
+                    return @"
+                        SELECT DISTINCT
+                            wsa.id as Id,
+                            wsa.workflow_stage_id as WorkflowStageId,
+                            wsa.action_name as ActionName,
+                            wsa.action_type as ActionType,
+                            wsa.next_stage_id as NextStageId,
+                            wsa.is_active as IsActive,
+                            wsa.created_date as CreatedDate
+                        FROM workflowmgmt.document_workflows dw
+                        INNER JOIN workflowmgmt.workflow_stage_actions wsa ON dw.current_stage_id = wsa.workflow_stage_id
+                        INNER JOIN workflowmgmt.workflow_stage_roles wsr ON dw.current_stage_id = wsr.workflow_stage_id
+                        INNER JOIN workflowmgmt.roles r ON r.code = wsr.role_code
+                        INNER JOIN workflowmgmt.workflow_role_mapping wrm ON r.id = wrm.role_id
+                        INNER JOIN workflowmgmt.lesson_plans lp ON dw.document_id = lp.id
+                        LEFT JOIN workflowmgmt.syllabi s ON lp.syllabus_id = s.id
+                        WHERE dw.document_id = @DocumentId
+                        AND dw.document_type = @DocumentType
+                        AND wrm.user_id = @UserId
+                        AND (wrm.department_id = s.department_id OR s.department_id IS NULL)
+                        AND wsa.is_active = true
+                        AND dw.status <> 'Completed'
+                        ORDER BY wsa.action_name";
+
+                default:
+                    throw new ArgumentException($"Unsupported document type: {documentType}");
+            }
         }
 
         private async Task<List<DocumentFeedbackDto>> GetRecentFeedbackAsync(Guid documentId, string documentType, int limit = 5)
@@ -304,9 +454,12 @@ namespace WorkflowMgmt.Infrastructure.Repository
                 Guid? nextAssignedTo = null;
                 if (action.next_stage_id != null)
                 {
-                    nextAssignedTo = await GetNextStageAssigneeAsync(action.next_stage_id, actionDto.DocumentId);
+                    nextAssignedTo = await GetNextStageAssigneeAsync(action.next_stage_id, actionDto.DocumentId, actionDto.DocumentType);
                 }
-
+                if (!nextAssignedTo.HasValue && newWorkflowStatus != "Completed")
+                {
+                    throw new InvalidOperationException($"Validation error: Assignee not found");
+                }
                 // Update document workflow with new stage and assignment
                 var updateWorkflowSql = @"
                     UPDATE workflowmgmt.document_workflows
@@ -428,7 +581,7 @@ namespace WorkflowMgmt.Infrastructure.Repository
 
             return stageOrder == 1 ? true : false;
         }
-        private async Task<Guid?> GetNextStageAssigneeAsync(Guid? nextStageId, Guid documentId)
+        private async Task<Guid?> GetNextStageAssigneeAsync(Guid? nextStageId, Guid documentId, string documentType)
         {
             if (!nextStageId.HasValue) return null;
 
@@ -442,14 +595,10 @@ namespace WorkflowMgmt.Infrastructure.Repository
                 new { StageId = nextStageId },
                 transaction: Transaction);
 
-            // If stage_order = 1, assign to faculty_id from syllabi table
+            // If stage_order = 1, assign to faculty_id from appropriate document table
             if (stageOrder == 1)
             {
-                var facultyAssignmentSql = @"
-                    SELECT faculty_id
-                    FROM workflowmgmt.syllabi
-                    WHERE id = @DocumentId
-                    AND faculty_id IS NOT NULL";
+                var facultyAssignmentSql = BuildFacultyAssignmentQuery(documentType);
 
                 var facultyId = await Connection.QuerySingleOrDefaultAsync<Guid?>(facultyAssignmentSql,
                     new { DocumentId = documentId },
@@ -463,17 +612,7 @@ namespace WorkflowMgmt.Infrastructure.Repository
 
             // Continue with current functionality for other stages
             // Get the primary user assigned to the next stage roles for this document's department
-            var assignmentSql = @"
-                SELECT DISTINCT wrm.user_id
-                FROM workflowmgmt.workflow_stage_roles wsr
-                INNER JOIN workflowmgmt.roles r ON r.code = wsr.role_code
-                INNER JOIN workflowmgmt.workflow_role_mapping wrm ON r.id = wrm.role_id
-                INNER JOIN workflowmgmt.syllabi s ON wrm.department_id = s.department_id
-                WHERE wsr.workflow_stage_id = @StageId
-                AND s.id = @DocumentId
-                AND wrm.isprimary = true
-                AND wsr.is_required = true
-                LIMIT 1";
+            var assignmentSql = BuildDepartmentRoleAssignmentQuery(documentType, true);
 
             var assignedUserId = await Connection.QuerySingleOrDefaultAsync<Guid?>(assignmentSql,
                 new { StageId = nextStageId, DocumentId = documentId },
@@ -482,15 +621,7 @@ namespace WorkflowMgmt.Infrastructure.Repository
             // If no primary user found, get any user with the required role
             if (!assignedUserId.HasValue)
             {
-                var fallbackSql = @"
-                    SELECT DISTINCT wrm.user_id
-                    FROM workflowmgmt.workflow_stage_roles wsr
-                    INNER JOIN workflowmgmt.workflow_role_mapping wrm ON wsr.role_code = wrm.role_code
-                    INNER JOIN workflowmgmt.syllabi s ON wrm.department_id = s.department_id
-                    WHERE wsr.workflow_stage_id = @StageId
-                    AND s.id = @DocumentId
-                    ORDER BY wrm.created_date ASC
-                    LIMIT 1";
+                var fallbackSql = BuildDepartmentRoleAssignmentQuery(documentType, false);
 
                 assignedUserId = await Connection.QuerySingleOrDefaultAsync<Guid?>(fallbackSql,
                     new { StageId = nextStageId, DocumentId = documentId },
@@ -559,6 +690,69 @@ namespace WorkflowMgmt.Infrastructure.Repository
             return rowsAffected > 0 ? true : false;
         }
 
+        private string BuildFacultyAssignmentQuery(string documentType)
+        {
+            switch (documentType.ToLower())
+            {
+                case "syllabus":
+                    return @"
+                        SELECT faculty_id
+                        FROM workflowmgmt.syllabi
+                        WHERE id = @DocumentId
+                        AND faculty_id IS NOT NULL";
+
+                case "lesson":
+                    return @"
+                        SELECT faculty_id
+                        FROM workflowmgmt.lesson_plans
+                        WHERE id = @DocumentId
+                        AND faculty_id IS NOT NULL";
+
+                default:
+                    throw new ArgumentException($"Unsupported document type for faculty assignment: {documentType}");
+            }
+        }
+
+        private string BuildDepartmentRoleAssignmentQuery(string documentType, bool primaryOnly)
+        {
+            var primaryFilter = primaryOnly ? "AND wrm.isprimary = true" : "";
+            var orderBy = primaryOnly ? "" : "ORDER BY wrm.created_date ASC";
+
+            switch (documentType.ToLower())
+            {
+                case "syllabus":
+                    return $@"
+                        SELECT DISTINCT wrm.user_id
+                        FROM workflowmgmt.workflow_stage_roles wsr
+                        INNER JOIN workflowmgmt.roles r ON r.code = wsr.role_code
+                        INNER JOIN workflowmgmt.workflow_role_mapping wrm ON r.id = wrm.role_id
+                        INNER JOIN workflowmgmt.syllabi s ON wrm.department_id = s.department_id
+                        WHERE wsr.workflow_stage_id = @StageId
+                        AND s.id = @DocumentId
+                        {primaryFilter}
+                        AND wsr.is_required = true
+                        {orderBy}
+                        LIMIT 1";
+
+                case "lesson":
+                    return $@"
+                        SELECT DISTINCT wrm.user_id
+                        FROM workflowmgmt.workflow_stage_roles wsr
+                        INNER JOIN workflowmgmt.roles r ON r.code = wsr.role_code
+                        INNER JOIN workflowmgmt.workflow_role_mapping wrm ON r.id = wrm.role_id
+                        INNER JOIN workflowmgmt.lesson_plans lp ON lp.id = @DocumentId
+                        INNER JOIN workflowmgmt.syllabi s ON wrm.department_id = s.department_id AND s.id = lp.syllabus_id
+                        WHERE wsr.workflow_stage_id = @StageId
+                        {primaryFilter}
+                        AND wsr.is_required = true
+                        {orderBy}
+                        LIMIT 1";
+
+                default:
+                    throw new ArgumentException($"Unsupported document type for role assignment: {documentType}");
+            }
+        }
+
         public static string GetTableName(string documentType)
         {
             switch (documentType.ToLower())
@@ -566,7 +760,7 @@ namespace WorkflowMgmt.Infrastructure.Repository
                 case "syllabus":
                     return "syllabi";
                 case "lesson":
-                    return "lesson";
+                    return "lesson_plans";
                 case "session":
                     return "session";
                 default:

@@ -71,6 +71,8 @@ namespace WorkflowMgmt.Application.Features.LessonPlan
         public string? Prerequisites { get; set; }
 
         public IFormFile? DocumentFile { get; set; }
+
+        public bool AutoCreateWorkflow { get; set; } = true;
     }
 
     public class UpdateLessonPlanCommand : IRequest<LessonPlanDto>

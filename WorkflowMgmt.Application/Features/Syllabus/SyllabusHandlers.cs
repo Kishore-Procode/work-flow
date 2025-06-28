@@ -258,12 +258,12 @@ namespace WorkflowMgmt.Application.Features.Syllabus
                     }
                     else
                     {
-                        Console.WriteLine($"⚠️ No workflow mapping found for department {request.DepartmentId} and document type 'syllabus'");
+                        throw new InvalidOperationException($"⚠️ No workflow mapping found for department {request.DepartmentId} and document type 'syllabus'");
                     }
                 }
                 catch (Exception workflowError)
                 {
-                    Console.WriteLine($"Failed to create workflow for syllabus: {workflowError.Message}");
+                    throw new InvalidOperationException($"Failed to create workflow for syllabus: {workflowError.Message}");
                     // Don't fail the syllabus creation if workflow creation fails
                 }
             }
