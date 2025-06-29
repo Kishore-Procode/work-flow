@@ -7,6 +7,7 @@ using MediatR;
 using WorkflowMgmt.Domain.Interface.IUnitOfWork;
 using WorkflowMgmt.Domain.Models.Workflow;
 using WorkflowMgmt.Domain.Models;
+using WorkflowMgmt.Application.Services;
 
 namespace WorkflowMgmt.Application.Features.DocumentLifecycle
 {
@@ -107,10 +108,12 @@ namespace WorkflowMgmt.Application.Features.DocumentLifecycle
     public class ProcessDocumentActionCommandHandler : IRequestHandler<ProcessDocumentActionCommand, ApiResponse<bool>>
     {
         private readonly IUnitOfWork _unitOfWork;
+        private readonly INotificationService _notificationService;
 
-        public ProcessDocumentActionCommandHandler(IUnitOfWork unitOfWork)
+        public ProcessDocumentActionCommandHandler(IUnitOfWork unitOfWork, INotificationService notificationService)
         {
             _unitOfWork = unitOfWork;
+            _notificationService = notificationService;
         }
 
         public async Task<ApiResponse<bool>> Handle(ProcessDocumentActionCommand request, CancellationToken cancellationToken)
@@ -153,7 +156,10 @@ namespace WorkflowMgmt.Application.Features.DocumentLifecycle
                     return ApiResponse<bool>.ErrorResponse("Failed to process document action");
                 }
 
-                // Step 5: Commit the transaction
+                // Step 5: Send notifications after successful commit
+                await SendWorkflowNotificationsAsync(request, action, documentWorkflow);
+
+                // Step 6: Commit the transaction
                 _unitOfWork.Commit();
 
                 return ApiResponse<bool>.SuccessResponse(true, "Document action processed successfully");
@@ -169,6 +175,156 @@ namespace WorkflowMgmt.Application.Features.DocumentLifecycle
                     // Ignore rollback errors
                 }
                 return ApiResponse<bool>.ErrorResponse($"Failed to process document action: {ex.Message}");
+            }
+        }
+
+        private async Task SendWorkflowNotificationsAsync(ProcessDocumentActionCommand request, dynamic action, dynamic documentWorkflow)
+        {
+            try
+            {
+                // Get document details for notification
+                var documentTitle = await GetDocumentTitleAsync(request.DocumentId, request.DocumentType);
+
+                // Get current workflow details after action processing
+                var updatedWorkflow = await _unitOfWork.DocumentWorkflowRepository.GetByDocumentIdAsync(request.DocumentId.ToString());
+                if (updatedWorkflow == null) return;
+
+                var recipientUserIds = new List<Guid>();
+
+                // Add assigned user (new assignee after action)
+                if (updatedWorkflow.AssignedTo != null && updatedWorkflow.AssignedTo != request.ProcessedBy)
+                {
+                    recipientUserIds.Add(updatedWorkflow.AssignedTo.Value);
+
+                    // Send assignment notification to new assignee
+                    var currentStage = await GetCurrentStageNameAsync(updatedWorkflow.CurrentStageId);
+                    await _notificationService.SendDocumentAssignedNotificationAsync(
+                        request.DocumentId,
+                        request.DocumentType,
+                        documentTitle,
+                        currentStage,
+                        request.ProcessedBy,
+                        updatedWorkflow.AssignedTo.Value
+                    );
+                }
+
+                // Add document initiator (creator)
+                if (updatedWorkflow.InitiatedBy != request.ProcessedBy)
+                {
+                    recipientUserIds.Add(updatedWorkflow.InitiatedBy);
+                }
+
+                // Remove duplicates
+                recipientUserIds = recipientUserIds.Distinct().ToList();
+
+                // Send action completion notification to relevant users
+                if (recipientUserIds.Any())
+                {
+                    var actionName = action?.action_name ?? "Unknown Action";
+
+                    // Determine notification type based on action
+                    if (actionName.ToLower().Contains("approve"))
+                    {
+                        foreach (var userId in recipientUserIds)
+                        {
+                            await _notificationService.SendDocumentApprovedNotificationAsync(
+                                request.DocumentId,
+                                request.DocumentType,
+                                documentTitle,
+                                request.ProcessedBy,
+                                userId
+                            );
+                        }
+                    }
+                    else if (actionName.ToLower().Contains("reject"))
+                    {
+                        foreach (var userId in recipientUserIds)
+                        {
+                            await _notificationService.SendDocumentRejectedNotificationAsync(
+                                request.DocumentId,
+                                request.DocumentType,
+                                documentTitle,
+                                request.Comments ?? "No reason provided",
+                                request.ProcessedBy,
+                                userId
+                            );
+                        }
+                    }
+                    else
+                    {
+                        // General status update notification
+                        var previousStatus = documentWorkflow?.Status ?? "Unknown";
+                        var newStatus = updatedWorkflow.Status ?? "Unknown";
+
+                        await _notificationService.SendDocumentStatusUpdatedNotificationAsync(
+                            request.DocumentId,
+                            request.DocumentType,
+                            documentTitle,
+                            previousStatus,
+                            newStatus,
+                            request.ProcessedBy,
+                            recipientUserIds
+                        );
+                    }
+                }
+
+                // Send feedback notification if comments were provided
+                if (!string.IsNullOrEmpty(request.Comments) && updatedWorkflow.InitiatedBy != request.ProcessedBy)
+                {
+                    await _notificationService.SendFeedbackReceivedNotificationAsync(
+                        request.DocumentId,
+                        request.DocumentType,
+                        documentTitle,
+                        request.FeedbackType ?? "general",
+                        request.ProcessedBy,
+                        updatedWorkflow.InitiatedBy
+                    );
+                }
+            }
+            catch (Exception ex)
+            {
+                // Log error but don't fail the main operation
+                System.Diagnostics.Debug.WriteLine($"Error sending workflow notifications: {ex.Message}");
+            }
+        }
+
+        private async Task<string> GetDocumentTitleAsync(Guid documentId, string documentType)
+        {
+            try
+            {
+                switch (documentType.ToLower())
+                {
+                    case "syllabus":
+                        var syllabus = await _unitOfWork.SyllabusRepository.GetByIdAsync(documentId);
+                        return syllabus?.Title ?? "Untitled Syllabus";
+                    case "lesson":
+                        var lesson = await _unitOfWork.LessonPlanRepository.GetByIdAsync(documentId);
+                        return lesson?.Title ?? "Untitled Lesson Plan";
+                    case "session":
+                        var session = await _unitOfWork.SessionRepository.GetByIdAsync(documentId);
+                        return session?.Title ?? "Untitled Session";
+                    default:
+                        return "Untitled Document";
+                }
+            }
+            catch
+            {
+                return "Untitled Document";
+            }
+        }
+
+        private async Task<string> GetCurrentStageNameAsync(Guid? stageId)
+        {
+            try
+            {
+                if (!stageId.HasValue) return "Unknown Stage";
+
+                var stage = await _unitOfWork.WorkflowStageRepository.GetByIdAsync(stageId.Value);
+                return stage?.StageName ?? "Unknown Stage";
+            }
+            catch
+            {
+                return "Unknown Stage";
             }
         }
 

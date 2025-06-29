@@ -211,6 +211,7 @@ namespace WorkflowMgmt.Infrastructure.Repository
                     dw.current_stage_id as CurrentStageId,
                     dw.status as Status,
                     dw.initiated_by as InitiatedBy,
+                    dw.assigned_to as AssignedTo,
                     dw.initiated_date as InitiatedDate,
                     dw.completed_date as CompletedDate,
                     dw.is_active as IsActive,

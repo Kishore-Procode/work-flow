@@ -38,10 +38,13 @@ namespace WorkflowMgmt.Domain.Interface.IUnitOfWork
         ISyllabusTemplateRepository SyllabusTemplateRepository { get; }
         IWorkflowRoleMappingRepository WorkflowRoleMappingRepository { get; }
         IWorkflowDepartmentDocumentMappingRepository WorkflowDepartmentDocumentMappingRepository { get; }
+        INotificationRepository NotificationRepository { get; }
         void Begin();
         void Commit();
         void Rollback();
         Task SaveAsync();
+        Task CommitAsync();
+        Task RollbackAsync();
     }
 
 }

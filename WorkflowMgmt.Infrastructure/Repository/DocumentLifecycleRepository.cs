@@ -739,17 +739,9 @@ namespace WorkflowMgmt.Infrastructure.Repository
         private async Task LogWorkflowActionAsync(Guid documentWorkflowId, string actionName, Guid processedBy,
             string? comments, Guid? feedbackId, Guid historyId)
         {
-            // This method can be used for additional logging, notifications, or audit trails
-            // For now, we'll just ensure the action is properly recorded
-            // In a full implementation, you might:
-            // 1. Send notifications to assigned users
-            // 2. Log to an audit table
-            // 3. Trigger external integrations
-            // 4. Update metrics/analytics
-
-            // Example: Log to a separate audit table (if it exists)
             try
             {
+                // 1. Log to audit table
                 var auditSql = @"
                     INSERT INTO workflowmgmt.workflow_audit_log
                     (id, document_workflow_id, action_name, processed_by, comments,
@@ -768,6 +760,8 @@ namespace WorkflowMgmt.Infrastructure.Repository
                     HistoryId = historyId,
                     CreatedDate = DateTime.UtcNow
                 }, transaction: Transaction);
+
+                // 2. Additional logging can be added here if needed
             }
             catch
             {

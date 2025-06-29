@@ -48,6 +48,7 @@ namespace WorkflowMgmt.Infrastructure
         private IWorkflowDepartmentDocumentMappingRepository? workflowDepartmentDocumentMappingRepository;
         private IDocumentFeedbackRepository? documentFeedbackRepository;
         private IDocumentLifecycleRepository? documentLifecycleRepository;
+        private INotificationRepository? notificationRepository;
 
         public UnitOfWork(IDbConnectionFactory connectionFactory)
         {
@@ -192,6 +193,11 @@ namespace WorkflowMgmt.Infrastructure
             get { return documentLifecycleRepository ?? (documentLifecycleRepository = new DocumentLifecycleRepository(_transaction)); }
         }
 
+        public INotificationRepository NotificationRepository
+        {
+            get { return notificationRepository ?? (notificationRepository = new NotificationRepository(_transaction)); }
+        }
+
         public void Begin()
         {
             if (_transaction == null)
@@ -214,6 +220,20 @@ namespace WorkflowMgmt.Infrastructure
         {
             // For now, just commit the transaction
             // In the future, this could be extended to handle async operations
+            await Task.CompletedTask;
+        }
+
+        public async Task CommitAsync()
+        {
+            _transaction?.Commit();
+            _connection?.Close();
+            await Task.CompletedTask;
+        }
+
+        public async Task RollbackAsync()
+        {
+            _transaction?.Rollback();
+            _connection?.Close();
             await Task.CompletedTask;
         }
 
