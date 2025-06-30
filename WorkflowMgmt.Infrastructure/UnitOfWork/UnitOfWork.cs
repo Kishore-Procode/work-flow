@@ -48,7 +48,9 @@ namespace WorkflowMgmt.Infrastructure
         private IWorkflowDepartmentDocumentMappingRepository? workflowDepartmentDocumentMappingRepository;
         private IDocumentFeedbackRepository? documentFeedbackRepository;
         private IDocumentLifecycleRepository? documentLifecycleRepository;
+        private IDocumentStatusRepository? documentStatusRepository;
         private INotificationRepository? notificationRepository;
+        private IDashboardRepository? dashboardRepository;
 
         public UnitOfWork(IDbConnectionFactory connectionFactory)
         {
@@ -193,9 +195,19 @@ namespace WorkflowMgmt.Infrastructure
             get { return documentLifecycleRepository ?? (documentLifecycleRepository = new DocumentLifecycleRepository(_transaction)); }
         }
 
+        public IDocumentStatusRepository DocumentStatusRepository
+        {
+            get { return documentStatusRepository ?? (documentStatusRepository = new DocumentStatusRepository(_transaction)); }
+        }
+
         public INotificationRepository NotificationRepository
         {
             get { return notificationRepository ?? (notificationRepository = new NotificationRepository(_transaction)); }
+        }
+
+        public IDashboardRepository DashboardRepository
+        {
+            get { return dashboardRepository ?? (dashboardRepository = new DashboardRepository(_transaction)); }
         }
 
         public void Begin()

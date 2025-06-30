@@ -33,12 +33,14 @@ namespace WorkflowMgmt.Domain.Interface.IUnitOfWork
         IWorkflowStageRoleRepository WorkflowStageRoleRepository { get; }
         IDocumentFeedbackRepository DocumentFeedbackRepository { get; }
         IDocumentLifecycleRepository DocumentLifecycleRepository { get; }
+        IDocumentStatusRepository DocumentStatusRepository { get; }
         IWorkflowStageDetailsRepository WorkflowStageDetailsRepository { get; }
         ISyllabusRepository SyllabusRepository { get; }
         ISyllabusTemplateRepository SyllabusTemplateRepository { get; }
         IWorkflowRoleMappingRepository WorkflowRoleMappingRepository { get; }
         IWorkflowDepartmentDocumentMappingRepository WorkflowDepartmentDocumentMappingRepository { get; }
         INotificationRepository NotificationRepository { get; }
+        IDashboardRepository DashboardRepository { get; }
         void Begin();
         void Commit();
         void Rollback();
