@@ -18,12 +18,13 @@ namespace WorkflowMgmt.Infrastructure.Repository
         public async Task<IEnumerable<SyllabusTemplateDto>> GetAllAsync()
         {
             var sql = @"
-                SELECT 
+                SELECT
                     id as Id,
                     name as Name,
                     description as Description,
                     template_type as TemplateType,
                     sections as Sections,
+                    html_form_template as HtmlFormTemplate,
                     is_active as IsActive,
                     created_date as CreatedDate,
                     modified_date as ModifiedDate,
@@ -38,12 +39,13 @@ namespace WorkflowMgmt.Infrastructure.Repository
         public async Task<SyllabusTemplateDto?> GetByIdAsync(Guid id)
         {
             var sql = @"
-                SELECT 
+                SELECT
                     id as Id,
                     name as Name,
                     description as Description,
                     template_type as TemplateType,
                     sections as Sections,
+                    html_form_template as HtmlFormTemplate,
                     is_active as IsActive,
                     created_date as CreatedDate,
                     modified_date as ModifiedDate,
@@ -59,17 +61,18 @@ namespace WorkflowMgmt.Infrastructure.Repository
         {
             var id = Guid.NewGuid();
             var sql = @"
-                INSERT INTO workflowmgmt.syllabus_templates 
-                (id, name, description, template_type, sections, is_active, created_date, created_by)
-                VALUES (@Id, @Name, @Description, @TemplateType, @Sections, true, @CreatedDate, @CreatedBy)";
+                INSERT INTO workflowmgmt.syllabus_templates
+                (id, name, description, template_type, sections, html_form_template, is_active, created_date, created_by)
+                VALUES (@Id, @Name, @Description, @TemplateType, cast( @Sections as json), @HtmlFormTemplate, true, @CreatedDate, @CreatedBy)";
 
-            await Connection.ExecuteAsync(sql, new
+            var res = await Connection.ExecuteAsync(sql, new
             {
                 Id = id,
                 template.Name,
                 template.Description,
                 template.TemplateType,
                 template.Sections,
+                template.HtmlFormTemplate,
                 CreatedDate = DateTime.UtcNow,
                 CreatedBy = "system" // TODO: Get from current user context
             }, transaction: Transaction);
@@ -80,11 +83,12 @@ namespace WorkflowMgmt.Infrastructure.Repository
         public async Task<bool> UpdateAsync(Guid id, UpdateSyllabusTemplateDto template)
         {
             var sql = @"
-                UPDATE workflowmgmt.syllabus_templates 
-                SET name = COALESCE(@Name, name),
-                    description = COALESCE(@Description, description),
-                    template_type = COALESCE(@TemplateType, template_type),
-                    sections = COALESCE(@Sections, sections),
+                UPDATE workflowmgmt.syllabus_templates
+                SET name = CASE WHEN @Name IS NOT NULL THEN @Name ELSE name END,
+                    description = CASE WHEN @Description IS NOT NULL THEN @Description ELSE description END,
+                    template_type = CASE WHEN @TemplateType IS NOT NULL THEN @TemplateType ELSE template_type END,
+                    sections = CASE WHEN @Sections IS NOT NULL THEN cast(@Sections as jsonb) ELSE sections END,
+                    html_form_template = CASE WHEN @HtmlFormTemplate IS NOT NULL THEN @HtmlFormTemplate ELSE html_form_template END,
                     modified_date = @ModifiedDate,
                     modified_by = @ModifiedBy
                 WHERE id = @Id";
@@ -96,6 +100,7 @@ namespace WorkflowMgmt.Infrastructure.Repository
                 template.Description,
                 template.TemplateType,
                 template.Sections,
+                template.HtmlFormTemplate,
                 ModifiedDate = DateTime.UtcNow,
                 ModifiedBy = "system" // TODO: Get from current user context
             }, transaction: Transaction);
@@ -132,12 +137,13 @@ namespace WorkflowMgmt.Infrastructure.Repository
         public async Task<IEnumerable<SyllabusTemplateDto>> GetActiveAsync()
         {
             var sql = @"
-                SELECT 
+                SELECT
                     id as Id,
                     name as Name,
                     description as Description,
                     template_type as TemplateType,
                     sections as Sections,
+                    html_form_template as HtmlFormTemplate,
                     is_active as IsActive,
                     created_date as CreatedDate,
                     modified_date as ModifiedDate,
@@ -153,12 +159,13 @@ namespace WorkflowMgmt.Infrastructure.Repository
         public async Task<IEnumerable<SyllabusTemplateDto>> GetByTypeAsync(string templateType)
         {
             var sql = @"
-                SELECT 
+                SELECT
                     id as Id,
                     name as Name,
                     description as Description,
                     template_type as TemplateType,
                     sections as Sections,
+                    html_form_template as HtmlFormTemplate,
                     is_active as IsActive,
                     created_date as CreatedDate,
                     modified_date as ModifiedDate,

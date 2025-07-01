@@ -91,13 +91,14 @@ namespace WorkflowMgmt.Application.Features.SyllabusTemplate
                 Name = request.Name,
                 Description = request.Description,
                 TemplateType = request.TemplateType,
-                Sections = request.Sections
+                Sections = request.Sections,
+                HtmlFormTemplate = request.HtmlFormTemplate
             };
 
             var templateId = await _unitOfWork.SyllabusTemplateRepository.CreateAsync(createDto);
-            await _unitOfWork.SaveAsync();
-
+            
             var result = await _unitOfWork.SyllabusTemplateRepository.GetByIdAsync(templateId);
+            _unitOfWork.Commit();
             return result ?? throw new InvalidOperationException("Failed to retrieve created syllabus template.");
         }
     }
@@ -135,7 +136,8 @@ namespace WorkflowMgmt.Application.Features.SyllabusTemplate
                 Name = request.Name,
                 Description = request.Description,
                 TemplateType = request.TemplateType,
-                Sections = request.Sections
+                Sections = request.Sections,
+                HtmlFormTemplate = request.HtmlFormTemplate
             };
 
             var success = await _unitOfWork.SyllabusTemplateRepository.UpdateAsync(request.Id, updateDto);

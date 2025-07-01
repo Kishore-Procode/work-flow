@@ -165,6 +165,7 @@ namespace WorkflowMgmt.Application.Features.Syllabus
                 AssessmentMethods = request.AssessmentMethods,
                 DetailedContent = request.DetailedContent,
                 ReferenceMaterials = request.ReferenceMaterials,
+                HtmlFormData = request.HtmlFormData,
                 DocumentFile = request.DocumentFile,
                 OriginalFilename = originalFilename
             };
@@ -448,6 +449,7 @@ namespace WorkflowMgmt.Application.Features.Syllabus
                 AssessmentMethods = request.AssessmentMethods,
                 DetailedContent = request.DetailedContent,
                 ReferenceMaterials = request.ReferenceMaterials,
+                HtmlFormData = request.HtmlFormData,
                 Status = request.Status,
                 DocumentUrl = documentUrl, // Only update if new file was uploaded
                 OriginalFilename = originalFilename, // Only update if new file was uploaded

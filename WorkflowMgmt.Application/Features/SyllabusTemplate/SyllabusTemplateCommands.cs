@@ -40,6 +40,8 @@ namespace WorkflowMgmt.Application.Features.SyllabusTemplate
 
         [Required]
         public string Sections { get; set; } = "[]";
+
+        public string? HtmlFormTemplate { get; set; }
     }
 
     public class UpdateSyllabusTemplateCommand : IRequest<SyllabusTemplateDto?>
@@ -55,6 +57,8 @@ namespace WorkflowMgmt.Application.Features.SyllabusTemplate
         public string? TemplateType { get; set; }
 
         public string? Sections { get; set; }
+
+        public string? HtmlFormTemplate { get; set; }
     }
 
     public class DeleteSyllabusTemplateCommand : IRequest<bool>

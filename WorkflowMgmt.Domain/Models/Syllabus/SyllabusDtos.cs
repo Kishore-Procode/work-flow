@@ -1,5 +1,6 @@
 using System;
 using System.ComponentModel.DataAnnotations;
+using System.Text.Json.Serialization;
 using WorkflowMgmt.Domain.Models.Workflow;
 using Microsoft.AspNetCore.Http;
 
@@ -26,6 +27,7 @@ namespace WorkflowMgmt.Domain.Models.Syllabus
         public string? AssessmentMethods { get; set; }
         public string? DetailedContent { get; set; }
         public string? ReferenceMaterials { get; set; }
+        public string? HtmlFormData { get; set; }
         public string? DocumentUrl { get; set; }
         public string Status { get; set; } = "Draft";
         public Guid? WorkflowId { get; set; }
@@ -95,6 +97,8 @@ namespace WorkflowMgmt.Domain.Models.Syllabus
 
         public string? ReferenceMaterials { get; set; }
 
+        public string? HtmlFormData { get; set; }
+
         public IFormFile? DocumentFile { get; set; }
 
         [MaxLength(500)]
@@ -137,6 +141,8 @@ namespace WorkflowMgmt.Domain.Models.Syllabus
         public string? DetailedContent { get; set; }
 
         public string? ReferenceMaterials { get; set; }
+
+        public string? HtmlFormData { get; set; }
 
         [MaxLength(50)]
         public string? Status { get; set; }
@@ -240,6 +246,7 @@ namespace WorkflowMgmt.Domain.Models.Syllabus
         public string? Description { get; set; }
         public string TemplateType { get; set; } = string.Empty;
         public string Sections { get; set; } = "[]"; // JSON string
+        public string? HtmlFormTemplate { get; set; }
         public bool IsActive { get; set; }
         public DateTime CreatedDate { get; set; }
         public DateTime? ModifiedDate { get; set; }
@@ -261,6 +268,8 @@ namespace WorkflowMgmt.Domain.Models.Syllabus
 
         [Required]
         public string Sections { get; set; } = "[]";
+
+        public string? HtmlFormTemplate { get; set; }
     }
 
     public class UpdateSyllabusTemplateDto
@@ -274,5 +283,7 @@ namespace WorkflowMgmt.Domain.Models.Syllabus
         public string? TemplateType { get; set; }
 
         public string? Sections { get; set; }
+
+        public string? HtmlFormTemplate { get; set; }
     }
 }

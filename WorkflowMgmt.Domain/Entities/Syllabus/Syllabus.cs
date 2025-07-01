@@ -50,6 +50,8 @@ namespace WorkflowMgmt.Domain.Entities.Syllabus
 
         public string? ReferenceMaterials { get; set; }
 
+        public string? HtmlFormData { get; set; }
+
         [MaxLength(500)]
         public string? DocumentUrl { get; set; }
 
