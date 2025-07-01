@@ -46,7 +46,7 @@ namespace WorkflowMgmt.Infrastructure.Repository
                     c.code as courseCode
                 FROM workflowmgmt.semesters s
                 JOIN workflowmgmt.departments d on d.id = s.department_id
-                LEFT JOIN workflowmgmt.courses c on c.semester_id = s.id
+                LEFT JOIN workflowmgmt.courses c on c.id = s.course_id
                 ORDER BY s.academic_year DESC, s.name";
             var semesters = await Connection.QueryAsync<SemesterDTO>(sql, transaction: Transaction);
             return semesters.ToList();
