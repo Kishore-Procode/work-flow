@@ -79,8 +79,12 @@ namespace WorkflowMgmt.WebAPI.Controllers
                 }
 
                 // Construct the file path
-                var uploadsPath = Path.Combine(_environment.WebRootPath, "uploads", "syllabi", syllabusId.ToString());
+                var uploadsPath = Path.Combine(_environment.ContentRootPath, "uploads", "syllabi", syllabusId.ToString());
                 var filePath = Path.Combine(uploadsPath, fileName);
+                _logger.LogInformation("WebRootPath: {path}", _environment.WebRootPath);
+                _logger.LogInformation("ContentRootPath: {path}", _environment.ContentRootPath);
+                _logger.LogInformation("uploadsPath: {uploadsPath}", uploadsPath);
+                _logger.LogInformation("uploadsPath: {filePath}", filePath);
 
                 // Check if file exists
                 if (!System.IO.File.Exists(filePath))
