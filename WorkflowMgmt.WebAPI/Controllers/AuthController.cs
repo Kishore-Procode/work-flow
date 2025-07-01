@@ -18,6 +18,7 @@ namespace WorkflowMgmt.WebAPI.Controllers
         [HttpPost("login")]
         public async Task<IActionResult> Login([FromBody] LoginCommand command)
         {
+            if (command == null) return BadRequest("Login data is required");
             var result = await Mediator.Send(command);
             return Ok(result);
         }
