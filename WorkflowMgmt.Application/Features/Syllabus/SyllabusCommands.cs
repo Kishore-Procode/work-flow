@@ -98,6 +98,8 @@ namespace WorkflowMgmt.Application.Features.Syllabus
 
         public string? ReferenceMaterials { get; set; }
 
+        public string? HtmlFormData { get; set; }
+
         public IFormFile? DocumentFile { get; set; }
 
         public bool AutoCreateWorkflow { get; set; } = true;
@@ -136,6 +138,8 @@ namespace WorkflowMgmt.Application.Features.Syllabus
         public string? DetailedContent { get; set; }
 
         public string? ReferenceMaterials { get; set; }
+
+        public string? HtmlFormData { get; set; }
 
         [MaxLength(50)]
         public string? Status { get; set; }
