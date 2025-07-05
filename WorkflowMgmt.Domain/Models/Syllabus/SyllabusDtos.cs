@@ -171,14 +171,14 @@ namespace WorkflowMgmt.Domain.Models.Syllabus
     public class CourseDto
     {
         public int Id { get; set; }
-        public string Name { get; set; } = string.Empty;
+        public string Course_Name { get; set; } = string.Empty;
         public string Code { get; set; } = string.Empty;
     }
 
     public class SemesterDto
     {
         public int Id { get; set; }
-        public string Name { get; set; } = string.Empty;
+        public string Semester_Name { get; set; } = string.Empty;
         public int Year { get; set; }
     }
 
