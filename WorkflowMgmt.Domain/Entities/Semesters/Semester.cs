@@ -14,7 +14,7 @@ namespace WorkflowMgmt.Domain.Entities.Semesters
 
         public int DepartmentId { get; set; }
         public int CourseId { get; set; }
-        // Note: Semesters don't have CourseId - courses have semester_id instead
+        // Note: Semesters have CourseId - each semester belongs to a specific course
 
         public DateTime StartDate { get; set; }
         public DateTime EndDate { get; set; }

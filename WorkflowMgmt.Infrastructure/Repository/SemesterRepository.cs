@@ -27,6 +27,7 @@ namespace WorkflowMgmt.Infrastructure.Repository
                     s.code as Code,
                     academic_year as AcademicYear,
                     s.department_id as DepartmentId,
+                    s.course_id as CourseId,
                     s.start_date as StartDate,
                     s.end_date as EndDate,
                     s.duration_weeks as DurationWeeks,
@@ -61,6 +62,7 @@ namespace WorkflowMgmt.Infrastructure.Repository
                     s.code as Code,
                     academic_year as AcademicYear,
                     s.department_id as DepartmentId,
+                    s.course_id as CourseId,
                     s.start_date as StartDate,
                     s.end_date as EndDate,
                     s.duration_weeks as DurationWeeks,
@@ -80,7 +82,7 @@ namespace WorkflowMgmt.Infrastructure.Repository
                     c.code as courseCode
                 FROM workflowmgmt.semesters s
                 JOIN workflowmgmt.departments d on d.id = s.department_id
-                LEFT JOIN workflowmgmt.courses c on c.semester_id = s.id
+                LEFT JOIN workflowmgmt.courses c on c.id = s.course_id
                 WHERE s.id = @Id ";
             return await Connection.QueryFirstOrDefaultAsync<SemesterDTO>(sql, new { Id = id }, Transaction);
         }
@@ -94,6 +96,7 @@ namespace WorkflowMgmt.Infrastructure.Repository
                     s.code as Code,
                     academic_year as AcademicYear,
                     s.department_id as DepartmentId,
+                    s.course_id as CourseId,
                     s.start_date as StartDate,
                     s.end_date as EndDate,
                     s.duration_weeks as DurationWeeks,
@@ -113,7 +116,7 @@ namespace WorkflowMgmt.Infrastructure.Repository
                     c.code as courseCode
                 FROM workflowmgmt.semesters s
                 JOIN workflowmgmt.departments d on d.id = s.department_id
-                LEFT JOIN workflowmgmt.courses c on c.semester_id = s.id
+                LEFT JOIN workflowmgmt.courses c on c.id = s.course_id
                 WHERE s.department_id = @DepartmentId AND s.is_active = true
                 ORDER BY s.academic_year DESC, s.name";
 
@@ -123,15 +126,15 @@ namespace WorkflowMgmt.Infrastructure.Repository
 
         public async Task<List<SemesterDTO>> GetSemestersByDepartmentAndCourseAsync(int departmentId, int courseId)
         {
-            // Find the semester that contains the selected course
-            // Since courses have semester_id, we get the semester from the course
+            // Get semesters that belong to the specified department and course
             var sql = @"
-                SELECT DISTINCT
+                SELECT
                     s.id as Id,
                     s.name as Name,
                     s.code as Code,
-                    s.academic_year as AcademicYear,
+                    academic_year as AcademicYear,
                     s.department_id as DepartmentId,
+                    s.course_id as CourseId,
                     s.start_date as StartDate,
                     s.end_date as EndDate,
                     s.duration_weeks as DurationWeeks,
@@ -149,13 +152,12 @@ namespace WorkflowMgmt.Infrastructure.Repository
                     d.code as departmentCode,
                     c.name as courseName,
                     c.code as courseCode
-                FROM workflowmgmt.courses c
-                JOIN workflowmgmt.semesters s on s.id = c.semester_id
+                FROM workflowmgmt.semesters s
                 JOIN workflowmgmt.departments d on d.id = s.department_id
-                WHERE c.id = @CourseId
-                AND c.department_id = @DepartmentId
+                LEFT JOIN workflowmgmt.courses c on c.id = s.course_id
+                WHERE s.department_id = @DepartmentId
+                AND s.course_id = @CourseId
                 AND s.is_active = true
-                AND c.is_active = true
                 ORDER BY s.academic_year DESC, s.name";
 
             var semesters = await Connection.QueryAsync<SemesterDTO>(sql, new { DepartmentId = departmentId, CourseId = courseId }, Transaction);

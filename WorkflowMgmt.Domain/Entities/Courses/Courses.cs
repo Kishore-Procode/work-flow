@@ -26,9 +26,6 @@ namespace WorkflowMgmt.Domain.Entities.Courses
         [Column("level")]
         public string Level { get; set; } = "Undergraduate";
 
-        [Column("semester_id")]
-        public int SemesterId { get; set; }
-
         [Column("duration_weeks")]
         public int DurationWeeks { get; set; }
 
