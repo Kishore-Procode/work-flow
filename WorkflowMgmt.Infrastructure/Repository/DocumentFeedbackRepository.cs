@@ -67,8 +67,8 @@ namespace WorkflowMgmt.Infrastructure.Repository
                     df.is_active as IsActive,
                     df.created_date as CreatedDate,
                     df.modified_date as ModifiedDate,
-                    fp.name as FeedbackProviderName,
-                    ab.name as AddressedByName,
+                    fp.username as FeedbackProviderName,
+                    ab.username as AddressedByName,
                     ws.stage_name as StageName
                 FROM workflowmgmt.document_feedback df
                 LEFT JOIN workflowmgmt.users fp ON df.feedback_provider = fp.id
@@ -313,7 +313,7 @@ namespace WorkflowMgmt.Infrastructure.Repository
         public async Task<bool> MarkAsUnaddressedAsync(Guid id)
         {
             var sql = @"
-                UPDATE workflowmgmt.document_feedback 
+                UPDATE workflowmgmt.document_feedback
                 SET is_addressed = false,
                     addressed_by = NULL,
                     addressed_date = NULL,
@@ -327,6 +327,51 @@ namespace WorkflowMgmt.Infrastructure.Repository
             }, transaction: Transaction);
 
             return rowsAffected > 0;
+        }
+
+        public async Task<Dictionary<Guid, List<DocumentFeedbackDto>>> GetFeedbackByDocumentIdsAsync(List<Guid> documentIds, string? documentType = null, int limit = 5)
+        {
+            var sql = @"
+                SELECT
+                    df.id as Id,
+                    df.document_id as DocumentId,
+                    df.document_type as DocumentType,
+                    df.workflow_stage_id as WorkflowStageId,
+                    df.feedback_provider as FeedbackProvider,
+                    df.feedback_text as FeedbackText,
+                    df.feedback_type as FeedbackType,
+                    df.is_addressed as IsAddressed,
+                    df.addressed_by as AddressedBy,
+                    df.addressed_date as AddressedDate,
+                    df.is_active as IsActive,
+                    df.created_date as CreatedDate,
+                    df.modified_date as ModifiedDate,
+                    COALESCE(fp.name, fp.username, 'Unknown User') as FeedbackProviderName,
+                    COALESCE(ab.name, ab.username) as AddressedByName,
+                    ws.stage_name as StageName
+                FROM workflowmgmt.document_feedback df
+                LEFT JOIN workflowmgmt.users fp ON df.feedback_provider = fp.id
+                LEFT JOIN workflowmgmt.users ab ON df.addressed_by = ab.id
+                LEFT JOIN workflowmgmt.workflow_stages ws ON df.workflow_stage_id = ws.id
+                WHERE df.document_id = ANY(@DocumentIds)
+                AND (@DocumentType IS NULL OR df.document_type = @DocumentType)
+                AND df.is_active = true
+                ORDER BY df.document_id, df.created_date DESC";
+
+            var parameters = new
+            {
+                DocumentIds = documentIds.ToArray(),
+                DocumentType = documentType
+            };
+
+            var result = await Connection.QueryAsync<DocumentFeedbackDto>(sql, parameters, transaction: Transaction);
+
+            // Group by document ID and limit to specified number per document
+            var feedbackDict = result
+                .GroupBy(f => f.DocumentId)
+                .ToDictionary(g => g.Key, g => g.Take(limit).ToList());
+
+            return feedbackDict;
         }
     }
 }

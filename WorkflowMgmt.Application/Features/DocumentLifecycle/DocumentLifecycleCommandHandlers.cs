@@ -396,10 +396,12 @@ namespace WorkflowMgmt.Application.Features.DocumentLifecycle
     public class CreateDocumentFeedbackCommandHandler : IRequestHandler<CreateDocumentFeedbackCommand, ApiResponse<DocumentFeedbackDto>>
     {
         private readonly IUnitOfWork _unitOfWork;
+        private readonly INotificationService _notificationService;
 
-        public CreateDocumentFeedbackCommandHandler(IUnitOfWork unitOfWork)
+        public CreateDocumentFeedbackCommandHandler(IUnitOfWork unitOfWork, INotificationService notificationService)
         {
             _unitOfWork = unitOfWork;
+            _notificationService = notificationService;
         }
 
         public async Task<ApiResponse<DocumentFeedbackDto>> Handle(CreateDocumentFeedbackCommand request, CancellationToken cancellationToken)
@@ -416,14 +418,112 @@ namespace WorkflowMgmt.Application.Features.DocumentLifecycle
                 };
 
                 var feedbackId = await _unitOfWork.DocumentFeedbackRepository.CreateAsync(createDto, request.FeedbackProvider);
-                _unitOfWork.Commit();
 
                 var result = await _unitOfWork.DocumentFeedbackRepository.GetByIdAsync(feedbackId);
+
+                // Send notifications to all users related to the document from history table except current user
+                await SendFeedbackNotificationsAsync(request.DocumentId, request.DocumentType, request.FeedbackProvider, request.FeedbackType);
+                _unitOfWork.Commit();
+
                 return ApiResponse<DocumentFeedbackDto>.SuccessResponse(result!, "Feedback created successfully");
             }
             catch (Exception ex)
             {
                 return ApiResponse<DocumentFeedbackDto>.ErrorResponse($"Failed to create feedback: {ex.Message}");
+            }
+        }
+
+        private async Task SendFeedbackNotificationsAsync(Guid documentId, string documentType, Guid feedbackProvider, string feedbackType)
+        {
+            try
+            {
+                // Get document title
+                var documentTitle = await GetDocumentTitleAsync(documentId, documentType);
+
+                // Get all users related to the document from workflow history except current user
+                var relatedUserIds = await GetDocumentRelatedUsersAsync(documentId, documentType, feedbackProvider);
+
+                if (relatedUserIds.Any())
+                {
+                    // Send feedback notification to each related user
+                    foreach (var userId in relatedUserIds)
+                    {
+                        await _notificationService.SendFeedbackReceivedNotificationAsync(
+                            documentId,
+                            documentType,
+                            documentTitle,
+                            feedbackType,
+                            feedbackProvider,
+                            userId
+                        );
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                // Log the exception but don't fail the feedback creation
+                // You can add logging here if needed
+                Console.WriteLine($"Failed to send feedback notifications: {ex.Message}");
+            }
+        }
+
+        private async Task<string> GetDocumentTitleAsync(Guid documentId, string documentType)
+        {
+            try
+            {
+                return documentType.ToLower() switch
+                {
+                    "syllabus" => (await _unitOfWork.SyllabusRepository.GetByIdAsync(documentId))?.Title ?? "Unknown Document",
+                    "lesson" => (await _unitOfWork.LessonPlanRepository.GetByIdAsync(documentId))?.Title ?? "Unknown Document",
+                    "session" => (await _unitOfWork.SessionRepository.GetByIdAsync(documentId))?.Title ?? "Unknown Document",
+                    _ => "Unknown Document"
+                };
+            }
+            catch
+            {
+                return "Unknown Document";
+            }
+        }
+
+        private async Task<List<Guid>> GetDocumentRelatedUsersAsync(Guid documentId, string documentType, Guid excludeUserId)
+        {
+            try
+            {
+                // Get document workflow using DocumentWorkflowRepository
+                var documentWorkflow = await _unitOfWork.DocumentWorkflowRepository.GetByDocumentIdAsync(documentId.ToString());
+                if (documentWorkflow == null) return [];
+
+                // Get all users from workflow stage history who have interacted with this document
+                var workflowHistory = await _unitOfWork.WorkflowStageHistoryRepository.GetByDocumentWorkflowIdAsync(documentWorkflow.Id);
+
+                var relatedUsers = new List<Guid>();
+
+                // Add users who processed or were assigned to stages (excluding current user)
+                foreach (var history in workflowHistory)
+                {
+                    if (history.ProcessedBy != excludeUserId)
+                    {
+                        relatedUsers.Add(history.ProcessedBy);
+                    }
+                }
+
+                // Add document initiator if not already included and not the current user
+                if (documentWorkflow.InitiatedBy != excludeUserId && !relatedUsers.Contains(documentWorkflow.InitiatedBy))
+                {
+                    relatedUsers.Add(documentWorkflow.InitiatedBy);
+                }
+
+                // Add currently assigned user if different from current user
+                if (documentWorkflow.AssignedTo.HasValue && documentWorkflow.AssignedTo.Value != excludeUserId && !relatedUsers.Contains(documentWorkflow.AssignedTo.Value))
+                {
+                    relatedUsers.Add(documentWorkflow.AssignedTo.Value);
+                }
+
+                return relatedUsers.Distinct().ToList();
+            }
+            catch(Exception ex)
+            {
+                return [];
             }
         }
     }

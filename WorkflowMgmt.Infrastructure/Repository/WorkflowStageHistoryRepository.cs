@@ -32,7 +32,7 @@ namespace WorkflowMgmt.Infrastructure.Repository
                     CONCAT(u.first_name, ' ', u.last_name) as ProcessedByName,
                     u.email as ProcessedByEmail,
                     r.name as ProcessedByRole,
-                    dw.document_id as DocumentTitle,
+                    dw.document_id::text as DocumentTitle,
                     dw.document_type as DocumentType
                 FROM workflowmgmt.workflow_stage_history wsh
                 INNER JOIN workflowmgmt.workflow_stages ws ON wsh.stage_id = ws.id
