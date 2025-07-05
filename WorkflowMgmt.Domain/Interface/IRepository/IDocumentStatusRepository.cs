@@ -44,5 +44,6 @@ namespace WorkflowMgmt.Domain.Interface.IRepository
         /// <param name="userId">User ID</param>
         /// <returns>List of user's actions on the document</returns>
         Task<IEnumerable<DocumentUserHistoryDto>> GetUserDocumentHistoryAsync(Guid documentId, string documentType, Guid userId);
+        Task<IEnumerable<DocumentWorkflowHistoryDto>> GetDocumentWorkflowHistoryAsync(string documentId, string documentType, Guid userId);
     }
 }

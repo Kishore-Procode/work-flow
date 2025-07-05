@@ -260,7 +260,7 @@ namespace WorkflowMgmt.Application.Features.Syllabus
                             {
                                 DocumentWorkflowId = workflow.Id,
                                 StageId = workflow.CurrentStageId.Value,
-                                ActionTaken = "initiated",
+                                ActionTaken = "Initiated",
                                 ProcessedBy = request.FacultyId,
                                 AssignedTo = request.FacultyId, // Initially assign to the creator
                                 Comments = "Workflow initiated upon syllabus creation"

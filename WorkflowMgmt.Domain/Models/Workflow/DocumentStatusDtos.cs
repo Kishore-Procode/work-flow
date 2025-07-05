@@ -136,6 +136,30 @@ namespace WorkflowMgmt.Domain.Models.Workflow
         public string[]? Attachments { get; set; }
     }
 
+    public class DocumentWorkflowHistoryDto
+    {
+        public Guid Id { get; set; }
+        public Guid DocumentWorkflowId { get; set; }
+        public Guid StageId { get; set; }
+        public string StageName { get; set; } = string.Empty;
+        public int StageOrder { get; set; }
+        public string ActionTaken { get; set; } = string.Empty;
+        public Guid ProcessedBy { get; set; }
+        public string ProcessedByName { get; set; } = string.Empty;
+        public Guid? AssignedTo { get; set; }
+        public string? AssignedToName { get; set; }
+        public DateTime ProcessedDate { get; set; }
+        public string? Comments { get; set; }
+        public string[]? Attachments { get; set; }
+        public DateTime CreatedDate { get; set; }
+
+        // Additional workflow context
+        public Guid DocumentId { get; set; }
+        public string DocumentType { get; set; } = string.Empty;
+        public string DocumentTitle { get; set; } = string.Empty;
+        public string WorkflowTemplateName { get; set; } = string.Empty;
+    }
+
     public class WorkflowRoadmapDto
     {
         public string StageId { get; set; } = string.Empty;

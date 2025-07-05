@@ -64,6 +64,27 @@ namespace WorkflowMgmt.WebAPI.Controllers
             return Ok(result);
         }
 
+        [HttpGet("workflow-history/{documentId}")]
+        public async Task<IActionResult> GetDocumentWorkflowHistory(
+            [FromRoute] string documentId,
+            [FromQuery] string documentType = "syllabus")
+        {
+            var userId = GetCurrentUserId();
+            if (userId == Guid.Empty)
+            {
+                return Unauthorized("User not authenticated");
+            }
+
+            if (string.IsNullOrWhiteSpace(documentId))
+            {
+                return BadRequest("Document ID is required");
+            }
+
+            var command = new GetDocumentWorkflowHistoryCommand(documentId, documentType, userId);
+            var result = await Mediator.Send(command);
+            return Ok(result);
+        }
+
         private Guid GetCurrentUserId()
         {
             var userIdClaim = User.FindFirst("userId")?.Value;
