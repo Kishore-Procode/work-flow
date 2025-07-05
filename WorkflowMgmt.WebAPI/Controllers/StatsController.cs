@@ -51,10 +51,18 @@ namespace WorkflowMgmt.WebAPI.Controllers
         }
 
         [HttpGet("users")]
-        public IActionResult GetUserStats()
+        public async Task<IActionResult> GetUserStats()
         {
-            // TODO: Implement when User commands are created
-            return Ok(new { message = "User stats endpoint - to be implemented" });
+            try
+            {
+                var query = new GetUserStatsQuery();
+                var result = await Mediator.Send(query);
+                return Ok(result);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { success = false, message = "An error occurred while retrieving user statistics", error = ex.Message });
+            }
         }
     }
 }

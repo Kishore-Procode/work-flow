@@ -9,6 +9,7 @@ using System.Threading.Tasks;
 using WorkflowMgmt.Domain.Entities;
 using WorkflowMgmt.Domain.Interface.IRepository;
 using WorkflowMgmt.Domain.Models.Stats;
+using WorkflowMgmt.Domain.Models.User;
 using WorkflowMgmt.Infrastructure.RepositoryBase;
 
 namespace WorkflowMgmt.Infrastructure.Repository
@@ -287,6 +288,66 @@ namespace WorkflowMgmt.Infrastructure.Repository
                 AND UPPER(accreditation) LIKE '%NBA%'";
 
             return await Connection.QuerySingleAsync<int>(sql, transaction: Transaction);
+        }
+
+        public async Task<UserStatsDto> GetUserStatsAsync()
+        {
+            // Get basic user statistics
+            var basicStatsSql = @"
+                SELECT
+                    COUNT(*) as TotalUsers,
+                    COUNT(CASE WHEN is_active = true THEN 1 END) as ActiveUsers,
+                    COUNT(CASE WHEN last_login >= @RecentDate THEN 1 END) as RecentLogins
+                FROM workflowmgmt.users";
+
+            var recentDate = DateTime.UtcNow.AddDays(-30); // Last 30 days
+            var basicStats = await Connection.QuerySingleAsync<UserStatsDto>(basicStatsSql, new { RecentDate = recentDate }, transaction: Transaction);
+
+            // Get users by role with proper JOIN
+            var rolesSql = @"
+                SELECT
+                    COALESCE(r.name, 'Unassigned') as RoleName,
+                    COUNT(u.id) as Count
+                FROM workflowmgmt.roles r
+                LEFT JOIN workflowmgmt.users u ON r.id = u.role_id
+                WHERE r.is_active = true
+                GROUP BY r.id, r.name
+                HAVING COUNT(u.id) > 0
+                UNION ALL
+                SELECT
+                    'Unassigned' as RoleName,
+                    COUNT(u.id) as Count
+                FROM workflowmgmt.users u
+                WHERE u.role_id IS NULL OR u.role_id NOT IN (SELECT id FROM workflowmgmt.roles WHERE is_active = true)
+                HAVING COUNT(u.id) > 0
+                ORDER BY RoleName";
+
+            var usersByRole = await Connection.QueryAsync<UsersByRoleDto>(rolesSql, transaction: Transaction);
+            basicStats.UsersByRole = usersByRole.ToArray();
+
+            // Get users by department with proper JOIN
+            var departmentsSql = @"
+                SELECT
+                    COALESCE(d.name, 'Unassigned') as DepartmentName,
+                    COUNT(u.id) as Count
+                FROM workflowmgmt.departments d
+                LEFT JOIN workflowmgmt.users u ON d.id = u.department_id
+                WHERE d.is_active = true
+                GROUP BY d.id, d.name
+                HAVING COUNT(u.id) > 0
+                UNION ALL
+                SELECT
+                    'Unassigned' as DepartmentName,
+                    COUNT(u.id) as Count
+                FROM workflowmgmt.users u
+                WHERE u.department_id IS NULL OR u.department_id NOT IN (SELECT id FROM workflowmgmt.departments WHERE is_active = true)
+                HAVING COUNT(u.id) > 0
+                ORDER BY DepartmentName";
+
+            var usersByDepartment = await Connection.QueryAsync<UsersByDepartmentDto>(departmentsSql, transaction: Transaction);
+            basicStats.UsersByDepartment = usersByDepartment.ToArray();
+
+            return basicStats;
         }
     }
 }

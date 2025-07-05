@@ -93,6 +93,9 @@ namespace WorkflowMgmt.Domain.Models.WorkflowManagement
 
         [MaxLength(20)]
         public string? PhoneNumber { get; set; }
+
+        public int[]? AllowedDepartments { get; set; }
+        public int[]? AllowedRoles { get; set; }
     }
 
     public class UpdateUserDto
@@ -120,6 +123,8 @@ namespace WorkflowMgmt.Domain.Models.WorkflowManagement
         public string? PhoneNumber { get; set; }
 
         public bool? EmailVerified { get; set; }
+        public int[]? AllowedDepartments { get; set; }
+        public int[]? AllowedRoles { get; set; }
     }
 
     public class CreateRoleDto

@@ -19,12 +19,36 @@ namespace WorkflowMgmt.Infrastructure.Repository
 
         public async Task<List<UserDTO>> GetAllUsers()
         {
-            var users = await Connection.QueryAsync<UserDTO>(
-                "SELECT id, username, email, first_name, last_name, " +
-                "role_id, department_id, phone, profile_image_url, is_active, last_login, " +
-                "created_date, modified_date, created_by, modified_by FROM workflowmgmt.users",
-                Transaction);
+            var sql = @"
+                SELECT
+                    u.id,
+                    u.username,
+                    u.email,
+                    u.first_name,
+                    u.last_name,
+                    u.role_id,
+                    u.department_id,
+                    u.phone,
+                    u.profile_image_url,
+                    u.is_active,
+                    u.last_login,
+                    u.created_date,
+                    u.modified_date,
+                    u.created_by,
+                    u.modified_by,
+                    u.allowed_departments,
+                    u.allowed_roles,
+                    r.name as role_name,
+                    r.code as role_code,
+                    r.description as role_description,
+                    d.name as department_name,
+                    d.code as department_code
+                FROM workflowmgmt.users u
+                LEFT JOIN workflowmgmt.roles r ON u.role_id = r.id
+                LEFT JOIN workflowmgmt.departments d ON u.department_id = d.id
+                ORDER BY u.first_name, u.last_name";
 
+            var users = await Connection.QueryAsync<UserDTO>(sql, transaction: Transaction);
             return users.ToList();
         }
         public async Task<UserDTO?> GetUserManagementById(Guid id)
@@ -39,37 +63,45 @@ namespace WorkflowMgmt.Infrastructure.Repository
 
         public async Task<Guid> InsertUser(UserDTO user)
         {
-            user.password_hash = BCrypt.Net.BCrypt.HashPassword(user.password_hash);
+            // Only hash the password if it's not empty and not already hashed
+            if (!string.IsNullOrEmpty(user.password_hash) && !user.password_hash.StartsWith("$2"))
+            {
+                user.password_hash = BCrypt.Net.BCrypt.HashPassword(user.password_hash);
+            }
 
             var sql = @"
                 INSERT INTO workflowmgmt.users (
                     username,
-                    email, 
-                    password_hash, 
-                    first_name, 
-                    last_name, 
-                    role_id, 
-                    department_id, 
-                    phone, 
-                    profile_image_url, 
-                    is_active, 
-                    last_login, 
-                    created_date, 
-                    created_by                                    
+                    email,
+                    password_hash,
+                    first_name,
+                    last_name,
+                    role_id,
+                    department_id,
+                    phone,
+                    profile_image_url,
+                    is_active,
+                    last_login,
+                    created_date,
+                    created_by,
+                    allowed_departments,
+                    allowed_roles
                 ) VALUES (
                     @username,
-                    @email, 
-                    @password_hash, 
-                    @first_name, 
-                    @last_name, 
-                    @role_id, 
-                    @department_id, 
-                    @phone, 
-                    @profile_image_url, 
-                    @is_active, 
-                    @last_login, 
-                    NOW(), 
-                    @created_by
+                    @email,
+                    @password_hash,
+                    @first_name,
+                    @last_name,
+                    @role_id,
+                    @department_id,
+                    @phone,
+                    @profile_image_url,
+                    @is_active,
+                    @last_login,
+                    NOW(),
+                    @created_by,
+                    @allowed_departments,
+                    @allowed_roles
                 )
                 RETURNING id;
             ";
@@ -80,24 +112,57 @@ namespace WorkflowMgmt.Infrastructure.Repository
 
         public async Task<bool> UpdateUser(UserDTO user)
         {
-            user.password_hash = BCrypt.Net.BCrypt.HashPassword(user.password_hash);
+            string sql;
 
-            var sql = @"
-                UPDATE workflowmgmt.users SET
-                username = @username,
-                email = @email,
-                password_hash = @password_hash,
-                first_name = @first_name,
-                last_name = @last_name,
-                role_id = @role_id,
-                department_id = @department_id,
-                phone = @phone,
-                profile_image_url = @profile_image_url,
-                is_active = @is_active,
-                modified_date = NOW(),
-                modified_by = @modified_by
-                WHERE id = @id;
-           ";
+            // Check if password should be updated
+            if (!string.IsNullOrEmpty(user.password_hash))
+            {
+                // Only hash the password if it's not already hashed
+                if (!user.password_hash.StartsWith("$2"))
+                {
+                    user.password_hash = BCrypt.Net.BCrypt.HashPassword(user.password_hash);
+                }
+
+                sql = @"
+                    UPDATE workflowmgmt.users SET
+                    username = @username,
+                    email = @email,
+                    password_hash = @password_hash,
+                    first_name = @first_name,
+                    last_name = @last_name,
+                    role_id = @role_id,
+                    department_id = @department_id,
+                    phone = @phone,
+                    profile_image_url = @profile_image_url,
+                    is_active = @is_active,
+                    allowed_departments = @allowed_departments,
+                    allowed_roles = @allowed_roles,
+                    modified_date = NOW(),
+                    modified_by = @modified_by
+                    WHERE id = @id;
+               ";
+            }
+            else
+            {
+                // Update without changing password
+                sql = @"
+                    UPDATE workflowmgmt.users SET
+                    username = @username,
+                    email = @email,
+                    first_name = @first_name,
+                    last_name = @last_name,
+                    role_id = @role_id,
+                    department_id = @department_id,
+                    phone = @phone,
+                    profile_image_url = @profile_image_url,
+                    is_active = @is_active,
+                    allowed_departments = @allowed_departments,
+                    allowed_roles = @allowed_roles,
+                    modified_date = NOW(),
+                    modified_by = @modified_by
+                    WHERE id = @id;
+               ";
+            }
 
             var rowsAffected = await Connection.ExecuteAsync(sql, user, Transaction);
             return rowsAffected > 0;

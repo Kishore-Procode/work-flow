@@ -29,7 +29,8 @@ namespace WorkflowMgmt.Infrastructure.Repository
                     modified_date as ModifiedDate,
                     created_by as CreatedBy,
                     modified_by as ModifiedBy
-                FROM workflowmgmt.roles and code <> 'ADMIN'
+                FROM workflowmgmt.roles 
+                where code <> 'ADMIN'
                 ORDER BY name";
 
             var result = await Connection.QueryAsync<RoleDto>(sql, transaction: Transaction);

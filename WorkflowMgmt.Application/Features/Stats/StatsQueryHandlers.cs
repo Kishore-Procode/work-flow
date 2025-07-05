@@ -8,6 +8,7 @@ using WorkflowMgmt.Domain.Entities;
 using WorkflowMgmt.Domain.Interface.IUnitOfWork;
 using WorkflowMgmt.Domain.Models;
 using WorkflowMgmt.Domain.Models.Stats;
+using WorkflowMgmt.Domain.Models.User;
 
 namespace WorkflowMgmt.Application.Features.Stats
 {
@@ -76,6 +77,29 @@ namespace WorkflowMgmt.Application.Features.Stats
             catch (Exception ex)
             {
                 return ApiResponse<SemesterStatsDto>.ErrorResponse($"Error retrieving semester statistics: {ex.Message}");
+            }
+        }
+    }
+
+    public class GetUserStatsQueryHandler : IRequestHandler<GetUserStatsQuery, ApiResponse<UserStatsDto>>
+    {
+        private readonly IUnitOfWork _unitOfWork;
+
+        public GetUserStatsQueryHandler(IUnitOfWork unitOfWork)
+        {
+            _unitOfWork = unitOfWork;
+        }
+
+        public async Task<ApiResponse<UserStatsDto>> Handle(GetUserStatsQuery request, CancellationToken cancellationToken)
+        {
+            try
+            {
+                var stats = await _unitOfWork.StatsRepository.GetUserStatsAsync();
+                return ApiResponse<UserStatsDto>.SuccessResponse(stats, "User statistics retrieved successfully");
+            }
+            catch (Exception ex)
+            {
+                return ApiResponse<UserStatsDto>.ErrorResponse($"Error retrieving user statistics: {ex.Message}");
             }
         }
     }

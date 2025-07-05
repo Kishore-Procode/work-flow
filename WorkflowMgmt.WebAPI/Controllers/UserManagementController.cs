@@ -10,8 +10,30 @@ namespace WorkflowMgmt.WebAPI.Controllers
     public class UserManagementController : BaseApiController
     {
         [HttpGet]
-        public async Task<IActionResult> GetAllUser()
+        public async Task<IActionResult> GetAllUser(
+            [FromQuery] int? departmentId = null,
+            [FromQuery] string? roleCode = null,
+            [FromQuery] bool? isActive = null)
         {
+            // If specific filters are provided, use the appropriate query
+            if (departmentId.HasValue)
+            {
+                // For now, return all users and filter on frontend
+                // TODO: Implement department filtering in UserManagementRepository
+            }
+
+            if (!string.IsNullOrWhiteSpace(roleCode))
+            {
+                // For now, return all users and filter on frontend
+                // TODO: Implement role filtering in UserManagementRepository
+            }
+
+            if (isActive.HasValue)
+            {
+                // For now, return all users and filter on frontend
+                // TODO: Implement active filtering in UserManagementRepository
+            }
+
             var result = await Mediator.Send(new GetUserManagementCommand());
             return Ok(result);
         }
@@ -69,6 +91,8 @@ namespace WorkflowMgmt.WebAPI.Controllers
 
             return Ok(new { success = true, message = "Password updated successfully" });
         }
+
+
 
     }
 
