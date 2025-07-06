@@ -92,7 +92,13 @@ namespace WorkflowMgmt.WebAPI.Controllers
             return Ok(new { success = true, message = "Password updated successfully" });
         }
 
-
+        [HttpPut("profile/{id}")]
+        public async Task<IActionResult> UpdateProfile(Guid id, [FromBody] UpdateProfileRequest updateProfileRequest)
+        {
+            updateProfileRequest.id = id;
+            var result = await Mediator.Send(new UpdateProfileCommand(updateProfileRequest));
+            return Ok(result);
+        }
 
     }
 

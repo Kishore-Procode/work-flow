@@ -192,7 +192,7 @@ namespace WorkflowMgmt.Infrastructure.Repository
         {
             var existingPassword = await Connection.QueryFirstOrDefaultAsync<string>(
                 "SELECT password_hash FROM workflowmgmt.users WHERE id = @Id",
-                new { Id = updateUser.id },
+                new { Id = updateUser.UserId },
                 Transaction
             );
 
@@ -206,15 +206,31 @@ namespace WorkflowMgmt.Infrastructure.Repository
             var hashedPassword = BCrypt.Net.BCrypt.HashPassword(updateUser.NewPassword);
             
             var rows = await Connection.ExecuteAsync(@"
-        UPDATE workflowmgmt.users
-        SET password_hash = @HashedPassword,
-            modified_date = NOW()
-        WHERE id = @Id",
-                new { Id = updateUser.id, HashedPassword = hashedPassword },
+                UPDATE workflowmgmt.users
+                SET password_hash = @HashedPassword,
+                    modified_date = NOW()
+                WHERE id = @Id",
+                new { Id = updateUser.UserId, HashedPassword = hashedPassword },
                 Transaction
             );
 
             return rows > 0;
+        }
+
+        public async Task<bool> UpdateProfile(UpdateProfileRequest profile)
+        {
+            var sql = @"
+                UPDATE workflowmgmt.users SET
+                first_name = @first_name,
+                last_name = @last_name,
+                email = @email,
+                phone = @phone,
+                modified_date = NOW()
+                WHERE id = @id;
+            ";
+
+            var rowsAffected = await Connection.ExecuteAsync(sql, profile, Transaction);
+            return rowsAffected > 0;
         }
 
     }

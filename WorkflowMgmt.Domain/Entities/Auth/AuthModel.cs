@@ -38,6 +38,7 @@ namespace WorkflowMgmt.Domain.Entities.Auth
         public string RoleCode { get; set; } = string.Empty;
         public string? Department { get; set; }
         public string? DepartmentCode { get; set; }
+        public string? Phone { get; set; }
         public string? ProfileImageUrl { get; set; }
         public DateTime? LastLogin { get; set; }
         public string[] Permissions { get; set; } = Array.Empty<string>();

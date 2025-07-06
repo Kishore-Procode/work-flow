@@ -20,5 +20,7 @@ namespace WorkflowMgmt.Domain.Interface.IRepository
         Task<bool> DeleteOrRestoreUser(Guid id, string modifiedBy, bool isRestore);
 
         Task<bool> UpdatePassword(UpdatePasswordRequest updateuser);
+
+        Task<bool> UpdateProfile(UpdateProfileRequest profile);
     }
 }
