@@ -450,6 +450,7 @@ namespace WorkflowMgmt.Application.Features.Syllabus
                 DetailedContent = request.DetailedContent,
                 ReferenceMaterials = request.ReferenceMaterials,
                 HtmlFormData = request.HtmlFormData,
+                ContentCreationMethod = request.ContentCreationMethod,
                 Status = request.Status,
                 DocumentUrl = documentUrl, // Only update if new file was uploaded
                 OriginalFilename = originalFilename, // Only update if new file was uploaded

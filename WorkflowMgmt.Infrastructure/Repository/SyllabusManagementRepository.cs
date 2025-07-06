@@ -1,4 +1,5 @@
 using Dapper;
+using MediatR;
 using System;
 using System.Collections.Generic;
 using System.Data;
@@ -283,6 +284,7 @@ namespace WorkflowMgmt.Infrastructure.Repository
                     faculty_name = COALESCE(@FacultyName, faculty_name),
                     credits = COALESCE(@Credits, credits),
                     duration_weeks = COALESCE(@DurationWeeks, duration_weeks),
+                    content_creation_method = COALESCE(@ContentCreationMethod, content_creation_method),
                     course_description = COALESCE(@CourseDescription, course_description),
                     learning_objectives = COALESCE(@LearningObjectives, learning_objectives),
                     learning_outcomes = COALESCE(@LearningOutcomes, learning_outcomes),
@@ -312,6 +314,7 @@ namespace WorkflowMgmt.Infrastructure.Repository
                 syllabus.DurationWeeks,
                 syllabus.CourseDescription,
                 syllabus.LearningObjectives,
+                syllabus.ContentCreationMethod,
                 syllabus.LearningOutcomes,
                 syllabus.CourseTopics,
                 syllabus.AssessmentMethods,

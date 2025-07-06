@@ -145,6 +145,9 @@ namespace WorkflowMgmt.Domain.Models.Syllabus
         public string? HtmlFormData { get; set; }
 
         [MaxLength(50)]
+        public string? ContentCreationMethod { get; set; }
+
+        [MaxLength(50)]
         public string? Status { get; set; }
 
         [MaxLength(500)]
