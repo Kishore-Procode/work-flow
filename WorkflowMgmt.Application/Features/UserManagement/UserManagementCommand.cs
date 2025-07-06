@@ -5,6 +5,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using WorkflowMgmt.Domain.Entities;
+using WorkflowMgmt.Domain.Entities.Auth;
 using WorkflowMgmt.Domain.Models;
 
 namespace WorkflowMgmt.Application.Features.UserManagement
@@ -19,4 +20,6 @@ namespace WorkflowMgmt.Application.Features.UserManagement
     public record DeleteOrRestoreUserCommand(Guid id, string modifiedBy, bool isRestore) : IRequest<ApiResponse<bool>>;
 
     public record UpdatePasswordCommand(UpdatePasswordRequest user) : IRequest<ApiResponse<bool>>;
+
+    public record UpdateProfileCommand(UpdateProfileRequest profile) : IRequest<ApiResponse<bool>>;
 }

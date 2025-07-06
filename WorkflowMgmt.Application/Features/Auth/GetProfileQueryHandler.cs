@@ -52,6 +52,7 @@ namespace WorkflowMgmt.Application.Features.Auth
                     RoleCode = role?.code ?? string.Empty,
                     Department = department?.name ?? string.Empty,
                     DepartmentCode = department?.code ?? string.Empty,
+                    Phone = user.phone,
                     ProfileImageUrl = user.profile_image_url,
                     LastLogin = user.last_login,
                     Permissions = role?.permissions ?? Array.Empty<string>()

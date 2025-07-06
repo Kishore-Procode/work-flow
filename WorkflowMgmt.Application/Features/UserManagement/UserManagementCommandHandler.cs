@@ -6,6 +6,7 @@ using System.Text;
 using System.Threading.Tasks;
 using WorkflowMgmt.Application.Features.Department;
 using WorkflowMgmt.Domain.Entities;
+using WorkflowMgmt.Domain.Entities.Auth;
 using WorkflowMgmt.Domain.Interface.IUnitOfWork;
 using WorkflowMgmt.Domain.Models;
 
@@ -157,6 +158,38 @@ namespace WorkflowMgmt.Application.Features.UserManagement
             catch (Exception ex)
             {
                 return ApiResponse<bool>.ErrorResponse($"Error updating password: {ex.Message}");
+            }
+        }
+    }
+
+    public class UpdateProfileCommandHandler : IRequestHandler<UpdateProfileCommand, ApiResponse<bool>>
+    {
+        private readonly IUnitOfWork _unitOfWork;
+
+        public UpdateProfileCommandHandler(IUnitOfWork unitOfWork)
+        {
+            _unitOfWork = unitOfWork;
+        }
+
+        public async Task<ApiResponse<bool>> Handle(UpdateProfileCommand request, CancellationToken cancellationToken)
+        {
+            try
+            {
+                // Update the profile
+                var success = await _unitOfWork.UserManagementRepository.UpdateProfile(request.profile);
+                if (!success)
+                {
+                    return ApiResponse<bool>.ErrorResponse("Failed to update profile");
+                }
+
+                _unitOfWork.Commit();
+
+                return ApiResponse<bool>.SuccessResponse(true, "Profile updated successfully");
+            }
+            catch (Exception ex)
+            {
+                _unitOfWork.Rollback();
+                return ApiResponse<bool>.ErrorResponse($"Error updating profile: {ex.Message}");
             }
         }
     }
