@@ -266,8 +266,8 @@ namespace WorkflowMgmt.Infrastructure.Repository
                 CurrentStageId = firstStageId,
                 workflow.InitiatedBy,
                 AssignedTo = workflow.AssignedTo,
-                InitiatedDate = DateTime.UtcNow,
-                CreatedDate = DateTime.UtcNow
+                InitiatedDate = DateTime.Now,
+                CreatedDate = DateTime.Now
             }, transaction: Transaction);
 
             return id;
@@ -289,7 +289,7 @@ namespace WorkflowMgmt.Infrastructure.Repository
                 workflow.CurrentStageId,
                 workflow.Status,
                 workflow.CompletedDate,
-                ModifiedDate = DateTime.UtcNow
+                ModifiedDate = DateTime.Now
             }, transaction: Transaction);
 
             return rowsAffected > 0;
@@ -315,8 +315,8 @@ namespace WorkflowMgmt.Infrastructure.Repository
             {
                 Id = id,
                 NextStageId = nextStageId,
-                CompletedDate = nextStageId == null ? DateTime.UtcNow : (DateTime?)null,
-                ModifiedDate = DateTime.UtcNow
+                CompletedDate = nextStageId == null ? DateTime.Now : (DateTime?)null,
+                ModifiedDate = DateTime.Now
             }, transaction: Transaction);
 
             return rowsAffected > 0;
@@ -335,8 +335,8 @@ namespace WorkflowMgmt.Infrastructure.Repository
             var rowsAffected = await Connection.ExecuteAsync(sql, new
             {
                 Id = id,
-                CompletedDate = DateTime.UtcNow,
-                ModifiedDate = DateTime.UtcNow
+                CompletedDate = DateTime.Now,
+                ModifiedDate = DateTime.Now
             }, transaction: Transaction);
 
             return rowsAffected > 0;
@@ -354,8 +354,8 @@ namespace WorkflowMgmt.Infrastructure.Repository
             var rowsAffected = await Connection.ExecuteAsync(sql, new
             {
                 Id = id,
-                CompletedDate = DateTime.UtcNow,
-                ModifiedDate = DateTime.UtcNow
+                CompletedDate = DateTime.Now,
+                ModifiedDate = DateTime.Now
             }, transaction: Transaction);
 
             return rowsAffected > 0;

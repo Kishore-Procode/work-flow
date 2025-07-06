@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Configuration;
 using System.Security.Claims;
 using WorkflowMgmt.Application.Features.Auth;
 
@@ -47,10 +48,29 @@ namespace WorkflowMgmt.WebAPI.Controllers
 
         [HttpPost("logout")]
         [Authorize]
-        public async Task<IActionResult> Logout()
+        public async Task<IActionResult> Logout([FromBody] LogoutRequest request)
         {
-            // TODO: Implement logout functionality (invalidate tokens)
-            return Ok(new { message = "Logout successful" });
+            try
+            {
+                var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+                if (string.IsNullOrEmpty(userId))
+                {
+                    return Unauthorized(new { message = "User ID not found in token" });
+                }
+
+                var command = new LogoutCommand(userId, request?.RefreshToken);
+                var result = await Mediator.Send(command);
+                return Ok(result);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { message = $"Logout failed: {ex.Message}" });
+            }
         }
+    }
+
+    public class LogoutRequest
+    {
+        public string? RefreshToken { get; set; }
     }
 }

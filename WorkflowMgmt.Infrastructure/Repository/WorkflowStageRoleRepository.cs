@@ -44,7 +44,7 @@ namespace WorkflowMgmt.Infrastructure.Repository
                 StageId = stageId,
                 role.RoleCode,
                 role.IsRequired,
-                CreatedDate = DateTime.UtcNow,
+                CreatedDate = DateTime.Now,
                 CreatedBy = "system" // TODO: Get from current user context
             }, transaction: Transaction);
 
@@ -127,7 +127,7 @@ namespace WorkflowMgmt.Infrastructure.Repository
                 StageId = stageId,
                 role.RoleCode,
                 role.IsRequired,
-                CreatedDate = DateTime.UtcNow,
+                CreatedDate = DateTime.Now,
                 CreatedBy = "system" // TODO: Get from current user context
             });
 

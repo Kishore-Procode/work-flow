@@ -24,7 +24,7 @@ namespace WorkflowMgmt.Infrastructure.Repository
             {
                 Id = id,
                 Status = status,
-                ModifiedDate = DateTime.UtcNow,
+                ModifiedDate = DateTime.Now,
                 ModifiedBy = "system" // TODO: Get from current user context
             }, transaction: Transaction);
 
@@ -44,7 +44,7 @@ namespace WorkflowMgmt.Infrastructure.Repository
             {
                 Id = id,
                 WorkflowId = workflowId,
-                ModifiedDate = DateTime.UtcNow,
+                ModifiedDate = DateTime.Now,
                 ModifiedBy = "system" // TODO: Get from current user context
             }, transaction: Transaction);
 
@@ -64,7 +64,7 @@ namespace WorkflowMgmt.Infrastructure.Repository
             {
                 Id = id,
                 DocumentUrl = documentUrl,
-                ModifiedDate = DateTime.UtcNow,
+                ModifiedDate = DateTime.Now,
                 ModifiedBy = "system" // TODO: Get from current user context
             }, transaction: Transaction);
 
@@ -86,7 +86,7 @@ namespace WorkflowMgmt.Infrastructure.Repository
                 Id = id,
                 Status = status,
                 Notes = notes,
-                ModifiedDate = DateTime.UtcNow,
+                ModifiedDate = DateTime.Now,
                 ModifiedBy = "system" // TODO: Get from current user context
             }, transaction: Transaction);
 

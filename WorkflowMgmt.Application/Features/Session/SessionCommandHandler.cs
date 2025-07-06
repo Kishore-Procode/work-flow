@@ -230,7 +230,7 @@ namespace WorkflowMgmt.Application.Features.Session
                         DocumentUrl = $"/uploads/sessions/{sessionId}/{uniqueFileName}",
                         OriginalFilename = request.DocumentFile.FileName,
                         FileProcessingStatus = "completed",
-                        FileProcessingNotes = $"File uploaded on {DateTime.UtcNow:yyyy-MM-dd HH:mm:ss} UTC"
+                        FileProcessingNotes = $"File uploaded on {DateTime.Now:yyyy-MM-dd HH:mm:ss} UTC"
                     };
                     await _unitOfWork.SessionRepository.UpdateAsync(sessionId, updateDto);
 

@@ -192,10 +192,10 @@ namespace WorkflowMgmt.Infrastructure.Repository
                 history.ActionTaken,
                 history.ProcessedBy,
                 history.AssignedTo,
-                ProcessedDate = DateTime.UtcNow,
+                ProcessedDate = DateTime.Now,
                 history.Comments,
                 history.Attachments,
-                CreatedDate = DateTime.UtcNow
+                CreatedDate = DateTime.Now
             }, transaction: Transaction);
 
             return id;

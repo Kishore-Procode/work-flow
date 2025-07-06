@@ -97,7 +97,7 @@ namespace WorkflowMgmt.Application.Features.WorkflowAction
 
             if (!nextStageId.HasValue)
             {
-                updateDto.CompletedDate = DateTime.UtcNow;
+                updateDto.CompletedDate = DateTime.Now;
             }
 
             await _unitOfWork.DocumentWorkflowRepository.UpdateAsync(request.DocumentWorkflowId, updateDto);

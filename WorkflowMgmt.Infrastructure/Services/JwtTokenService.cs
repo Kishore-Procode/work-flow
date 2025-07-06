@@ -97,7 +97,7 @@ namespace WorkflowMgmt.Infrastructure.Services
             {
                 var tokenHandler = new JwtSecurityTokenHandler();
                 var jsonToken = tokenHandler.ReadJwtToken(token);
-                return jsonToken.ValidTo < DateTime.UtcNow;
+                return jsonToken.ValidTo < DateTime.Now;
             }
             catch
             {

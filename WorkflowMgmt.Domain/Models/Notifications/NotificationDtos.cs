@@ -27,12 +27,12 @@ namespace WorkflowMgmt.Domain.Models.Notifications
         
         // Computed properties
         public string TimeAgo => GetTimeAgo();
-        public bool IsExpired => ExpiresAt.HasValue && ExpiresAt.Value < DateTime.UtcNow;
+        public bool IsExpired => ExpiresAt.HasValue && ExpiresAt.Value < DateTime.Now;
         public string PriorityText => GetPriorityText();
 
         private string GetTimeAgo()
         {
-            var timeSpan = DateTime.UtcNow - CreatedDate;
+            var timeSpan = DateTime.Now - CreatedDate;
             
             if (timeSpan.TotalMinutes < 1)
                 return "Just now";
@@ -188,7 +188,7 @@ namespace WorkflowMgmt.Domain.Models.Notifications
 
         private string GetTimeAgo()
         {
-            var timeSpan = DateTime.UtcNow - CreatedDate;
+            var timeSpan = DateTime.Now - CreatedDate;
             
             if (timeSpan.TotalMinutes < 1)
                 return "Just now";

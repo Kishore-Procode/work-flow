@@ -218,7 +218,7 @@ namespace WorkflowMgmt.Application.Features.Syllabus
                     {
                         DocumentUrl = $"/uploads/syllabi/{syllabusId}/{uniqueFileName}",
                         FileProcessingStatus = "completed",
-                        FileProcessingNotes = $"File uploaded on {DateTime.UtcNow:yyyy-MM-dd HH:mm:ss} UTC"
+                        FileProcessingNotes = $"File uploaded on {DateTime.Now:yyyy-MM-dd HH:mm:ss} UTC"
                     };
                     await _unitOfWork.SyllabusRepository.UpdateAsync(syllabusId, updateDto);
 
@@ -454,7 +454,7 @@ namespace WorkflowMgmt.Application.Features.Syllabus
                 DocumentUrl = documentUrl, // Only update if new file was uploaded
                 OriginalFilename = originalFilename, // Only update if new file was uploaded
                 FileProcessingStatus = documentUrl != null ? "completed" : null, // Update processing status if file was uploaded
-                FileProcessingNotes = documentUrl != null ? $"File updated on {DateTime.UtcNow:yyyy-MM-dd HH:mm:ss} UTC" : null
+                FileProcessingNotes = documentUrl != null ? $"File updated on {DateTime.Now:yyyy-MM-dd HH:mm:ss} UTC" : null
             };
 
             var success = await _unitOfWork.SyllabusRepository.UpdateAsync(request.Id, updateDto);

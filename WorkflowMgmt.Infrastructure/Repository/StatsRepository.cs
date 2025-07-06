@@ -300,7 +300,7 @@ namespace WorkflowMgmt.Infrastructure.Repository
                     COUNT(CASE WHEN last_login >= @RecentDate THEN 1 END) as RecentLogins
                 FROM workflowmgmt.users";
 
-            var recentDate = DateTime.UtcNow.AddDays(-30); // Last 30 days
+            var recentDate = DateTime.Now.AddDays(-30); // Last 30 days
             var basicStats = await Connection.QuerySingleAsync<UserStatsDto>(basicStatsSql, new { RecentDate = recentDate }, transaction: Transaction);
 
             // Get users by role with proper JOIN

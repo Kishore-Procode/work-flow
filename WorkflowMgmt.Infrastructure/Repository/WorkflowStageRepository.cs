@@ -292,7 +292,7 @@ namespace WorkflowMgmt.Infrastructure.Repository
                 stage.IsRequired,
                 stage.AutoApprove,
                 stage.TimeoutDays,
-                CreatedDate = DateTime.UtcNow,
+                CreatedDate = DateTime.Now,
                 CreatedBy = "system" // TODO: Get from current user context
             }, transaction: Transaction);
 
@@ -324,7 +324,7 @@ namespace WorkflowMgmt.Infrastructure.Repository
                 stage.IsRequired,
                 stage.AutoApprove,
                 stage.TimeoutDays,
-                ModifiedDate = DateTime.UtcNow,
+                ModifiedDate = DateTime.Now,
                 ModifiedBy = "system" // TODO: Get from current user context
             }, transaction: Transaction);
 
@@ -357,7 +357,7 @@ namespace WorkflowMgmt.Infrastructure.Repository
             var rowsAffected = await Connection.ExecuteAsync(sql, new
             {
                 TemplateId = templateId,
-                ModifiedDate = DateTime.UtcNow,
+                ModifiedDate = DateTime.Now,
                 ModifiedBy = "system" // TODO: Get from current user context
             }, transaction: Transaction);
 
@@ -415,7 +415,7 @@ namespace WorkflowMgmt.Infrastructure.Repository
                 StageId = so.stageId,
                 NewOrder = so.newOrder,
                 TemplateId = templateId,
-                ModifiedDate = DateTime.UtcNow,
+                ModifiedDate = DateTime.Now,
                 ModifiedBy = "system" // TODO: Get from current user context
             });
 

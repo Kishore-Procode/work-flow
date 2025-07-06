@@ -92,7 +92,7 @@ namespace WorkflowMgmt.Infrastructure.Repository
                 action.ActionName,
                 action.ActionType,
                 action.NextStageId,
-                CreatedDate = DateTime.UtcNow
+                CreatedDate = DateTime.Now
             }, transaction: Transaction);
 
             return id;

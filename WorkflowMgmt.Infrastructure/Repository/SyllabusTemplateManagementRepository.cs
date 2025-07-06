@@ -73,7 +73,7 @@ namespace WorkflowMgmt.Infrastructure.Repository
                 template.TemplateType,
                 template.Sections,
                 template.HtmlFormTemplate,
-                CreatedDate = DateTime.UtcNow,
+                CreatedDate = DateTime.Now,
                 CreatedBy = "system" // TODO: Get from current user context
             }, transaction: Transaction);
 
@@ -101,7 +101,7 @@ namespace WorkflowMgmt.Infrastructure.Repository
                 template.TemplateType,
                 template.Sections,
                 template.HtmlFormTemplate,
-                ModifiedDate = DateTime.UtcNow,
+                ModifiedDate = DateTime.Now,
                 ModifiedBy = "system" // TODO: Get from current user context
             }, transaction: Transaction);
 
@@ -127,7 +127,7 @@ namespace WorkflowMgmt.Infrastructure.Repository
             var rowsAffected = await Connection.ExecuteAsync(sql, new
             {
                 Id = id,
-                ModifiedDate = DateTime.UtcNow,
+                ModifiedDate = DateTime.Now,
                 ModifiedBy = "system" // TODO: Get from current user context
             }, transaction: Transaction);
 

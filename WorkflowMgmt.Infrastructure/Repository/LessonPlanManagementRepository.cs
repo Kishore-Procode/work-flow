@@ -223,7 +223,7 @@ namespace WorkflowMgmt.Infrastructure.Repository
             var setParts = new List<string>();
             var parameters = new DynamicParameters();
             parameters.Add("Id", id);
-            parameters.Add("ModifiedDate", DateTime.UtcNow);
+            parameters.Add("ModifiedDate", DateTime.Now);
             parameters.Add("ModifiedBy", lessonPlan.ModifiedBy);
 
             if (!string.IsNullOrEmpty(lessonPlan.Title))

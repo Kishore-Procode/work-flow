@@ -11,6 +11,7 @@ namespace WorkflowMgmt.Application.Features.Auth
 {
     public record LoginCommand(string Username, string Password) : IRequest<ApiResponse<LoginResponse>>;
     public record RefreshTokenCommand(string refreshToken) : IRequest<ApiResponse<AuthTokenResponse>>;
+    public record LogoutCommand(string userId, string? refreshToken = null) : IRequest<ApiResponse<string>>;
     public record GetProfileQuery(string userId) : IRequest<ApiResponse<UserProfileDto>>;
     public record ChangePasswordCommand(string userId, string currentPassword, string newPassword) : IRequest<ApiResponse<string>>;
     public record ForgotPasswordCommand(string email) : IRequest<ApiResponse<string>>;

@@ -540,7 +540,7 @@ namespace WorkflowMgmt.Infrastructure.Repository
                         FeedbackProvider = processedBy,
                         FeedbackText = actionDto.Comments,
                         FeedbackType = actionDto.FeedbackType ?? "general",
-                        CreatedDate = DateTime.UtcNow
+                        CreatedDate = DateTime.Now
                     }, transaction: Transaction);
                 }
                 var isDraftStatus = await CheckDraftStatus(action.next_stage_id);
@@ -581,8 +581,8 @@ namespace WorkflowMgmt.Infrastructure.Repository
                     CurrentStageId = isDocumentRejected ? documentWorkflow.current_stage_id : action.next_stage_id,
                     Status = newWorkflowStatus,
                     AssignedTo = nextAssignedTo,
-                    CompletedDate = newWorkflowStatus == "Completed" ? DateTime.UtcNow : (DateTime?)null,
-                    ModifiedDate = DateTime.UtcNow
+                    CompletedDate = newWorkflowStatus == "Completed" ? DateTime.Now : (DateTime?)null,
+                    ModifiedDate = DateTime.Now
                 }, transaction: Transaction);
 
                 // Update document status in syllabus table
@@ -605,9 +605,9 @@ namespace WorkflowMgmt.Infrastructure.Repository
                     ActionTaken = action.action_name,
                     ProcessedBy = processedBy,
                     AssignedTo = nextAssignedTo,
-                    ProcessedDate = DateTime.UtcNow,
+                    ProcessedDate = DateTime.Now,
                     Comments = actionDto.Comments,
-                    CreatedDate = DateTime.UtcNow
+                    CreatedDate = DateTime.Now
                 }, transaction: Transaction);
 
                 // Log the action for audit purposes
@@ -758,7 +758,7 @@ namespace WorkflowMgmt.Infrastructure.Repository
                     Comments = comments,
                     FeedbackId = feedbackId,
                     HistoryId = historyId,
-                    CreatedDate = DateTime.UtcNow
+                    CreatedDate = DateTime.Now
                 }, transaction: Transaction);
 
                 // 2. Additional logging can be added here if needed
@@ -783,7 +783,7 @@ namespace WorkflowMgmt.Infrastructure.Repository
             {
                 DocumentId = documentId,
                 Status = status,
-                ModifiedDate = DateTime.UtcNow
+                ModifiedDate = DateTime.Now
             }, transaction: Transaction);
 
             return rowsAffected > 0 ? true : false;

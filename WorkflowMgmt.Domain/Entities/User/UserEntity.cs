@@ -48,7 +48,7 @@ namespace WorkflowMgmt.Domain.Entities
         public string? role_description { get; set; }
         public string? department_name { get; set; }
         public string? department_code { get; set; }
-        public DateTime created_date { get; set; } = DateTime.UtcNow;
+        public DateTime created_date { get; set; } = DateTime.Now;
         public DateTime? modified_date { get; set; }
         public string? created_by { get; set; }
         public string? modified_by { get; set; }

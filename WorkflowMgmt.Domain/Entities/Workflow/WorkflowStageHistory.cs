@@ -18,7 +18,7 @@ namespace WorkflowMgmt.Domain.Entities.Workflow
         [Required]
         public Guid ProcessedBy { get; set; }
 
-        public DateTime ProcessedDate { get; set; } = DateTime.UtcNow;
+        public DateTime ProcessedDate { get; set; } = DateTime.Now;
 
         public string? Comments { get; set; }
 

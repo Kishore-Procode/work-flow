@@ -265,7 +265,7 @@ namespace WorkflowMgmt.Infrastructure.Repository
                 syllabus.HtmlFormData,
                 syllabus.DocumentUrl,
                 syllabus.OriginalFilename,
-                CreatedDate = DateTime.UtcNow,
+                CreatedDate = DateTime.Now,
                 CreatedBy = "system" // TODO: Get from current user context
             }, transaction: Transaction);
 
@@ -323,7 +323,7 @@ namespace WorkflowMgmt.Infrastructure.Repository
                 syllabus.FileProcessingStatus,
                 syllabus.FileProcessingNotes,
                 syllabus.Status,
-                ModifiedDate = DateTime.UtcNow,
+                ModifiedDate = DateTime.Now,
                 ModifiedBy = "system" // TODO: Get from current user context
             }, transaction: Transaction);
 
@@ -349,7 +349,7 @@ namespace WorkflowMgmt.Infrastructure.Repository
             var rowsAffected = await Connection.ExecuteAsync(sql, new
             {
                 Id = id,
-                ModifiedDate = DateTime.UtcNow,
+                ModifiedDate = DateTime.Now,
                 ModifiedBy = "system" // TODO: Get from current user context
             }, transaction: Transaction);
 

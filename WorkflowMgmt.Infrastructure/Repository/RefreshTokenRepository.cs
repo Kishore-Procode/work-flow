@@ -33,7 +33,7 @@ namespace WorkflowMgmt.Infrastructure.Repository
                 "SELECT Id,token,user_id as UserId,expires_at as ExpiresAt,created_at as CreatedAt,is_revoked as IsRevoked," +
                 "revoked_reason as RevokedReason, revoked_at as RevokedAt, replaced_by_token as ReplacedByToken " +
                 "FROM workflowmgmt.refresh_tokens WHERE user_id = @UserId AND is_revoked = false AND expires_at > @Now ORDER BY created_at DESC",
-                new { UserId = userId, Now = DateTime.UtcNow },
+                new { UserId = userId, Now = DateTime.Now },
                 Transaction);
         }
 
@@ -43,7 +43,7 @@ namespace WorkflowMgmt.Infrastructure.Repository
                 "SELECT Id,token,user_id as UserId,expires_at as ExpiresAt,created_at as CreatedAt,is_revoked as IsRevoked," +
                 "revoked_reason as RevokedReason, revoked_at as RevokedAt, replaced_by_token as ReplacedByToken " +
                 "FROM workflowmgmt.refresh_tokens WHERE user_id = @UserId AND is_revoked = false AND expires_at > @Now",
-                new { UserId = userId, Now = DateTime.UtcNow },
+                new { UserId = userId, Now = DateTime.Now },
                 Transaction);
 
             return tokens.ToList();
@@ -66,9 +66,9 @@ namespace WorkflowMgmt.Infrastructure.Repository
         {
             var sql = @"
                 UPDATE workflowmgmt.refresh_tokens 
-                SET token = @token, expires_at = @expires_at, is_revoked = @is_revoked, 
-                    revoked_reason = @revoked_reason, revoked_at = @revoked_at, 
-                    replaced_by_token = @replaced_by_token
+                SET token = @Token, expires_at = @ExpiresAt, is_revoked = @IsRevoked, 
+                    revoked_reason = @RevokedReason, revoked_at = @RevokedAt, 
+                    replaced_by_token = @ReplacedByToken
                 WHERE id = @id";
 
             var rowsAffected = await Connection.ExecuteAsync(sql, refreshToken, Transaction);
@@ -83,7 +83,7 @@ namespace WorkflowMgmt.Infrastructure.Repository
                 WHERE token = @Token";
 
             var rowsAffected = await Connection.ExecuteAsync(sql, 
-                new { Token = token, Reason = reason, RevokedAt = DateTime.UtcNow }, 
+                new { Token = token, Reason = reason, RevokedAt = DateTime.Now }, 
                 Transaction);
             return rowsAffected > 0;
         }
@@ -96,7 +96,7 @@ namespace WorkflowMgmt.Infrastructure.Repository
                 WHERE user_id = @UserId AND is_revoked = false";
 
             var rowsAffected = await Connection.ExecuteAsync(sql, 
-                new { UserId = userId, Reason = reason, RevokedAt = DateTime.UtcNow }, 
+                new { UserId = userId, Reason = reason, RevokedAt = DateTime.Now }, 
                 Transaction);
             return rowsAffected > 0;
         }
@@ -107,9 +107,9 @@ namespace WorkflowMgmt.Infrastructure.Repository
                 DELETE FROM workflowmgmt.refresh_tokens 
                 WHERE expires_at < @Now OR (is_revoked = true AND revoked_at < @CutoffDate)";
 
-            var cutoffDate = DateTime.UtcNow.AddDays(-30); // Keep revoked tokens for 30 days for audit
+            var cutoffDate = DateTime.Now.AddDays(-30); // Keep revoked tokens for 30 days for audit
             var rowsAffected = await Connection.ExecuteAsync(sql, 
-                new { Now = DateTime.UtcNow, CutoffDate = cutoffDate }, 
+                new { Now = DateTime.Now, CutoffDate = cutoffDate }, 
                 Transaction);
             return rowsAffected > 0;
         }

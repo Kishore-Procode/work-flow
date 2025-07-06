@@ -1,4 +1,5 @@
 ﻿using MediatR;
+using Microsoft.Extensions.Configuration;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -16,11 +17,13 @@ namespace WorkflowMgmt.Application.Features.Auth
     {
         private readonly IJwtTokenService _jwtTokenService;
         private readonly IUnitOfWork _unitOfWork;
+        private readonly IConfiguration _configuration;
 
-        public LoginCommandHandler(IJwtTokenService jwtTokenService, IUnitOfWork unitOfWork)
+        public LoginCommandHandler(IJwtTokenService jwtTokenService, IUnitOfWork unitOfWork ,IConfiguration configuration)
         {
             _jwtTokenService = jwtTokenService;
             _unitOfWork = unitOfWork;
+            _configuration = configuration;
         }
 
         public async Task<ApiResponse<LoginResponse>> Handle(LoginCommand request, CancellationToken cancellationToken)
@@ -45,24 +48,26 @@ namespace WorkflowMgmt.Application.Features.Auth
                 // Generate tokens
                 var tokens = _jwtTokenService.GenerateTokens(user, role, department);
 
-                // Create refresh token record
+                // Create new refresh token record for each login (multi-device support)
+                var refreshTokenExpiryMinutes = int.Parse(_configuration["Jwt:RefreshTokenExpiresInMinutes"] ?? "10080");
                 var refreshToken = new RefreshToken
                 {
                     Id = Guid.NewGuid(),
                     Token = tokens.RefreshToken,
                     UserId = user.id,
-                    ExpiresAt = DateTime.UtcNow.AddDays(7), // Should come from configuration
-                    CreatedAt = DateTime.UtcNow,
+                    ExpiresAt = DateTime.Now.AddMinutes(refreshTokenExpiryMinutes),
+                    CreatedAt = DateTime.Now,
                     IsRevoked = false
                 };
 
                 await _unitOfWork.RefreshTokenRepository.CreateAsync(refreshToken);
+
                 _unitOfWork.Commit();
 
                 var response = new LoginResponse
                 {
                     AccessToken = tokens.AccessToken,
-                    RefreshToken = tokens.RefreshToken,
+                    RefreshToken = refreshToken.Token,
                     ExpiresAt = tokens.ExpiresAt
                 };
 

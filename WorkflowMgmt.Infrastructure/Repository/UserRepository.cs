@@ -45,7 +45,7 @@ namespace WorkflowMgmt.Infrastructure.Repository
         {
             await Connection.ExecuteAsync(
                 "UPDATE workflowmgmt.users SET last_login = @Now WHERE id = @UserId",
-                new { Now = DateTime.UtcNow, UserId = userId },
+                new { Now = DateTime.Now, UserId = userId },
                 transaction: Transaction
             );
         }

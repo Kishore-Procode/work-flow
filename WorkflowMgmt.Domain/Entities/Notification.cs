@@ -17,7 +17,7 @@ namespace WorkflowMgmt.Domain.Entities
         public bool IsDeleted { get; set; } = false;
         public int Priority { get; set; } = 1;
         public DateTime? ExpiresAt { get; set; }
-        public DateTime CreatedDate { get; set; } = DateTime.UtcNow;
+        public DateTime CreatedDate { get; set; } = DateTime.Now;
         public DateTime? ReadDate { get; set; }
 
         // Navigation properties
@@ -34,7 +34,7 @@ namespace WorkflowMgmt.Domain.Entities
         public string? Icon { get; set; }
         public string? Color { get; set; }
         public bool IsActive { get; set; } = true;
-        public DateTime CreatedDate { get; set; } = DateTime.UtcNow;
+        public DateTime CreatedDate { get; set; } = DateTime.Now;
         public DateTime? ModifiedDate { get; set; }
 
         // Navigation properties
@@ -50,7 +50,7 @@ namespace WorkflowMgmt.Domain.Entities
         public int NotificationTypeId { get; set; }
         public bool IsEnabled { get; set; } = true;
         public string DeliveryMethod { get; set; } = "in_app"; // 'in_app', 'email', 'both'
-        public DateTime CreatedDate { get; set; } = DateTime.UtcNow;
+        public DateTime CreatedDate { get; set; } = DateTime.Now;
         public DateTime? ModifiedDate { get; set; }
 
         // Navigation properties
@@ -67,7 +67,7 @@ namespace WorkflowMgmt.Domain.Entities
         public string MessageTemplate { get; set; } = string.Empty;
         public string? Variables { get; set; } // JSON string
         public bool IsActive { get; set; } = true;
-        public DateTime CreatedDate { get; set; } = DateTime.UtcNow;
+        public DateTime CreatedDate { get; set; } = DateTime.Now;
         public DateTime? ModifiedDate { get; set; }
 
         // Navigation properties
@@ -83,7 +83,7 @@ namespace WorkflowMgmt.Domain.Entities
         public int DeliveryAttempt { get; set; } = 1;
         public string? ErrorMessage { get; set; }
         public DateTime? DeliveredAt { get; set; }
-        public DateTime CreatedDate { get; set; } = DateTime.UtcNow;
+        public DateTime CreatedDate { get; set; } = DateTime.Now;
 
         // Navigation properties
         public Notification? Notification { get; set; }

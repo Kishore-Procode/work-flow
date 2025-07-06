@@ -25,7 +25,7 @@ namespace WorkflowMgmt.Domain.Entities.Workflow
         [Required]
         public Guid InitiatedBy { get; set; }
 
-        public DateTime InitiatedDate { get; set; } = DateTime.UtcNow;
+        public DateTime InitiatedDate { get; set; } = DateTime.Now;
 
         public DateTime? CompletedDate { get; set; }
 

@@ -100,7 +100,7 @@ namespace WorkflowMgmt.Infrastructure.Repository
                 FeedbackProvider = feedbackProvider,
                 feedback.FeedbackText,
                 feedback.FeedbackType,
-                CreatedDate = DateTime.UtcNow
+                CreatedDate = DateTime.Now
             }, transaction: Transaction);
 
             return id;
@@ -122,7 +122,7 @@ namespace WorkflowMgmt.Infrastructure.Repository
                 feedback.FeedbackText,
                 feedback.FeedbackType,
                 feedback.IsAddressed,
-                ModifiedDate = DateTime.UtcNow
+                ModifiedDate = DateTime.Now
             }, transaction: Transaction);
 
             return rowsAffected > 0;
@@ -138,7 +138,7 @@ namespace WorkflowMgmt.Infrastructure.Repository
             var rowsAffected = await Connection.ExecuteAsync(sql, new
             {
                 Id = id,
-                ModifiedDate = DateTime.UtcNow
+                ModifiedDate = DateTime.Now
             }, transaction: Transaction);
 
             return rowsAffected > 0;
@@ -303,8 +303,8 @@ namespace WorkflowMgmt.Infrastructure.Repository
             {
                 Id = id,
                 AddressedBy = addressedBy,
-                AddressedDate = DateTime.UtcNow,
-                ModifiedDate = DateTime.UtcNow
+                AddressedDate = DateTime.Now,
+                ModifiedDate = DateTime.Now
             }, transaction: Transaction);
 
             return rowsAffected > 0;
@@ -323,7 +323,7 @@ namespace WorkflowMgmt.Infrastructure.Repository
             var rowsAffected = await Connection.ExecuteAsync(sql, new
             {
                 Id = id,
-                ModifiedDate = DateTime.UtcNow
+                ModifiedDate = DateTime.Now
             }, transaction: Transaction);
 
             return rowsAffected > 0;

@@ -213,7 +213,7 @@ namespace WorkflowMgmt.Infrastructure.Repository
                 Id = id,
                 IsActive = isRestore,
                 Status = isRestore ? "Active" : "Inactive",
-                ModifiedDate = DateTime.UtcNow,
+                ModifiedDate = DateTime.Now,
                 ModifiedBy = modifiedBy
             }, Transaction);
 

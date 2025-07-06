@@ -102,7 +102,7 @@ namespace WorkflowMgmt.Infrastructure.Repository
                 assignment.RoleId,
                 assignment.DepartmentId,
                 assignment.IsDefault,
-                CreatedDate = DateTime.UtcNow,
+                CreatedDate = DateTime.Now,
                 CreatedBy = "system" // TODO: Get from current user context
             }, transaction: Transaction);
 
