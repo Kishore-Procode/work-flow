@@ -29,7 +29,9 @@ namespace WorkflowMgmt.Infrastructure.Repository
         public async Task<User?> GetUserByUserName(string userName)
         {
             return await Connection.QueryFirstOrDefaultAsync<User>(
-                "SELECT * FROM workflowmgmt.users where (username = @UserName or email = @UserName) AND is_active IS TRUE",
+                "SELECT * FROM workflowmgmt.users " +
+                "where (lower(username) = lower(@UserName) or " +
+                "lower(email) = lower(@UserName)) AND is_active IS TRUE",
                 new { UserName = userName },
                 Transaction);
         }
