@@ -93,7 +93,15 @@ builder.Services.AddCors(options =>
 {
     options.AddDefaultPolicy(builder =>
     {
-        builder.WithOrigins("http://localhost:5173", "https://localhost:5173", "http://localhost:3000", "https://localhost:3000", "http://localhost:5000", "http://13.201.30.6:3000", "http://13.201.30.6:5000")
+        builder.WithOrigins(
+            "http://localhost:5173", 
+            "https://localhost:5173", 
+            "http://localhost:3000", 
+            "https://localhost:3000", 
+            "http://localhost:5000", 
+            "http://13.201.30.6:3000", 
+            "http://13.201.30.6:5000",
+            "https://act.conprgtech.com")
                .AllowAnyMethod()
                .AllowAnyHeader()
                .AllowCredentials();
