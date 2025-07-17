@@ -13,4 +13,5 @@ namespace WorkflowMgmt.Application.Features.User
     public record GetActiveUsersByDepartmentCommand(int departmentId) : IRequest<ApiResponse<List<WorkflowMgmt.Domain.Entities.UserDto>>>;
     public record GetActiveUsersByAllowedDepartmentCommand(int departmentId) : IRequest<ApiResponse<List<WorkflowMgmt.Domain.Entities.UserDto>>>;
     public record GetActiveUsersByAllowedDepartmentAndRoleCommand(int departmentId, int roleId) : IRequest<ApiResponse<List<WorkflowMgmt.Domain.Entities.UserDto>>>;
+    public record GetActiveUsersByRolesCommand(int[] roleIds) : IRequest<ApiResponse<List<WorkflowMgmt.Domain.Entities.UserDto>>>;
 }

@@ -76,6 +76,70 @@ namespace WorkflowMgmt.Application.Features.Notifications
         }
     }
 
+    public class CreateBulkNotificationsCommandHandler : IRequestHandler<CreateBulkNotificationsCommand, ApiResponse<List<Guid>>>
+    {
+        private readonly IUnitOfWork _unitOfWork;
+        private readonly IHubContext<NotificationHub> _hubContext;
+
+        public CreateBulkNotificationsCommandHandler(IUnitOfWork unitOfWork, IHubContext<NotificationHub> hubContext)
+        {
+            _unitOfWork = unitOfWork;
+            _hubContext = hubContext;
+        }
+
+        public async Task<ApiResponse<List<Guid>>> Handle(CreateBulkNotificationsCommand request, CancellationToken cancellationToken)
+        {
+            try
+            {
+                if (request.Notifications == null || !request.Notifications.Any())
+                {
+                    return ApiResponse<List<Guid>>.ErrorResponse("No notifications provided");
+                }
+
+                // Create bulk notifications
+                var notificationIds = await _unitOfWork.NotificationRepository.CreateBulkNotificationsAsync(request.Notifications);
+                
+                // Send real-time notifications
+                foreach (var notificationId in notificationIds)
+                {
+                    var notification = await _unitOfWork.NotificationRepository.GetNotificationByIdAsync(notificationId);
+                    if (notification != null)
+                    {
+                        var realTimeNotification = new RealTimeNotificationDto
+                        {
+                            Id = notification.Id,
+                            Title = notification.Title,
+                            Message = notification.Message,
+                            TypeName = notification.TypeName,
+                            Icon = notification.Icon,
+                            Color = notification.Color,
+                            Priority = notification.Priority,
+                            CreatedDate = notification.CreatedDate,
+                            DocumentId = notification.DocumentId,
+                            DocumentType = notification.DocumentType,
+                            Metadata = notification.Metadata
+                        };
+
+                        await _hubContext.SendNotificationToUser(notification.UserId, realTimeNotification);
+
+                        // Update unread count
+                        var unreadCount = await _unitOfWork.NotificationRepository.GetUnreadNotificationCountAsync(notification.UserId);
+                        await _hubContext.SendUnreadCountUpdate(notification.UserId, unreadCount);
+                    }
+                }
+
+                _unitOfWork.Commit();
+
+                return ApiResponse<List<Guid>>.SuccessResponse(notificationIds, $"Successfully created {notificationIds.Count} notifications");
+            }
+            catch (Exception ex)
+            {
+                await _unitOfWork.RollbackAsync();
+                return ApiResponse<List<Guid>>.ErrorResponse($"Error creating bulk notifications: {ex.Message}");
+            }
+        }
+    }
+
     public class MarkNotificationAsReadCommandHandler : IRequestHandler<MarkNotificationAsReadCommand, ApiResponse<bool>>
     {
         private readonly IUnitOfWork _unitOfWork;

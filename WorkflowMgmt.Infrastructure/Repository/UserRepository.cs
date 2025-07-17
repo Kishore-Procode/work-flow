@@ -187,5 +187,65 @@ namespace WorkflowMgmt.Infrastructure.Repository
             var users = await Connection.QueryAsync<WorkflowMgmt.Domain.Entities.UserDto>(sql, new { DepartmentId = departmentId, RoleId = roleId }, Transaction);
             return users.ToList();
         }
+
+        public async Task<List<WorkflowMgmt.Domain.Entities.UserDto>> GetActiveUsersByRoles(int[] roleIds)
+        {
+            var sql = @"
+                SELECT DISTINCT
+                    u.id,
+                    u.username,
+                    u.email,
+                    u.first_name,
+                    u.last_name,
+                    u.role_id,
+                    u.department_id,
+                    u.phone,
+                    u.profile_image_url,
+                    u.allowed_departments,
+                    u.allowed_roles,
+                    r.name as role_name,
+                    r.code as role_code,
+                    d.name as department_name,
+                    d.code as department_code
+                FROM workflowmgmt.users u
+                INNER JOIN workflowmgmt.roles r ON u.role_id = r.id
+                LEFT JOIN workflowmgmt.departments d ON u.department_id = d.id
+                WHERE u.is_active = true AND r.is_active = true
+                AND u.role_id = ANY(@RoleIds)
+                ORDER BY u.first_name, u.last_name";
+
+            var users = await Connection.QueryAsync<WorkflowMgmt.Domain.Entities.UserDto>(sql, new { RoleIds = roleIds }, Transaction);
+            return users.ToList();
+        }
+
+        public async Task<List<WorkflowMgmt.Domain.Entities.UserDto>> GetActiveUsersByRoleCode(string roleCode)
+        {
+            var sql = @"
+                SELECT
+                    u.id,
+                    u.username,
+                    u.email,
+                    u.first_name,
+                    u.last_name,
+                    u.role_id,
+                    u.department_id,
+                    u.phone,
+                    u.profile_image_url,
+                    u.allowed_departments,
+                    u.allowed_roles,
+                    r.name as role_name,
+                    r.code as role_code,
+                    d.name as department_name,
+                    d.code as department_code
+                FROM workflowmgmt.users u
+                INNER JOIN workflowmgmt.roles r ON u.role_id = r.id
+                LEFT JOIN workflowmgmt.departments d ON u.department_id = d.id
+                WHERE u.is_active = true AND r.is_active = true
+                AND r.code = @RoleCode
+                ORDER BY u.first_name, u.last_name";
+
+            var users = await Connection.QueryAsync<WorkflowMgmt.Domain.Entities.UserDto>(sql, new { RoleCode = roleCode }, Transaction);
+            return users.ToList();
+        }
     }
 }

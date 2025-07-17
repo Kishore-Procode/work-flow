@@ -44,5 +44,7 @@ namespace WorkflowMgmt.Domain.IRepository
         Task<List<WorkflowMgmt.Domain.Entities.UserDto>> GetActiveUsersByDepartment(int departmentId);
         Task<List<WorkflowMgmt.Domain.Entities.UserDto>> GetActiveUsersByAllowedDepartment(int departmentId);
         Task<List<WorkflowMgmt.Domain.Entities.UserDto>> GetActiveUsersByAllowedDepartmentAndRole(int departmentId, int roleId);
+        Task<List<WorkflowMgmt.Domain.Entities.UserDto>> GetActiveUsersByRoles(int[] roleIds);
+        Task<List<WorkflowMgmt.Domain.Entities.UserDto>> GetActiveUsersByRoleCode(string roleCode);
     }
 }

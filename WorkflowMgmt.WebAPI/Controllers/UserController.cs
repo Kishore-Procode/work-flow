@@ -35,5 +35,13 @@ namespace WorkflowMgmt.WebAPI.Controllers
             var result = await Mediator.Send(new GetActiveUsersByAllowedDepartmentAndRoleCommand(departmentId, roleId));
             return Ok(result);
         }
+        
+        [HttpGet("active/roles/{roleIds}")]
+        public async Task<IActionResult> GetActiveUsersByRoles(string roleIds)
+        {
+            var roleIdArray = roleIds.Split(',').Select(int.Parse).ToArray();
+            var result = await Mediator.Send(new GetActiveUsersByRolesCommand(roleIdArray));
+            return Ok(result);
+        }
     }
 }

@@ -101,4 +101,27 @@ namespace WorkflowMgmt.Application.Features.User
             }
         }
     }
+
+    public class GetActiveUsersByRolesCommandHandler : IRequestHandler<GetActiveUsersByRolesCommand, ApiResponse<List<WorkflowMgmt.Domain.Entities.UserDto>>>
+    {
+        private readonly IUnitOfWork _unitOfWork;
+
+        public GetActiveUsersByRolesCommandHandler(IUnitOfWork unitOfWork)
+        {
+            _unitOfWork = unitOfWork;
+        }
+
+        public async Task<ApiResponse<List<WorkflowMgmt.Domain.Entities.UserDto>>> Handle(GetActiveUsersByRolesCommand request, CancellationToken cancellationToken)
+        {
+            try
+            {
+                var users = await _unitOfWork.UserRepository.GetActiveUsersByRoles(request.roleIds);
+                return ApiResponse<List<WorkflowMgmt.Domain.Entities.UserDto>>.SuccessResponse(users, "Active users by roles retrieved successfully");
+            }
+            catch (Exception ex)
+            {
+                return ApiResponse<List<WorkflowMgmt.Domain.Entities.UserDto>>.ErrorResponse($"Error during fetching active users by roles: {ex.Message}");
+            }
+        }
+    }
 }
