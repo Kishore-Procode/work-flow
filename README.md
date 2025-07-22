@@ -23,7 +23,7 @@ The application strictly follows **Clean Architecture** principles, ensuring sep
 ┌─────────────────────▼───────────────────────────────────────┐
 │                WorkflowMgmt.Application                     │
 │                 (Application Layer)                         │
-│  • Commands & Queries (CQRS)                               │
+│  • Commands & Queries (CQRS)                                │
 │  • Command/Query Handlers                                   │
 │  • Application Services                                     │
 │  • DTOs & Mapping                                           │
@@ -53,7 +53,7 @@ The application strictly follows **Clean Architecture** principles, ensuring sep
 
 ### Design Patterns Implemented
 
-#### 1. **CQRS (Command Query Responsibility Segregation)**
+ #### 1. **CQRS (Command Query Responsibility Segregation)**
 - **Commands**: Handle write operations (Create, Update, Delete)
 - **Queries**: Handle read operations (Get, List, Search)
 - **Handlers**: Process commands and queries using MediatR
