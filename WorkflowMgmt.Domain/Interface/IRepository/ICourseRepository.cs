@@ -12,7 +12,6 @@ namespace WorkflowMgmt.Domain.Interface.IRepository
     {
         Task<List<CourseDTO>> GetAllCourses();
         Task<CourseDTO?> GetCourseById(int id);
-        Task<List<CourseDTO>> GetCoursesByDepartmentAsync(int departmentId);
         Task<int> InsertCourse(CourseDTO course);
         Task<bool> UpdateCourse(CourseDTO course);
         Task<bool> DeleteOrRestoreCourse(int id, string modifiedBy, bool isRestore);

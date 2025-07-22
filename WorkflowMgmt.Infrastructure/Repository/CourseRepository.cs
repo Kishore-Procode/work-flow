@@ -24,9 +24,7 @@ namespace WorkflowMgmt.Infrastructure.Repository
                     code as CourseCode,
                     description,
                     credits,
-                    department_id as DepartmentId,
                     course_type as CourseType,
-                    level,
                     duration_weeks as DurationWeeks,
                     max_capacity as MaxCapacity,
                     status,
@@ -54,9 +52,7 @@ namespace WorkflowMgmt.Infrastructure.Repository
                     code as CourseCode,
                     description,
                     credits,
-                    department_id as DepartmentId,
                     course_type as CourseType,
-                    level,
                     duration_weeks as DurationWeeks,
                     max_capacity as MaxCapacity,
                     status,
@@ -74,36 +70,7 @@ namespace WorkflowMgmt.Infrastructure.Repository
             return await Connection.QuerySingleOrDefaultAsync<CourseDTO>(query, new { Id = id }, Transaction);
         }
 
-        public async Task<List<CourseDTO>> GetCoursesByDepartmentAsync(int departmentId)
-        {
-            var query = @"
-                SELECT
-                    id,
-                    name as CourseName,
-                    code as CourseCode,
-                    description,
-                    credits,
-                    department_id as DepartmentId,
-                    course_type as CourseType,
-                    level,
-                    duration_weeks as DurationWeeks,
-                    max_capacity as MaxCapacity,
-                    status,
-                    prerequisites,
-                    learning_objectives as LearningObjectives,
-                    learning_outcomes as LearningOutcomes,
-                    created_date as CreatedDate,
-                    modified_date as ModifiedDate,
-                    created_by as CreatedBy,
-                    modified_by as ModifiedBy,
-                    is_active as IsActive
-                FROM workflowmgmt.courses
-                WHERE department_id = @DepartmentId AND is_active = true
-                ORDER BY code";
 
-            var courses = await Connection.QueryAsync<CourseDTO>(query, new { DepartmentId = departmentId }, transaction: Transaction);
-            return courses.ToList();
-        }
 
         public async Task<bool> IsCourseCodeExists(string code, int? excludeId = null)
         {
@@ -124,9 +91,7 @@ namespace WorkflowMgmt.Infrastructure.Repository
                     code,
                     description,
                     credits,
-                    department_id,
                     course_type,
-                    level,
                     duration_weeks,
                     max_capacity,
                     status,
@@ -141,9 +106,7 @@ namespace WorkflowMgmt.Infrastructure.Repository
                     @CourseCode,
                     @Description,
                     @Credits,
-                    @DepartmentId,
                     @CourseType,
-                    @Level,
                     @DurationWeeks,
                     @MaxCapacity,
                     @Status,
@@ -178,9 +141,7 @@ namespace WorkflowMgmt.Infrastructure.Repository
                     code = @CourseCode,
                     description = @Description,
                     credits = @Credits,
-                    department_id = @DepartmentId,
                     course_type = @CourseType,
-                    level = @Level,
                     duration_weeks = @DurationWeeks,
                     max_capacity = @MaxCapacity,
                     status = @Status,

@@ -12,7 +12,6 @@ namespace WorkflowMgmt.Application.Features.Course
 {
     public record GetCourseCommand() : IRequest<ApiResponse<List<CourseDTO>>>;
     public record GetCourseByIdCommand(int id) : IRequest<ApiResponse<CourseDTO>>;
-    public record GetCoursesByDepartmentCommand(int departmentId) : IRequest<ApiResponse<List<CourseDTO>>>;
     public record CreateCourseCommand(CourseDTO Course) : IRequest<ApiResponse<int>>;
     public record UpdateCourseCommand(CourseDTO Course) : IRequest<ApiResponse<bool>>;
     public record DeleteOrRestoreCourseCommand(int id, string modifiedBy, bool isRestore) : IRequest<ApiResponse<bool>>;

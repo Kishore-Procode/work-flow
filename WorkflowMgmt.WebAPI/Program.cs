@@ -2,6 +2,7 @@ using MediatR;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using Serilog;
+using Serilog.Events;
 using System.Text;
 using WorkflowMgmt.Application.DependencyInjection;
 using WorkflowMgmt.Application.Hubs;
@@ -50,14 +51,19 @@ if (!string.IsNullOrEmpty(jwtAudience))
 
 // Configure Serilog based on environment
 var loggerConfig = new LoggerConfiguration()
-    .ReadFrom.Configuration(builder.Configuration);
+    .MinimumLevel.Information()
+    .MinimumLevel.Override("Microsoft", LogEventLevel.Warning)
+    .MinimumLevel.Override("System", LogEventLevel.Warning)
+    .Enrich.FromLogContext();
 
 // Environment-specific logging configuration
 if (builder.Environment.IsDevelopment())
 {
     loggerConfig
-        .WriteTo.Console()
-        .WriteTo.File("logs/log-.txt", rollingInterval: RollingInterval.Day);
+        .WriteTo.Console(outputTemplate: "[{Timestamp:HH:mm:ss} {Level:u3}] {Message:lj}{NewLine}{Exception}")
+        .WriteTo.File("logs/log-.txt",
+            rollingInterval: RollingInterval.Day,
+            outputTemplate: "[{Timestamp:yyyy-MM-dd HH:mm:ss.fff zzz} [{Level:u3}] {Message:lj}{NewLine}{Exception}");
 }
 else
 {
@@ -187,6 +193,11 @@ builder.Services.AddSignalR(options =>
 
 var app = builder.Build();
 
+// Log application startup
+Log.Information("Application built successfully");
+Log.Information("Environment: {Environment}", app.Environment.EnvironmentName);
+Log.Information("Content Root: {ContentRoot}", app.Environment.ContentRootPath);
+
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
 {
@@ -197,6 +208,19 @@ if (app.Environment.IsDevelopment())
         c.RoutePrefix = string.Empty; // Serve Swagger UI at the app's root
     });
     app.UseDeveloperExceptionPage();
+
+    // Add request logging for development
+    app.Use(async (context, next) =>
+    {
+        var startTime = DateTime.UtcNow;
+        Log.Information("HTTP {Method} {Path} started", context.Request.Method, context.Request.Path);
+
+        await next();
+
+        var duration = DateTime.UtcNow - startTime;
+        Log.Information("HTTP {Method} {Path} responded {StatusCode} in {Duration}ms",
+            context.Request.Method, context.Request.Path, context.Response.StatusCode, duration.TotalMilliseconds);
+    });
 }
 else
 {
@@ -230,7 +254,11 @@ app.MapHub<NotificationHub>("/notificationHub").RequireAuthorization();
 try
 {
     Log.Information("Starting WorkFlow Management API");
-    app.Run();
+    // Log before starting the application
+Log.Information("Starting WorkFlow Management API...");
+Log.Information("API will be available at: {Urls}", string.Join(", ", app.Urls));
+
+app.Run();
 }
 catch (Exception ex)
 {
