@@ -19,8 +19,6 @@ Generated_Code/
 .history/
 
 ## ASP.NET Core
-appsettings.Development.json
-appsettings.Local.json
 secrets.json
 
 ## Logs
