@@ -205,7 +205,7 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI(c =>
     {
         c.SwaggerEndpoint("/swagger/v1/swagger.json", "WorkFlow Management API v1");
-        c.RoutePrefix = string.Empty; // Serve Swagger UI at the app's root
+        c.RoutePrefix = "swagger"; // Serve Swagger UI at /swagger
     });
     app.UseDeveloperExceptionPage();
 
@@ -238,7 +238,13 @@ else
 }
 
 app.UseMiddleware<ExceptionHandlingMiddleware>();
-app.UseHttpsRedirection();
+
+// Only use HTTPS redirection if required
+var requireHttps = builder.Configuration.GetValue<bool>("Security:RequireHttps", true);
+if (requireHttps)
+{
+    app.UseHttpsRedirection();
+}
 
 // Enable static file serving from wwwroot
 app.UseStaticFiles();
