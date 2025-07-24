@@ -20,14 +20,36 @@ namespace WorkflowMgmt.Infrastructure.Repository
 
         public async Task<List<DepartmentDTO>> GetAllDepartments()
         {
-            var departments = await Connection.QueryAsync<DepartmentDTO>(
-                "SELECT * FROM workflowmgmt.departments order by code", Transaction);
+            var sql = @"
+                SELECT d.*, l.name as level_name, l.code as level_code
+                FROM workflowmgmt.departments d
+                LEFT JOIN workflowmgmt.levels l ON d.level_id = l.id
+                ORDER BY d.code";
 
+            var departments = await Connection.QueryAsync<DepartmentDTO>(sql, Transaction);
+            return departments.ToList();
+        }
+
+        public async Task<List<DepartmentDTO>> GetDepartmentsByLevelId(int levelId)
+        {
+            var sql = @"
+                SELECT d.*, l.name as level_name, l.code as level_code
+                FROM workflowmgmt.departments d
+                LEFT JOIN workflowmgmt.levels l ON d.level_id = l.id
+                WHERE d.level_id = @LevelId AND d.is_active = true
+                ORDER BY d.code";
+
+            var departments = await Connection.QueryAsync<DepartmentDTO>(sql, new { LevelId = levelId }, Transaction);
             return departments.ToList();
         }
         public async Task<DepartmentDTO?> GetDepartmentById(int id)
         {
-            var sql = "SELECT * FROM workflowmgmt.departments WHERE id = @Id";
+            var sql = @"
+                SELECT d.*, l.name as level_name, l.code as level_code
+                FROM workflowmgmt.departments d
+                LEFT JOIN workflowmgmt.levels l ON d.level_id = l.id
+                WHERE d.id = @Id";
+
             var department = await Connection.QueryFirstOrDefaultAsync<DepartmentDTO>(sql, new { Id = id }, Transaction);
             return department;
         }
@@ -44,6 +66,7 @@ namespace WorkflowMgmt.Infrastructure.Repository
                     established_year,
                     programs_offered,
                     accreditation,
+                    level_id,
                     status,
                     created_date,
                     created_by
@@ -57,6 +80,7 @@ namespace WorkflowMgmt.Infrastructure.Repository
                     @established_year,
                     @programs_offered,
                     @accreditation,
+                    @level_id,
                     @status,
                     NOW(),
                     @CreatedBy
@@ -81,6 +105,7 @@ namespace WorkflowMgmt.Infrastructure.Repository
                 established_year = @established_year,
                 programs_offered = @programs_offered,
                 accreditation = @accreditation,
+                level_id = @level_id,
                 status = @status,
                 modified_date = NOW(),
                 modified_by = @ModifiedBy,

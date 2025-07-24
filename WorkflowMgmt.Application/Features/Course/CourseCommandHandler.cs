@@ -36,7 +36,26 @@ namespace WorkflowMgmt.Application.Features.Course
 
     }
 
-
+    public class GetCoursesByDepartmentCommandHandler : IRequestHandler<GetCoursesByDepartmentCommand, ApiResponse<List<CourseDTO>>>
+    {
+        private readonly IUnitOfWork _unitOfWork;
+        public GetCoursesByDepartmentCommandHandler(IUnitOfWork unitOfWork)
+        {
+            _unitOfWork = unitOfWork;
+        }
+        public async Task<ApiResponse<List<CourseDTO>>> Handle(GetCoursesByDepartmentCommand request, CancellationToken cancellationToken)
+        {
+            try
+            {
+                var courses = await _unitOfWork.CourseRepository.GetCoursesByDepartmentAsync(request.departmentId);
+                return ApiResponse<List<CourseDTO>>.SuccessResponse(courses, "Courses retrieved successfully");
+            }
+            catch (Exception ex)
+            {
+                return ApiResponse<List<CourseDTO>>.ErrorResponse($"Error during fetching courses by department: {ex.Message}");
+            }
+        }
+    }
 
     public class GetCourseByIdCommandHandler : IRequestHandler<GetCourseByIdCommand, ApiResponse<CourseDTO>>
     {         

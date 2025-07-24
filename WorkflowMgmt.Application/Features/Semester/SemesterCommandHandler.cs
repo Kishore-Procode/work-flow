@@ -83,30 +83,6 @@ namespace WorkflowMgmt.Application.Features.Semester
         }
     }
 
-    public class GetSemestersByDepartmentAndCourseCommandHandler : IRequestHandler<GetSemestersByDepartmentAndCourseCommand, ApiResponse<List<SemesterDTO>>>
-    {
-        private readonly IUnitOfWork _unitOfWork;
-
-        public GetSemestersByDepartmentAndCourseCommandHandler(IUnitOfWork unitOfWork)
-        {
-            _unitOfWork = unitOfWork;
-        }
-
-        public async Task<ApiResponse<List<SemesterDTO>>> Handle(GetSemestersByDepartmentAndCourseCommand request, CancellationToken cancellationToken)
-        {
-            try
-            {
-                var semesters = await _unitOfWork.SemesterRepository.GetSemestersByDepartmentAndCourseAsync(request.DepartmentId, request.CourseId);
-                return ApiResponse<List<SemesterDTO>>.SuccessResponse(semesters, "Semesters retrieved successfully");
-            }
-            catch (Exception ex)
-            {
-                return ApiResponse<List<SemesterDTO>>.ErrorResponse($"Error fetching semesters by department and course: {ex.Message}");
-            }
-        }
-    }
-
-
     public class CreateSemesterCommandHandler : IRequestHandler<CreateSemesterCommand, ApiResponse<int>>
     {
         private readonly IUnitOfWork _unitOfWork;

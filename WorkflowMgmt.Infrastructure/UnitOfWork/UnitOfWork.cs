@@ -24,6 +24,8 @@ namespace WorkflowMgmt.Infrastructure
         private IDepartmentRepository? departmentRepository;
         private ICourseRepository? courseRepository;
         private ISemesterRepository? semesterRepository;
+        private ILevelRepository? levelRepository;
+        private IAcademicYearRepository? academicYearRepository;
         private ILessonPlanTemplateRepository lessonPlanTemplateRepository;
         private ILessonPlanRepository? lessonPlanRepository;
         private ISessionRepository? sessionRepository;
@@ -74,6 +76,16 @@ namespace WorkflowMgmt.Infrastructure
         public ISemesterRepository SemesterRepository
         {
             get { return semesterRepository ?? (semesterRepository = new SemesterRepository(_transaction)); }
+        }
+
+        public ILevelRepository LevelRepository
+        {
+            get { return levelRepository ?? (levelRepository = new LevelRepository(_transaction)); }
+        }
+
+        public IAcademicYearRepository AcademicYearRepository
+        {
+            get { return academicYearRepository ?? (academicYearRepository = new AcademicYearRepository(_transaction)); }
         }
 
         public IUserManagementRepository UserManagementRepository

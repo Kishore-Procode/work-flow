@@ -10,15 +10,8 @@ namespace WorkflowMgmt.WebAPI.Controllers
     {
         [HttpGet]
         public async Task<IActionResult> GetAllSemester(
-            [FromQuery] int? departmentId = null,
-            [FromQuery] int? courseId = null)
+            [FromQuery] int? departmentId = null)
         {
-            if (departmentId.HasValue && courseId.HasValue)
-            {
-                var result = await Mediator.Send(new GetSemestersByDepartmentAndCourseCommand(departmentId.Value, courseId.Value));
-                return Ok(result);
-            }
-
             if (departmentId.HasValue)
             {
                 var result = await Mediator.Send(new GetSemestersByDepartmentCommand(departmentId.Value));

@@ -37,6 +37,7 @@ namespace WorkflowMgmt.Infrastructure.Repository
                     modified_by as ModifiedBy,
                     is_active as IsActive
                 FROM workflowmgmt.courses
+                WHERE is_active = true
                 ORDER BY code";
 
             var courses = await Connection.QueryAsync<CourseDTO>(query, transaction: Transaction);
@@ -70,7 +71,36 @@ namespace WorkflowMgmt.Infrastructure.Repository
             return await Connection.QuerySingleOrDefaultAsync<CourseDTO>(query, new { Id = id }, Transaction);
         }
 
+        public async Task<List<CourseDTO>> GetCoursesByDepartmentAsync(int departmentId)
+        {
+            // Since courses table doesn't have department_id column, return all active courses
+            // This can be updated later when the relationship is properly established
+            var query = @"
+                SELECT
+                    id,
+                    name as CourseName,
+                    code as CourseCode,
+                    description,
+                    credits,
+                    course_type as CourseType,
+                    duration_weeks as DurationWeeks,
+                    max_capacity as MaxCapacity,
+                    status,
+                    prerequisites,
+                    learning_objectives as LearningObjectives,
+                    learning_outcomes as LearningOutcomes,
+                    created_date as CreatedDate,
+                    modified_date as ModifiedDate,
+                    created_by as CreatedBy,
+                    modified_by as ModifiedBy,
+                    is_active as IsActive
+                FROM workflowmgmt.courses
+                WHERE is_active = true
+                ORDER BY code";
 
+            var courses = await Connection.QueryAsync<CourseDTO>(query, transaction: Transaction);
+            return courses.ToList();
+        }
 
         public async Task<bool> IsCourseCodeExists(string code, int? excludeId = null)
         {

@@ -35,6 +35,30 @@ namespace WorkflowMgmt.Application.Features.Department
             }
         }
     }
+
+    public class GetDepartmentsByLevelCommandHandler : IRequestHandler<GetDepartmentsByLevelCommand, ApiResponse<List<DepartmentDTO>>>
+    {
+        private readonly IUnitOfWork _unitOfWork;
+
+        public GetDepartmentsByLevelCommandHandler(IUnitOfWork unitOfWork)
+        {
+            _unitOfWork = unitOfWork;
+        }
+
+        public async Task<ApiResponse<List<DepartmentDTO>>> Handle(GetDepartmentsByLevelCommand request, CancellationToken cancellationToken)
+        {
+            try
+            {
+                var departments = await _unitOfWork.DepartmentRepository.GetDepartmentsByLevelId(request.levelId);
+
+                return ApiResponse<List<DepartmentDTO>>.SuccessResponse(departments, "Departments retrieved successfully");
+            }
+            catch (Exception ex)
+            {
+                return ApiResponse<List<DepartmentDTO>>.ErrorResponse($"Error during fetching departments: {ex.Message}");
+            }
+        }
+    }
     public class GetDepartmentByIdCommandHandler : IRequestHandler<GetDepartmentByIdCommand, ApiResponse<DepartmentDTO>>
     {
         private readonly IUnitOfWork _unitOfWork;

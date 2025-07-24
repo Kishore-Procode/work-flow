@@ -11,19 +11,17 @@ namespace WorkflowMgmt.WebAPI.Controllers
     [Authorize]
     public class CourseController : BaseApiController
     {
-        private readonly ILogger<CourseController> _logger;
-
-        public CourseController(ILogger<CourseController> logger)
-        {
-            _logger = logger;
-        }
         [HttpGet]
-        public async Task<IActionResult> GetAllCourses()
+        public async Task<IActionResult> GetAllCourses([FromQuery] int? departmentId = null)
         {
-            _logger.LogInformation("Getting all courses");
-            var result = await Mediator.Send(new GetCourseCommand());
-            _logger.LogInformation("Retrieved {Count} courses", result.Data?.Count ?? 0);
-            return Ok(result);
+            if (departmentId.HasValue)
+            {
+                var result = await Mediator.Send(new GetCoursesByDepartmentCommand(departmentId.Value));
+                return Ok(result);
+            }
+
+            var allResult = await Mediator.Send(new GetCourseCommand());
+            return Ok(allResult);
         }
         [HttpGet("{id}")]
         public async Task<IActionResult> GetCourseById(int id)

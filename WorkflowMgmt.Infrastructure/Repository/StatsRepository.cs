@@ -165,11 +165,12 @@ namespace WorkflowMgmt.Infrastructure.Repository
                 ),
                 semesters_by_level AS (
                   SELECT
-                    s.level,
+                    l.name as level,
                     COUNT(*) as count
                   FROM workflowmgmt.semesters s
+                  LEFT JOIN workflowmgmt.levels l ON s.level_id = l.id
                   WHERE s.is_active = true
-                  GROUP BY s.level
+                  GROUP BY l.name
                 ),
                 semesters_by_department AS (
                   SELECT
@@ -182,11 +183,12 @@ namespace WorkflowMgmt.Infrastructure.Repository
                 ),
                 semesters_by_academic_year AS (
                   SELECT
-                    s.academic_year,
+                    ay.name as academic_year,
                     COUNT(*) as count
                   FROM workflowmgmt.semesters s
+                  LEFT JOIN workflowmgmt.academic_years ay ON s.academic_year_id = ay.id
                   WHERE s.is_active = true
-                  GROUP BY s.academic_year
+                  GROUP BY ay.name
                 )
 
                 SELECT

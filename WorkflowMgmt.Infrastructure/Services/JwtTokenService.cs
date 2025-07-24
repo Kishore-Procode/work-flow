@@ -41,7 +41,7 @@ namespace WorkflowMgmt.Infrastructure.Services
             return new JwtSecurityTokenHandler().WriteToken(token);
         }
 
-        public AuthTokenResponse GenerateTokens(User user, Role role, DepartmentDTO dept)
+        public AuthTokenResponse GenerateTokens(User user, Role role, DepartmentDTO? dept)
         {
             var accessToken = GenerateToken(user, role, dept);
             var refreshToken = GenerateRefreshToken();
@@ -105,7 +105,7 @@ namespace WorkflowMgmt.Infrastructure.Services
             }
         }
 
-        private List<Claim> BuildClaims(User user, Role role, DepartmentDTO dept)
+        private List<Claim> BuildClaims(User user, Role role, DepartmentDTO? dept)
         {
             var claims = new List<Claim>
             {

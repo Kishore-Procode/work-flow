@@ -13,6 +13,15 @@ CREATE SEQUENCE workflowmgmt.acadamic_year_id_seq
 	START 1
 	CACHE 1
 	NO CYCLE;
+-- DROP SEQUENCE workflowmgmt.academic_years_id_seq;
+
+CREATE SEQUENCE workflowmgmt.academic_years_id_seq
+	INCREMENT BY 1
+	MINVALUE 1
+	MAXVALUE 2147483647
+	START 1
+	CACHE 1
+	NO CYCLE;
 -- DROP SEQUENCE workflowmgmt.courses_id_seq;
 
 CREATE SEQUENCE workflowmgmt.courses_id_seq
@@ -34,6 +43,15 @@ CREATE SEQUENCE workflowmgmt.degree_id_seq
 -- DROP SEQUENCE workflowmgmt.departments_id_seq;
 
 CREATE SEQUENCE workflowmgmt.departments_id_seq
+	INCREMENT BY 1
+	MINVALUE 1
+	MAXVALUE 2147483647
+	START 1
+	CACHE 1
+	NO CYCLE;
+-- DROP SEQUENCE workflowmgmt.levels_id_seq;
+
+CREATE SEQUENCE workflowmgmt.levels_id_seq
 	INCREMENT BY 1
 	MINVALUE 1
 	MAXVALUE 2147483647
@@ -93,6 +111,37 @@ CREATE TABLE workflowmgmt.acadamic_year (
 );
 
 
+-- workflowmgmt.courses definition
+
+-- Drop table
+
+-- DROP TABLE workflowmgmt.courses;
+
+CREATE TABLE workflowmgmt.courses (
+	id serial4 NOT NULL,
+	"name" varchar(100) NOT NULL,
+	code varchar(20) NOT NULL,
+	description text NULL,
+	credits int4 NOT NULL,
+	course_type varchar(50) DEFAULT 'Core'::character varying NOT NULL,
+	duration_weeks int4 NOT NULL,
+	max_capacity int4 NOT NULL,
+	status varchar(20) DEFAULT 'Active'::character varying NOT NULL,
+	prerequisites text NULL,
+	learning_objectives text NULL,
+	learning_outcomes text NULL,
+	created_date timestamp DEFAULT now() NOT NULL,
+	modified_date timestamp NULL,
+	created_by varchar(50) NULL,
+	modified_by varchar(50) NULL,
+	is_active bool DEFAULT true NOT NULL,
+	CONSTRAINT courses_code_key UNIQUE (code),
+	CONSTRAINT courses_pkey PRIMARY KEY (id)
+);
+CREATE INDEX idx_courses_code ON workflowmgmt.courses USING btree (code);
+CREATE INDEX idx_courses_status ON workflowmgmt.courses USING btree (status);
+
+
 -- workflowmgmt."degree" definition
 
 -- Drop table
@@ -109,42 +158,6 @@ CREATE TABLE workflowmgmt."degree" (
 	modified_by uuid NULL,
 	CONSTRAINT degree_pkey PRIMARY KEY (id)
 );
-
-
--- workflowmgmt.departments definition
-
--- Drop table
-
--- DROP TABLE workflowmgmt.departments;
-
-CREATE TABLE workflowmgmt.departments (
-	id serial4 NOT NULL,
-	"name" varchar(100) NOT NULL,
-	code varchar(20) NOT NULL,
-	description text NULL,
-	head_of_department varchar(100) NULL,
-	email varchar(100) NULL,
-	phone varchar(20) NULL,
-	established_year int4 NULL,
-	programs_offered text NULL,
-	accreditation text NULL,
-	status varchar(20) DEFAULT 'Active'::character varying NOT NULL,
-	created_date timestamp DEFAULT now() NOT NULL,
-	modified_date timestamp NULL,
-	created_by varchar(50) NULL,
-	modified_by varchar(50) NULL,
-	is_active bool DEFAULT true NOT NULL,
-	email_notify bool DEFAULT false NULL,
-	sms_notify bool DEFAULT false NULL,
-	in_app_notify bool DEFAULT false NULL,
-	digest_frequency varchar(20) NULL,
-	CONSTRAINT departments_code_key UNIQUE (code),
-	CONSTRAINT departments_pkey PRIMARY KEY (id)
-);
-CREATE INDEX idx_departments_code ON workflowmgmt.departments USING btree (code);
-CREATE INDEX idx_departments_established_year ON workflowmgmt.departments USING btree (established_year);
-CREATE INDEX idx_departments_status ON workflowmgmt.departments USING btree (status);
-CREATE INDEX idx_departments_status_active ON workflowmgmt.departments USING btree (status, is_active);
 
 
 -- workflowmgmt.lesson_plan_templates definition
@@ -169,6 +182,31 @@ CREATE TABLE workflowmgmt.lesson_plan_templates (
 );
 CREATE INDEX idx_lesson_plan_templates_active ON workflowmgmt.lesson_plan_templates USING btree (is_active);
 CREATE INDEX idx_lesson_plan_templates_type ON workflowmgmt.lesson_plan_templates USING btree (template_type);
+
+
+-- workflowmgmt.levels definition
+
+-- Drop table
+
+-- DROP TABLE workflowmgmt.levels;
+
+CREATE TABLE workflowmgmt.levels (
+	id serial4 NOT NULL,
+	"name" varchar(50) NOT NULL,
+	code varchar(20) NOT NULL,
+	description text NULL,
+	sort_order int4 DEFAULT 0 NULL,
+	is_active bool DEFAULT true NOT NULL,
+	created_date timestamp DEFAULT now() NOT NULL,
+	modified_date timestamp NULL,
+	created_by varchar(50) NULL,
+	modified_by varchar(50) NULL,
+	CONSTRAINT levels_code_key UNIQUE (code),
+	CONSTRAINT levels_name_key UNIQUE (name),
+	CONSTRAINT levels_pkey PRIMARY KEY (id)
+);
+CREATE INDEX idx_levels_code ON workflowmgmt.levels USING btree (code);
+CREATE INDEX idx_levels_is_active ON workflowmgmt.levels USING btree (is_active);
 
 
 -- workflowmgmt.notification_types definition
@@ -288,35 +326,72 @@ CREATE INDEX idx_workflow_templates_document_type ON workflowmgmt.workflow_templ
 CREATE INDEX idx_workflow_templates_document_type_active ON workflowmgmt.workflow_templates USING btree (document_type, is_active);
 
 
--- workflowmgmt.courses definition
+-- workflowmgmt.academic_years definition
 
 -- Drop table
 
--- DROP TABLE workflowmgmt.courses;
+-- DROP TABLE workflowmgmt.academic_years;
 
-CREATE TABLE workflowmgmt.courses (
+CREATE TABLE workflowmgmt.academic_years (
 	id serial4 NOT NULL,
 	"name" varchar(100) NOT NULL,
 	code varchar(20) NOT NULL,
-	description text NULL,
-	credits int4 NOT NULL,
-	course_type varchar(50) DEFAULT 'Core'::character varying NOT NULL,
-	duration_weeks int4 NOT NULL,
-	max_capacity int4 NOT NULL,
+	start_year int4 NOT NULL,
+	end_year int4 NOT NULL,
+	level_id int4 NOT NULL,
 	status varchar(20) DEFAULT 'Active'::character varying NOT NULL,
-	prerequisites text NULL,
-	learning_objectives text NULL,
-	learning_outcomes text NULL,
+	description text NULL,
 	created_date timestamp DEFAULT now() NOT NULL,
 	modified_date timestamp NULL,
 	created_by varchar(50) NULL,
 	modified_by varchar(50) NULL,
 	is_active bool DEFAULT true NOT NULL,
-	CONSTRAINT courses_code_key UNIQUE (code),
-	CONSTRAINT courses_pkey PRIMARY KEY (id)
+	CONSTRAINT academic_years_pkey PRIMARY KEY (id),
+	CONSTRAINT academic_years_level_id_fkey FOREIGN KEY (level_id) REFERENCES workflowmgmt.levels(id)
 );
-CREATE INDEX idx_courses_code ON workflowmgmt.courses USING btree (code);
-CREATE INDEX idx_courses_status ON workflowmgmt.courses USING btree (status);
+CREATE INDEX idx_academic_years_code ON workflowmgmt.academic_years USING btree (code);
+CREATE INDEX idx_academic_years_level_id ON workflowmgmt.academic_years USING btree (level_id);
+CREATE INDEX idx_academic_years_start_year ON workflowmgmt.academic_years USING btree (start_year);
+CREATE INDEX idx_academic_years_status ON workflowmgmt.academic_years USING btree (status);
+
+
+-- workflowmgmt.departments definition
+
+-- Drop table
+
+-- DROP TABLE workflowmgmt.departments;
+
+CREATE TABLE workflowmgmt.departments (
+	id serial4 NOT NULL,
+	"name" varchar(100) NOT NULL,
+	code varchar(20) NOT NULL,
+	description text NULL,
+	head_of_department varchar(100) NULL,
+	email varchar(100) NULL,
+	phone varchar(20) NULL,
+	established_year int4 NULL,
+	programs_offered text NULL,
+	accreditation text NULL,
+	status varchar(20) DEFAULT 'Active'::character varying NOT NULL,
+	created_date timestamp DEFAULT now() NOT NULL,
+	modified_date timestamp NULL,
+	created_by varchar(50) NULL,
+	modified_by varchar(50) NULL,
+	is_active bool DEFAULT true NOT NULL,
+	email_notify bool DEFAULT false NULL,
+	sms_notify bool DEFAULT false NULL,
+	in_app_notify bool DEFAULT false NULL,
+	digest_frequency varchar(20) NULL,
+	level_id int4 DEFAULT 1 NOT NULL,
+	CONSTRAINT departments_code_key UNIQUE (code),
+	CONSTRAINT departments_pkey PRIMARY KEY (id),
+	CONSTRAINT departments_level_id_fkey FOREIGN KEY (level_id) REFERENCES workflowmgmt.levels(id)
+);
+CREATE INDEX idx_departments_code ON workflowmgmt.departments USING btree (code);
+CREATE INDEX idx_departments_established_year ON workflowmgmt.departments USING btree (established_year);
+CREATE INDEX idx_departments_level_id ON workflowmgmt.departments USING btree (level_id);
+CREATE INDEX idx_departments_status ON workflowmgmt.departments USING btree (status);
+CREATE INDEX idx_departments_status_active ON workflowmgmt.departments USING btree (status, is_active);
 
 
 -- workflowmgmt.notification_templates definition
@@ -352,11 +427,10 @@ CREATE TABLE workflowmgmt.semesters (
 	code varchar(20) NOT NULL,
 	academic_year varchar(20) NOT NULL,
 	department_id int4 NOT NULL,
-	course_id int4 NULL,
+	course_id _int4 NULL,
 	start_date date NOT NULL,
 	end_date date NOT NULL,
 	duration_weeks int4 NOT NULL,
-	"level" varchar(50) DEFAULT 'Undergraduate'::character varying NOT NULL,
 	total_students int4 DEFAULT 0 NOT NULL,
 	status varchar(20) DEFAULT 'Upcoming'::character varying NOT NULL,
 	description text NULL,
@@ -366,16 +440,20 @@ CREATE TABLE workflowmgmt.semesters (
 	created_by varchar(50) NULL,
 	modified_by varchar(50) NULL,
 	is_active bool DEFAULT true NOT NULL,
+	academic_year_id int4 NOT NULL,
+	level_id int4 NOT NULL,
 	CONSTRAINT semesters_code_key UNIQUE (code),
 	CONSTRAINT semesters_pkey PRIMARY KEY (id),
-	CONSTRAINT semesters_course_id_fkey FOREIGN KEY (course_id) REFERENCES workflowmgmt.courses(id),
-	CONSTRAINT semesters_department_id_fkey FOREIGN KEY (department_id) REFERENCES workflowmgmt.departments(id)
+	CONSTRAINT semesters_unique_key UNIQUE (department_id, name, academic_year_id, level_id),
+	CONSTRAINT semesters_academic_year_id_fkey FOREIGN KEY (academic_year_id) REFERENCES workflowmgmt.academic_years(id),
+	CONSTRAINT semesters_department_id_fkey FOREIGN KEY (department_id) REFERENCES workflowmgmt.departments(id),
+	CONSTRAINT semesters_level_id_fkey FOREIGN KEY (level_id) REFERENCES workflowmgmt.levels(id)
 );
-CREATE INDEX idx_semesters_academic_year ON workflowmgmt.semesters USING btree (academic_year);
+CREATE INDEX idx_semesters_academic_year_id ON workflowmgmt.semesters USING btree (academic_year_id);
 CREATE INDEX idx_semesters_code ON workflowmgmt.semesters USING btree (code);
-CREATE INDEX idx_semesters_course_id ON workflowmgmt.semesters USING btree (course_id);
+CREATE INDEX idx_semesters_course_id ON workflowmgmt.semesters USING gin (course_id);
 CREATE INDEX idx_semesters_department_id ON workflowmgmt.semesters USING btree (department_id);
-CREATE INDEX idx_semesters_level ON workflowmgmt.semesters USING btree (level);
+CREATE INDEX idx_semesters_level_id ON workflowmgmt.semesters USING btree (level_id);
 CREATE INDEX idx_semesters_start_date ON workflowmgmt.semesters USING btree (start_date);
 CREATE INDEX idx_semesters_status ON workflowmgmt.semesters USING btree (status);
 

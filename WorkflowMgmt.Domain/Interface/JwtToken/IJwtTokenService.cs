@@ -12,7 +12,7 @@ namespace WorkflowMgmt.Domain.Interface.JwtToken
     public interface IJwtTokenService
     {
         string GenerateToken(User user, Role role, DepartmentDTO dept);
-        AuthTokenResponse GenerateTokens(User user, Role role, DepartmentDTO dept);
+        AuthTokenResponse GenerateTokens(User user, Role role, DepartmentDTO? dept);
         string GenerateRefreshToken();
         ClaimsPrincipal? ValidateToken(string token);
         bool IsTokenExpired(string token);

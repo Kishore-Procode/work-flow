@@ -17,6 +17,7 @@ namespace WorkflowMgmt.Domain.Entities
         public int? established_year { get; set; }
         public string? programs_offered { get; set; }
         public string? accreditation { get; set; }
+        public int level_id { get; set; }
         public string status { get; set; } = "Active";
         public Guid? default_template_id { get; set; }
         public bool email_notify { get; set; } = false;
@@ -24,6 +25,10 @@ namespace WorkflowMgmt.Domain.Entities
         public bool in_app_notify { get; set; } = false;
         public string? digest_frequency { get; set; }
         public bool is_active { get; set; } = false;
+
+        // Navigation properties for display
+        public string? level_name { get; set; }
+        public string? level_code { get; set; }
     }
     public class DepartmentStatsDto
     {

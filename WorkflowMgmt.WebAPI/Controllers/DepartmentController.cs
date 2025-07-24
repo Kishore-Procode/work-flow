@@ -16,6 +16,14 @@ namespace WorkflowMgmt.WebAPI.Controllers
             var result = await Mediator.Send(new GetDepartmentCommand());
             return Ok(result);
         }
+
+        [HttpGet("by-level/{levelId}")]
+        public async Task<IActionResult> GetDepartmentsByLevel(int levelId)
+        {
+            var result = await Mediator.Send(new GetDepartmentsByLevelCommand(levelId));
+            return Ok(result);
+        }
+
         [HttpGet("{id}")]
         public async Task<IActionResult> GetDepartmentById(int id)
         {
