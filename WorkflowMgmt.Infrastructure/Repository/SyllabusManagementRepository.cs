@@ -73,7 +73,7 @@ namespace WorkflowMgmt.Infrastructure.Repository
                     -- Semester
                     sem.id as Semester_Id,
                     sem.name as Semester_Name,
-                    sem.academic_year as Semester_Year,
+                    ay.name as Semester_Year,
                     -- Workflow
                     dw.id as Workflow_Id,
                     dw.status as Workflow_Status,
@@ -85,6 +85,7 @@ namespace WorkflowMgmt.Infrastructure.Repository
                 INNER JOIN workflowmgmt.departments d ON s.department_id = d.id
                 LEFT JOIN workflowmgmt.courses c ON s.course_id = c.id
                 LEFT JOIN workflowmgmt.semesters sem ON s.semester_id = sem.id
+                LEFT JOIN workflowmgmt.academic_years ay ON sem.academic_year_id = ay.id
                 LEFT JOIN workflowmgmt.document_workflows dw ON dw.document_id = s.id and dw.document_type = 'syllabus'
                 LEFT JOIN workflowmgmt.workflow_stages ws ON dw.current_stage_id = ws.id
                 ORDER BY s.created_date DESC";
@@ -165,7 +166,7 @@ namespace WorkflowMgmt.Infrastructure.Repository
                     -- Semester
                     sem.id as Semester_Id,
                     sem.name as Semester_Name,
-                    sem.academic_year as Semester_Year,
+                    ay.name as Semester_Year,
                     -- Workflow
                     dw.id as Workflow_Id,
                     dw.status as Workflow_Status,
@@ -177,6 +178,7 @@ namespace WorkflowMgmt.Infrastructure.Repository
                 INNER JOIN workflowmgmt.departments d ON s.department_id = d.id
                 LEFT JOIN workflowmgmt.courses c ON s.course_id = c.id
                 LEFT JOIN workflowmgmt.semesters sem ON s.semester_id = sem.id
+                LEFT JOIN workflowmgmt.academic_years ay ON sem.academic_year_id = ay.id
                 LEFT JOIN workflowmgmt.document_workflows dw ON dw.document_id = s.id and dw.document_type = 'syllabus'
                 LEFT JOIN workflowmgmt.workflow_stages ws ON dw.current_stage_id = ws.id
                 WHERE s.id = @Id";
@@ -413,7 +415,7 @@ namespace WorkflowMgmt.Infrastructure.Repository
                     -- Semester
                     sem.id as Semester_Id,
                     sem.name as Semester_Name,
-                    sem.academic_year as Semester_Year,
+                    ay.name as Semester_Year,
                     -- Workflow
                     dw.id as Workflow_Id,
                     dw.status as Workflow_Status,
@@ -425,6 +427,7 @@ namespace WorkflowMgmt.Infrastructure.Repository
                 INNER JOIN workflowmgmt.departments d ON s.department_id = d.id
                 LEFT JOIN workflowmgmt.courses c ON s.course_id = c.id
                 LEFT JOIN workflowmgmt.semesters sem ON s.semester_id = sem.id
+                LEFT JOIN workflowmgmt.academic_years ay ON sem.academic_year_id = ay.id
                 LEFT JOIN workflowmgmt.document_workflows dw ON s.id = dw.document_id AND dw.document_type = 'syllabus'
                 LEFT JOIN workflowmgmt.workflow_stages ws ON dw.current_stage_id = ws.id
                 WHERE s.department_id = @DepartmentId
@@ -506,7 +509,7 @@ namespace WorkflowMgmt.Infrastructure.Repository
                     -- Semester
                     sem.id as Semester_Id,
                     sem.name as Semester_Name,
-                    sem.academic_year as Semester_Year,
+                    ay.name as Semester_Year,
                     -- Workflow
                     dw.id as Workflow_Id,
                     dw.status as Workflow_Status,
@@ -518,6 +521,7 @@ namespace WorkflowMgmt.Infrastructure.Repository
                 INNER JOIN workflowmgmt.departments d ON s.department_id = d.id
                 LEFT JOIN workflowmgmt.courses c ON s.course_id = c.id
                 LEFT JOIN workflowmgmt.semesters sem ON s.semester_id = sem.id
+                LEFT JOIN workflowmgmt.academic_years ay ON sem.academic_year_id = ay.id
                 LEFT JOIN workflowmgmt.document_workflows dw ON s.id = dw.document_id AND dw.document_type = 'syllabus'
                 LEFT JOIN workflowmgmt.workflow_stages ws ON dw.current_stage_id = ws.id
                 WHERE s.status = @Status
@@ -599,7 +603,7 @@ namespace WorkflowMgmt.Infrastructure.Repository
                     -- Semester
                     sem.id as Semester_Id,
                     sem.name as Semester_Name,
-                    sem.academic_year as Semester_Year,
+                    ay.name as Semester_Year,
                     -- Workflow
                     dw.id as Workflow_Id,
                     dw.status as Workflow_Status,
@@ -611,6 +615,7 @@ namespace WorkflowMgmt.Infrastructure.Repository
                 INNER JOIN workflowmgmt.departments d ON s.department_id = d.id
                 LEFT JOIN workflowmgmt.courses c ON s.course_id = c.id
                 LEFT JOIN workflowmgmt.semesters sem ON s.semester_id = sem.id
+                LEFT JOIN workflowmgmt.academic_years ay ON sem.academic_year_id = ay.id
                 LEFT JOIN workflowmgmt.document_workflows dw ON s.id = dw.document_id AND dw.document_type = 'syllabus'
                 LEFT JOIN workflowmgmt.workflow_stages ws ON dw.current_stage_id = ws.id
                 WHERE s.faculty_name ILIKE @FacultyName
@@ -693,7 +698,7 @@ namespace WorkflowMgmt.Infrastructure.Repository
                     -- Semester
                     sem.id as Semester_Id,
                     sem.name as Semester_Name,
-                    sem.academic_year as Semester_Year,
+                    ay.name as Semester_Year,
                     -- Workflow
                     dw.id as Workflow_Id,
                     dw.status as Workflow_Status,
@@ -705,6 +710,7 @@ namespace WorkflowMgmt.Infrastructure.Repository
                 INNER JOIN workflowmgmt.departments d ON s.department_id = d.id
                 LEFT JOIN workflowmgmt.courses c ON s.course_id = c.id
                 LEFT JOIN workflowmgmt.semesters sem ON s.semester_id = sem.id
+                LEFT JOIN workflowmgmt.academic_years ay ON sem.academic_year_id = ay.id
                 LEFT JOIN workflowmgmt.document_workflows dw ON s.id = dw.document_id AND dw.document_type = 'syllabus'
                 LEFT JOIN workflowmgmt.workflow_stages ws ON dw.current_stage_id = ws.id
                 WHERE s.template_id = @TemplateId
@@ -787,7 +793,7 @@ namespace WorkflowMgmt.Infrastructure.Repository
                     -- Semester
                     sem.id as Semester_Id,
                     sem.name as Semester_Name,
-                    sem.academic_year as Semester_Year,
+                    ay.name as Semester_Year,
                     -- Workflow
                     dw.id as Workflow_Id,
                     dw.status as Workflow_Status,
@@ -799,6 +805,7 @@ namespace WorkflowMgmt.Infrastructure.Repository
                 INNER JOIN workflowmgmt.departments d ON s.department_id = d.id
                 LEFT JOIN workflowmgmt.courses c ON s.course_id = c.id
                 LEFT JOIN workflowmgmt.semesters sem ON s.semester_id = sem.id
+                LEFT JOIN workflowmgmt.academic_years ay ON sem.academic_year_id = ay.id
                 LEFT JOIN workflowmgmt.document_workflows dw ON s.id = dw.document_id AND dw.document_type = 'syllabus'
                 LEFT JOIN workflowmgmt.workflow_stages ws ON dw.current_stage_id = ws.id
                 WHERE s.course_id = @CourseId
@@ -881,7 +888,7 @@ namespace WorkflowMgmt.Infrastructure.Repository
                     -- Semester
                     sem.id as Semester_Id,
                     sem.name as Semester_Name,
-                    sem.academic_year as Semester_Year,
+                    ay.name as Semester_Year,
                     -- Workflow
                     dw.id as Workflow_Id,
                     dw.status as Workflow_Status,
@@ -893,6 +900,7 @@ namespace WorkflowMgmt.Infrastructure.Repository
                 INNER JOIN workflowmgmt.departments d ON s.department_id = d.id
                 LEFT JOIN workflowmgmt.courses c ON s.course_id = c.id
                 LEFT JOIN workflowmgmt.semesters sem ON s.semester_id = sem.id
+                LEFT JOIN workflowmgmt.academic_years ay ON sem.academic_year_id = ay.id
                 LEFT JOIN workflowmgmt.document_workflows dw ON s.id = dw.document_id AND dw.document_type = 'syllabus'
                 LEFT JOIN workflowmgmt.workflow_stages ws ON dw.current_stage_id = ws.id
                 WHERE s.semester_id = @SemesterId
@@ -975,7 +983,7 @@ namespace WorkflowMgmt.Infrastructure.Repository
                     -- Semester
                     sem.id as Semester_Id,
                     sem.name as Semester_Name,
-                    sem.academic_year as Semester_Year,
+                    ay.name as Semester_Year,
                     -- Workflow
                     dw.id as Workflow_Id,
                     dw.status as Workflow_Status,
@@ -988,6 +996,7 @@ namespace WorkflowMgmt.Infrastructure.Repository
                 INNER JOIN workflowmgmt.departments d ON s.department_id = d.id
                 LEFT JOIN workflowmgmt.courses c ON s.course_id = c.id
                 LEFT JOIN workflowmgmt.semesters sem ON s.semester_id = sem.id
+                LEFT JOIN workflowmgmt.academic_years ay ON sem.academic_year_id = ay.id
                 LEFT JOIN workflowmgmt.document_workflows dw ON s.id = dw.document_id AND dw.document_type = 'syllabus'
                 LEFT JOIN workflowmgmt.workflow_stages ws ON dw.current_stage_id = ws.id
                 WHERE lp.id = @LessonPlanId AND s.is_active = true";

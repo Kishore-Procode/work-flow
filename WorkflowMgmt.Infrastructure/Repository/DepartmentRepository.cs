@@ -24,7 +24,7 @@ namespace WorkflowMgmt.Infrastructure.Repository
                 SELECT d.*, l.name as level_name, l.code as level_code
                 FROM workflowmgmt.departments d
                 LEFT JOIN workflowmgmt.levels l ON d.level_id = l.id
-                ORDER BY d.code";
+                ORDER BY d.name";
 
             var departments = await Connection.QueryAsync<DepartmentDTO>(sql, Transaction);
             return departments.ToList();
@@ -37,7 +37,7 @@ namespace WorkflowMgmt.Infrastructure.Repository
                 FROM workflowmgmt.departments d
                 LEFT JOIN workflowmgmt.levels l ON d.level_id = l.id
                 WHERE d.level_id = @LevelId AND d.is_active = true
-                ORDER BY d.code";
+                ORDER BY d.name";
 
             var departments = await Connection.QueryAsync<DepartmentDTO>(sql, new { LevelId = levelId }, Transaction);
             return departments.ToList();
