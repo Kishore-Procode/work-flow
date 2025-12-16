@@ -1,13 +1,21 @@
-name: .NET Build on Release Branch
+name: .NET CI Pipeline
 
 on:
-  create:
+  # Run on every commit to any branch
+  push:
     branches:
-      - "release/**"
+      - "**"
+
+  # Run on pull requests for any branch
+  pull_request:
+    branches:
+      - "**"
+
+  # Allow manual run
   workflow_dispatch:
 
 jobs:
-  build:
+  dotnet-build-test:
     runs-on: ubuntu-latest
 
     steps:
@@ -19,8 +27,11 @@ jobs:
         with:
           dotnet-version: '8.0.x'
 
-      - name: Restore
+      - name: Restore dependencies
         run: dotnet restore
 
       - name: Build
-        run: dotnet build --configuration Release
+        run: dotnet build --configuration Release --no-restore
+
+      - name: Run tests
+        run: dotnet test --no-build
