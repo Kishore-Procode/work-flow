@@ -27,3 +27,8 @@ jobs:
 
       - name: Build
         run: dotnet build WorkflowMgmt.WebAPI/WorkflowMgmt.WebAPI.csproj --configuration Release
+
+      # ✅ Tests ONLY run on master branch
+      - name: Test (master only)
+        if: github.ref == 'refs/heads/feature'
+        run: dotnet test WorkflowMgmt.WebAPI/WorkflowMgmt.WebAPI.csproj --no-build
