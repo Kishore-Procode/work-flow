@@ -22,19 +22,26 @@ jobs:
         with:
           dotnet-version: '8.0.x'
 
-      # 🔹 Build for ALL branches
       - name: Restore
         run: dotnet restore WorkflowMgmt.WebAPI/WorkflowMgmt.WebAPI.csproj
 
       - name: Build
         run: dotnet build WorkflowMgmt.WebAPI/WorkflowMgmt.WebAPI.csproj --configuration Release
 
-      # 🔹 Extra build ONLY on master
-      - name: Build (master only)
-        if: github.ref == 'refs/heads/master'
-        run: dotnet build WorkflowMgmt.WebAPI/WorkflowMgmt.WebAPI.csproj --configuration Release --no-restore
+  test:
+    name: Unit Test
+    runs-on: ubuntu-latest
+    needs: build
+    if: github.ref == 'refs/heads/master'
 
-      # 🔹 Unit tests ONLY on master
-      - name: Test (master only)
-        if: github.ref == 'refs/heads/master'
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8.0.x'
+
+      - name: Run Unit Tests
         run: dotnet test --configuration Release --no-build
