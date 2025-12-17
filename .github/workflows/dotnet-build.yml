@@ -1,0 +1,29 @@
+name: .NET Build CI
+
+on:
+  push:
+    branches:
+      - '**'
+  pull_request:
+    branches:
+      - '**'
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8.0.x'
+
+      - name: Restore
+        run: dotnet restore WorkflowMgmt.WebAPI/WorkflowMgmt.WebAPI.csproj
+
+      - name: Build
+        run: dotnet build WorkflowMgmt.WebAPI/WorkflowMgmt.WebAPI.csproj --configuration Release
