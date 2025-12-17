@@ -27,3 +27,21 @@ jobs:
 
       - name: Build
         run: dotnet build WorkflowMgmt.WebAPI/WorkflowMgmt.WebAPI.csproj --configuration Release
+
+  test:
+    name: Unit Test
+    runs-on: ubuntu-latest
+    needs: build
+    if: github.ref == 'refs/heads/master'
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8.0.x'
+
+      - name: Run Unit Tests
+        run: dotnet test --configuration Release --no-build
