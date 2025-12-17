@@ -23,6 +23,7 @@ jobs:
         with:
           dotnet-version: '8.0.x'
 
+      # 🔹 Build for ALL branches
       - name: Restore
         run: dotnet restore WorkflowMgmt.WebAPI/WorkflowMgmt.WebAPI.csproj
 
@@ -46,3 +47,13 @@ jobs:
 
       - name: Build
         run: dotnet build WorkflowMgmt.WebAPI/WorkflowMgmt.WebAPI.csproj --configuration Release
+
+      # 🔹 Extra build ONLY on master
+      - name: Build (master only)
+        if: github.ref == 'refs/heads/master'
+        run: dotnet build WorkflowMgmt.WebAPI/WorkflowMgmt.WebAPI.csproj --configuration Release --no-restore
+
+      # 🔹 Unit tests ONLY on master
+      - name: Test (master only)
+        if: github.ref == 'refs/heads/master'
+        run: dotnet test --configuration Release --no-build
